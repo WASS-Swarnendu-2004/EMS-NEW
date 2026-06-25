@@ -9,7 +9,10 @@ export function Shell({ items, title, children }: { items: NavItem[]; title: str
   const { session, logout } = useAuth();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const current = items.find((i) => pathname === i.to || pathname.startsWith(i.to + "/"))?.label ?? "Dashboard";
+  // Prefer the most specific (longest) matching nav item so /admin doesn't shadow /admin/employees.
+  const current = [...items]
+    .sort((a, b) => b.to.length - a.to.length)
+    .find((i) => pathname === i.to || pathname.startsWith(i.to + "/"))?.label ?? "Dashboard";
 
   return (
     <div className="app">
