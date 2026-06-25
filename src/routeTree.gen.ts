@@ -13,7 +13,14 @@ import { Route as UserRouteImport } from './routes/user'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as UserIndexRouteImport } from './routes/user.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as UserWfhRouteImport } from './routes/user.wfh'
+import { Route as UserTasksRouteImport } from './routes/user.tasks'
+import { Route as UserSalaryRouteImport } from './routes/user.salary'
+import { Route as UserProjectsRouteImport } from './routes/user.projects'
+import { Route as UserLeaveRouteImport } from './routes/user.leave'
+import { Route as UserAttendanceRouteImport } from './routes/user.attendance'
 import { Route as AdminWorkStatusRouteImport } from './routes/admin.work-status'
 import { Route as AdminWfhRouteImport } from './routes/admin.wfh'
 import { Route as AdminSalaryRouteImport } from './routes/admin.salary'
@@ -43,10 +50,45 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const UserIndexRoute = UserIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => UserRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
+} as any)
+const UserWfhRoute = UserWfhRouteImport.update({
+  id: '/wfh',
+  path: '/wfh',
+  getParentRoute: () => UserRoute,
+} as any)
+const UserTasksRoute = UserTasksRouteImport.update({
+  id: '/tasks',
+  path: '/tasks',
+  getParentRoute: () => UserRoute,
+} as any)
+const UserSalaryRoute = UserSalaryRouteImport.update({
+  id: '/salary',
+  path: '/salary',
+  getParentRoute: () => UserRoute,
+} as any)
+const UserProjectsRoute = UserProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => UserRoute,
+} as any)
+const UserLeaveRoute = UserLeaveRouteImport.update({
+  id: '/leave',
+  path: '/leave',
+  getParentRoute: () => UserRoute,
+} as any)
+const UserAttendanceRoute = UserAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => UserRoute,
 } as any)
 const AdminWorkStatusRoute = AdminWorkStatusRouteImport.update({
   id: '/work-status',
@@ -93,7 +135,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
-  '/user': typeof UserRoute
+  '/user': typeof UserRouteWithChildren
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/employees': typeof AdminEmployeesRoute
   '/admin/leaves': typeof AdminLeavesRoute
@@ -102,12 +144,18 @@ export interface FileRoutesByFullPath {
   '/admin/salary': typeof AdminSalaryRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
+  '/user/attendance': typeof UserAttendanceRoute
+  '/user/leave': typeof UserLeaveRoute
+  '/user/projects': typeof UserProjectsRoute
+  '/user/salary': typeof UserSalaryRoute
+  '/user/tasks': typeof UserTasksRoute
+  '/user/wfh': typeof UserWfhRoute
   '/admin/': typeof AdminIndexRoute
+  '/user/': typeof UserIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/user': typeof UserRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/employees': typeof AdminEmployeesRoute
   '/admin/leaves': typeof AdminLeavesRoute
@@ -116,14 +164,21 @@ export interface FileRoutesByTo {
   '/admin/salary': typeof AdminSalaryRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
+  '/user/attendance': typeof UserAttendanceRoute
+  '/user/leave': typeof UserLeaveRoute
+  '/user/projects': typeof UserProjectsRoute
+  '/user/salary': typeof UserSalaryRoute
+  '/user/tasks': typeof UserTasksRoute
+  '/user/wfh': typeof UserWfhRoute
   '/admin': typeof AdminIndexRoute
+  '/user': typeof UserIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
-  '/user': typeof UserRoute
+  '/user': typeof UserRouteWithChildren
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/employees': typeof AdminEmployeesRoute
   '/admin/leaves': typeof AdminLeavesRoute
@@ -132,7 +187,14 @@ export interface FileRoutesById {
   '/admin/salary': typeof AdminSalaryRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
+  '/user/attendance': typeof UserAttendanceRoute
+  '/user/leave': typeof UserLeaveRoute
+  '/user/projects': typeof UserProjectsRoute
+  '/user/salary': typeof UserSalaryRoute
+  '/user/tasks': typeof UserTasksRoute
+  '/user/wfh': typeof UserWfhRoute
   '/admin/': typeof AdminIndexRoute
+  '/user/': typeof UserIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -149,12 +211,18 @@ export interface FileRouteTypes {
     | '/admin/salary'
     | '/admin/wfh'
     | '/admin/work-status'
+    | '/user/attendance'
+    | '/user/leave'
+    | '/user/projects'
+    | '/user/salary'
+    | '/user/tasks'
+    | '/user/wfh'
     | '/admin/'
+    | '/user/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/user'
     | '/admin/attendance'
     | '/admin/employees'
     | '/admin/leaves'
@@ -163,7 +231,14 @@ export interface FileRouteTypes {
     | '/admin/salary'
     | '/admin/wfh'
     | '/admin/work-status'
+    | '/user/attendance'
+    | '/user/leave'
+    | '/user/projects'
+    | '/user/salary'
+    | '/user/tasks'
+    | '/user/wfh'
     | '/admin'
+    | '/user'
   id:
     | '__root__'
     | '/'
@@ -178,14 +253,21 @@ export interface FileRouteTypes {
     | '/admin/salary'
     | '/admin/wfh'
     | '/admin/work-status'
+    | '/user/attendance'
+    | '/user/leave'
+    | '/user/projects'
+    | '/user/salary'
+    | '/user/tasks'
+    | '/user/wfh'
     | '/admin/'
+    | '/user/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
-  UserRoute: typeof UserRoute
+  UserRoute: typeof UserRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -218,12 +300,61 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/user/': {
+      id: '/user/'
+      path: '/'
+      fullPath: '/user/'
+      preLoaderRoute: typeof UserIndexRouteImport
+      parentRoute: typeof UserRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
+    }
+    '/user/wfh': {
+      id: '/user/wfh'
+      path: '/wfh'
+      fullPath: '/user/wfh'
+      preLoaderRoute: typeof UserWfhRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/user/tasks': {
+      id: '/user/tasks'
+      path: '/tasks'
+      fullPath: '/user/tasks'
+      preLoaderRoute: typeof UserTasksRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/user/salary': {
+      id: '/user/salary'
+      path: '/salary'
+      fullPath: '/user/salary'
+      preLoaderRoute: typeof UserSalaryRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/user/projects': {
+      id: '/user/projects'
+      path: '/projects'
+      fullPath: '/user/projects'
+      preLoaderRoute: typeof UserProjectsRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/user/leave': {
+      id: '/user/leave'
+      path: '/leave'
+      fullPath: '/user/leave'
+      preLoaderRoute: typeof UserLeaveRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/user/attendance': {
+      id: '/user/attendance'
+      path: '/attendance'
+      fullPath: '/user/attendance'
+      preLoaderRoute: typeof UserAttendanceRouteImport
+      parentRoute: typeof UserRoute
     }
     '/admin/work-status': {
       id: '/admin/work-status'
@@ -310,11 +441,33 @@ const AdminRouteChildren: AdminRouteChildren = {
 
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
+interface UserRouteChildren {
+  UserAttendanceRoute: typeof UserAttendanceRoute
+  UserLeaveRoute: typeof UserLeaveRoute
+  UserProjectsRoute: typeof UserProjectsRoute
+  UserSalaryRoute: typeof UserSalaryRoute
+  UserTasksRoute: typeof UserTasksRoute
+  UserWfhRoute: typeof UserWfhRoute
+  UserIndexRoute: typeof UserIndexRoute
+}
+
+const UserRouteChildren: UserRouteChildren = {
+  UserAttendanceRoute: UserAttendanceRoute,
+  UserLeaveRoute: UserLeaveRoute,
+  UserProjectsRoute: UserProjectsRoute,
+  UserSalaryRoute: UserSalaryRoute,
+  UserTasksRoute: UserTasksRoute,
+  UserWfhRoute: UserWfhRoute,
+  UserIndexRoute: UserIndexRoute,
+}
+
+const UserRouteWithChildren = UserRoute._addFileChildren(UserRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
-  UserRoute: UserRoute,
+  UserRoute: UserRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
