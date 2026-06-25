@@ -14,6 +14,7 @@ const ADMIN = { email: "admin@webapps.com", password: "admin", name: "Admin" };
 
 interface Ctx {
   session: Session | null;
+  ready: boolean;
   login: (email: string, password: string, kind: "admin" | "employee") => string | null;
   logout: () => void;
 }
@@ -22,11 +23,13 @@ const AuthCtx = createContext<Ctx | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
+  const [ready, setReady] = useState(false);
   useEffect(() => {
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) setSession(JSON.parse(raw));
     } catch {}
+    setReady(true);
   }, []);
 
   const login: Ctx["login"] = (email, password, kind) => {
