@@ -10,7 +10,9 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import scssCss from "../styles/global.scss?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AuthProvider } from "../lib/auth";
 
 function NotFoundComponent() {
   return (
@@ -87,10 +89,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
+      { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: scssCss },
     ],
   }),
   shellComponent: RootShell,
@@ -118,8 +118,9 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <AuthProvider>
+        <Outlet />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
