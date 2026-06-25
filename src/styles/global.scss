@@ -1,0 +1,294 @@
+@use "./theme" as *;
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: $bg;
+  color: $text;
+  font-size: 14px;
+  line-height: 1.5;
+}
+a { color: $brand-purple; text-decoration: none; }
+h1, h2, h3, h4 { margin: 0 0 .5rem; color: $text; font-weight: 600; }
+h1 { font-size: 1.6rem; }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.05rem; }
+
+// ---- Layout shell ----
+.app {
+  display: flex;
+  min-height: 100vh;
+}
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, $brand-purple-dark, $brand-purple);
+  color: #fff;
+  padding: 1.25rem 0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding: 0 1.25rem 1rem;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    img { width: 38px; height: 38px; border-radius: 50%; background: #fff; }
+    .brand-text { font-weight: 700; font-size: 1rem; line-height: 1.1; }
+    .brand-sub { font-size: .7rem; opacity: .75; }
+  }
+  nav { display: flex; flex-direction: column; padding: .75rem 0; flex: 1; }
+  nav a {
+    color: rgba(255,255,255,.85);
+    padding: .6rem 1.25rem;
+    font-size: .9rem;
+    border-left: 3px solid transparent;
+    display: flex; align-items: center; gap: .6rem;
+    transition: background .15s;
+    &:hover { background: rgba(255,255,255,.07); color: #fff; }
+    &.active, &[data-status="active"] {
+      background: rgba(232,180,60,.12);
+      border-left-color: $brand-gold;
+      color: #fff;
+      font-weight: 500;
+    }
+  }
+  .sidebar-foot {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid rgba(255,255,255,.12);
+    font-size: .8rem;
+    .user-name { font-weight: 600; }
+    .user-role { opacity: .7; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; }
+    button { margin-top: .6rem; }
+  }
+}
+.main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  background: #fff;
+  border-bottom: 1px solid $border;
+  padding: .85rem 1.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  .page-title { font-size: 1.1rem; font-weight: 600; }
+}
+.content { padding: 1.5rem; flex: 1; }
+
+// ---- Buttons ----
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  border: 1px solid transparent;
+  background: $brand-purple;
+  color: #fff;
+  padding: .55rem 1rem;
+  border-radius: $radius-sm;
+  font-size: .85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all .15s;
+  &:hover { background: $brand-purple-dark; }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+
+  &.btn-gold { background: $brand-gold; color: $brand-purple-dark; &:hover { background: $brand-gold-light; } }
+  &.btn-ghost { background: transparent; color: $brand-purple; border-color: $border; &:hover { background: $bg; } }
+  &.btn-danger { background: $danger; &:hover { background: darken($danger, 8%); } }
+  &.btn-success { background: $success; &:hover { background: darken($success, 8%); } }
+  &.btn-sm { padding: .35rem .65rem; font-size: .78rem; }
+}
+
+// ---- Forms ----
+.field { display: flex; flex-direction: column; gap: .25rem; margin-bottom: .85rem; }
+.field label { font-size: .78rem; font-weight: 500; color: $text-muted; }
+.input, .select, .textarea {
+  width: 100%;
+  border: 1px solid $border;
+  background: #fff;
+  border-radius: $radius-sm;
+  padding: .55rem .7rem;
+  font-size: .88rem;
+  font-family: inherit;
+  color: $text;
+  &:focus { outline: none; border-color: $brand-purple; box-shadow: 0 0 0 3px rgba(75,0,130,.12); }
+}
+.textarea { min-height: 80px; resize: vertical; }
+.row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.row-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; }
+@media (max-width: 720px) { .row-2, .row-3 { grid-template-columns: 1fr; } }
+
+// ---- Cards ----
+.card { @include card; padding: 1.25rem; }
+.card + .card { margin-top: 1rem; }
+.card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 1rem;
+  h2 { margin: 0; }
+}
+
+// ---- Stats / KPIs ----
+.kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.kpi {
+  @include card;
+  padding: 1.1rem 1.25rem;
+  .kpi-label { font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; color: $text-muted; }
+  .kpi-value { font-size: 1.7rem; font-weight: 700; color: $brand-purple; margin-top: .25rem; }
+  .kpi-foot { font-size: .75rem; color: $text-muted; margin-top: .35rem; }
+  &.gold .kpi-value { color: $brand-gold; }
+}
+
+// ---- Table ----
+.table-wrap { @include card; padding: 0; overflow-x: auto; }
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .87rem;
+  thead th {
+    text-align: left;
+    background: lighten($brand-purple, 60%);
+    color: $brand-purple-dark;
+    font-weight: 600;
+    padding: .7rem .85rem;
+    border-bottom: 1px solid $border;
+    font-size: .78rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+  }
+  tbody td { padding: .7rem .85rem; border-bottom: 1px solid $border; vertical-align: middle; }
+  tbody tr:hover { background: rgba(75,0,130,.03); }
+  tbody tr:last-child td { border-bottom: 0; }
+  .actions { display: flex; gap: .35rem; }
+}
+
+// ---- Badge ----
+.badge {
+  display: inline-block;
+  padding: .2rem .55rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 600;
+  background: $border;
+  color: $text;
+  text-transform: capitalize;
+  &.success { background: rgba(46,125,50,.15); color: $success; }
+  &.warn { background: rgba(237,108,2,.15); color: $warn; }
+  &.danger { background: rgba(211,47,47,.15); color: $danger; }
+  &.info { background: rgba(2,136,209,.15); color: $info; }
+  &.purple { background: rgba(75,0,130,.12); color: $brand-purple; }
+  &.gold { background: rgba(232,180,60,.18); color: darken($brand-gold,15%); }
+}
+
+// ---- Modal ----
+.modal-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(28,18,48,.45);
+  display: flex; justify-content: center; align-items: flex-start;
+  padding: 4rem 1rem;
+  z-index: 50;
+  overflow-y: auto;
+}
+.modal {
+  background: #fff;
+  width: 100%;
+  max-width: 600px;
+  border-radius: $radius;
+  padding: 1.5rem;
+  box-shadow: $shadow;
+  &.lg { max-width: 820px; }
+  .modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .modal-head h2 { margin: 0; }
+  .modal-foot { display: flex; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+}
+
+// ---- Toolbar / filters ----
+.toolbar {
+  display: flex; gap: .65rem; flex-wrap: wrap; align-items: center;
+  margin-bottom: 1rem;
+  .spacer { flex: 1; }
+}
+
+// ---- Login ----
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  background: radial-gradient(circle at top right, $brand-purple-light, $brand-purple-dark);
+  align-items: center; justify-content: center;
+  padding: 1.25rem;
+  .login-card {
+    width: 100%;
+    max-width: 420px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 24px 60px rgba(0,0,0,.25);
+    padding: 2rem;
+  }
+  .login-brand {
+    display: flex; flex-direction: column; align-items: center;
+    margin-bottom: 1.25rem;
+    img { width: 64px; height: 64px; border-radius: 50%; background: $brand-purple; padding: 2px; }
+    h1 { margin: .8rem 0 .2rem; color: $brand-purple-dark; font-size: 1.3rem; }
+    p { margin: 0; font-size: .82rem; color: $text-muted; }
+  }
+  .demo-creds {
+    margin-top: 1rem; padding: .75rem;
+    background: lighten($brand-gold, 32%);
+    border: 1px dashed $brand-gold;
+    border-radius: $radius-sm;
+    font-size: .75rem;
+    color: $brand-purple-dark;
+    code { background: rgba(0,0,0,.06); padding: 0 .25rem; border-radius: 3px; }
+  }
+  .role-tabs {
+    display: flex; gap: .5rem; margin-bottom: 1rem;
+    button {
+      flex: 1; padding: .55rem; border: 1px solid $border; background: #fff;
+      border-radius: $radius-sm; cursor: pointer; font-weight: 500;
+      &.active { background: $brand-purple; color: #fff; border-color: $brand-purple; }
+    }
+  }
+}
+
+// ---- Empty state ----
+.empty { text-align: center; padding: 3rem 1rem; color: $text-muted; font-size: .9rem; }
+
+// ---- Salary slip ----
+.slip {
+  @include card;
+  padding: 1.5rem;
+  max-width: 720px;
+  margin: 0 auto;
+  .slip-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid $brand-purple; padding-bottom: 1rem; margin-bottom: 1rem; }
+  .slip-head img { width: 50px; }
+  .slip-head h2 { color: $brand-purple; margin: 0; }
+  .slip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; font-size: .85rem; }
+  .slip-grid div span { color: $text-muted; }
+  .slip-table { width: 100%; border-collapse: collapse; font-size: .88rem;
+    th, td { border: 1px solid $border; padding: .55rem .7rem; text-align: left; }
+    th { background: lighten($brand-purple, 60%); }
+    tfoot td { font-weight: 700; }
+  }
+}
+
+// ---- Misc utilities ----
+.muted { color: $text-muted; }
+.flex { display: flex; gap: .5rem; align-items: center; }
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.mt-1 { margin-top: .5rem; } .mt-2 { margin-top: 1rem; } .mb-1 { margin-bottom: .5rem; } .mb-2 { margin-bottom: 1rem; }
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.w-full { width: 100%; }
+
+// ---- Print (salary slip) ----
+@media print {
+  .sidebar, .topbar, .no-print { display: none !important; }
+  .content { padding: 0; }
+  body { background: #fff; }
+}
