@@ -13,6 +13,15 @@ import { Route as UserRouteImport } from './routes/user'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminWorkStatusRouteImport } from './routes/admin.work-status'
+import { Route as AdminWfhRouteImport } from './routes/admin.wfh'
+import { Route as AdminSalaryRouteImport } from './routes/admin.salary'
+import { Route as AdminProjectsRouteImport } from './routes/admin.projects'
+import { Route as AdminMailRouteImport } from './routes/admin.mail'
+import { Route as AdminLeavesRouteImport } from './routes/admin.leaves'
+import { Route as AdminEmployeesRouteImport } from './routes/admin.employees'
+import { Route as AdminAttendanceRouteImport } from './routes/admin.attendance'
 
 const UserRoute = UserRouteImport.update({
   id: '/user',
@@ -34,37 +43,147 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWorkStatusRoute = AdminWorkStatusRouteImport.update({
+  id: '/work-status',
+  path: '/work-status',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminWfhRoute = AdminWfhRouteImport.update({
+  id: '/wfh',
+  path: '/wfh',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSalaryRoute = AdminSalaryRouteImport.update({
+  id: '/salary',
+  path: '/salary',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminProjectsRoute = AdminProjectsRouteImport.update({
+  id: '/projects',
+  path: '/projects',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMailRoute = AdminMailRouteImport.update({
+  id: '/mail',
+  path: '/mail',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLeavesRoute = AdminLeavesRouteImport.update({
+  id: '/leaves',
+  path: '/leaves',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminEmployeesRoute = AdminEmployeesRouteImport.update({
+  id: '/employees',
+  path: '/employees',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAttendanceRoute = AdminAttendanceRouteImport.update({
+  id: '/attendance',
+  path: '/attendance',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/user': typeof UserRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/employees': typeof AdminEmployeesRoute
+  '/admin/leaves': typeof AdminLeavesRoute
+  '/admin/mail': typeof AdminMailRoute
+  '/admin/projects': typeof AdminProjectsRoute
+  '/admin/salary': typeof AdminSalaryRoute
+  '/admin/wfh': typeof AdminWfhRoute
+  '/admin/work-status': typeof AdminWorkStatusRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/login': typeof LoginRoute
   '/user': typeof UserRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/employees': typeof AdminEmployeesRoute
+  '/admin/leaves': typeof AdminLeavesRoute
+  '/admin/mail': typeof AdminMailRoute
+  '/admin/projects': typeof AdminProjectsRoute
+  '/admin/salary': typeof AdminSalaryRoute
+  '/admin/wfh': typeof AdminWfhRoute
+  '/admin/work-status': typeof AdminWorkStatusRoute
+  '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/user': typeof UserRoute
+  '/admin/attendance': typeof AdminAttendanceRoute
+  '/admin/employees': typeof AdminEmployeesRoute
+  '/admin/leaves': typeof AdminLeavesRoute
+  '/admin/mail': typeof AdminMailRoute
+  '/admin/projects': typeof AdminProjectsRoute
+  '/admin/salary': typeof AdminSalaryRoute
+  '/admin/wfh': typeof AdminWfhRoute
+  '/admin/work-status': typeof AdminWorkStatusRoute
+  '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/login' | '/user'
+  fullPaths:
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/user'
+    | '/admin/attendance'
+    | '/admin/employees'
+    | '/admin/leaves'
+    | '/admin/mail'
+    | '/admin/projects'
+    | '/admin/salary'
+    | '/admin/wfh'
+    | '/admin/work-status'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/login' | '/user'
-  id: '__root__' | '/' | '/admin' | '/login' | '/user'
+  to:
+    | '/'
+    | '/login'
+    | '/user'
+    | '/admin/attendance'
+    | '/admin/employees'
+    | '/admin/leaves'
+    | '/admin/mail'
+    | '/admin/projects'
+    | '/admin/salary'
+    | '/admin/wfh'
+    | '/admin/work-status'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/login'
+    | '/user'
+    | '/admin/attendance'
+    | '/admin/employees'
+    | '/admin/leaves'
+    | '/admin/mail'
+    | '/admin/projects'
+    | '/admin/salary'
+    | '/admin/wfh'
+    | '/admin/work-status'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   LoginRoute: typeof LoginRoute
   UserRoute: typeof UserRoute
 }
@@ -99,12 +218,101 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/work-status': {
+      id: '/admin/work-status'
+      path: '/work-status'
+      fullPath: '/admin/work-status'
+      preLoaderRoute: typeof AdminWorkStatusRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/wfh': {
+      id: '/admin/wfh'
+      path: '/wfh'
+      fullPath: '/admin/wfh'
+      preLoaderRoute: typeof AdminWfhRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/salary': {
+      id: '/admin/salary'
+      path: '/salary'
+      fullPath: '/admin/salary'
+      preLoaderRoute: typeof AdminSalaryRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/projects': {
+      id: '/admin/projects'
+      path: '/projects'
+      fullPath: '/admin/projects'
+      preLoaderRoute: typeof AdminProjectsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/mail': {
+      id: '/admin/mail'
+      path: '/mail'
+      fullPath: '/admin/mail'
+      preLoaderRoute: typeof AdminMailRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/leaves': {
+      id: '/admin/leaves'
+      path: '/leaves'
+      fullPath: '/admin/leaves'
+      preLoaderRoute: typeof AdminLeavesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/employees': {
+      id: '/admin/employees'
+      path: '/employees'
+      fullPath: '/admin/employees'
+      preLoaderRoute: typeof AdminEmployeesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/attendance': {
+      id: '/admin/attendance'
+      path: '/attendance'
+      fullPath: '/admin/attendance'
+      preLoaderRoute: typeof AdminAttendanceRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
+interface AdminRouteChildren {
+  AdminAttendanceRoute: typeof AdminAttendanceRoute
+  AdminEmployeesRoute: typeof AdminEmployeesRoute
+  AdminLeavesRoute: typeof AdminLeavesRoute
+  AdminMailRoute: typeof AdminMailRoute
+  AdminProjectsRoute: typeof AdminProjectsRoute
+  AdminSalaryRoute: typeof AdminSalaryRoute
+  AdminWfhRoute: typeof AdminWfhRoute
+  AdminWorkStatusRoute: typeof AdminWorkStatusRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAttendanceRoute: AdminAttendanceRoute,
+  AdminEmployeesRoute: AdminEmployeesRoute,
+  AdminLeavesRoute: AdminLeavesRoute,
+  AdminMailRoute: AdminMailRoute,
+  AdminProjectsRoute: AdminProjectsRoute,
+  AdminSalaryRoute: AdminSalaryRoute,
+  AdminWfhRoute: AdminWfhRoute,
+  AdminWorkStatusRoute: AdminWorkStatusRoute,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   LoginRoute: LoginRoute,
   UserRoute: UserRoute,
 }
