@@ -6,13 +6,14 @@ import { Shell, userNav } from "@/components/Layout";
 export const Route = createFileRoute("/user")({ component: UserLayout });
 
 function UserLayout() {
-  const { session } = useAuth();
+  const { session, ready } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
+    if (!ready) return;
     if (!session) navigate({ to: "/login", replace: true });
     else if (session.kind !== "employee") navigate({ to: "/admin", replace: true });
-  }, [session, navigate]);
+  }, [session, ready, navigate]);
 
-  if (!session || session.kind !== "employee") return null;
+  if (!ready || !session || session.kind !== "employee") return null;
   return <Shell items={userNav} title="auto"><Outlet /></Shell>;
 }

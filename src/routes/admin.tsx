@@ -6,13 +6,14 @@ import { Shell, adminNav } from "@/components/Layout";
 export const Route = createFileRoute("/admin")({ component: AdminLayout });
 
 function AdminLayout() {
-  const { session } = useAuth();
+  const { session, ready } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
+    if (!ready) return;
     if (!session) navigate({ to: "/login", replace: true });
     else if (session.kind !== "admin") navigate({ to: "/user", replace: true });
-  }, [session, navigate]);
+  }, [session, ready, navigate]);
 
-  if (!session || session.kind !== "admin") return null;
+  if (!ready || !session || session.kind !== "admin") return null;
   return <Shell items={adminNav} title="auto"><Outlet /></Shell>;
 }

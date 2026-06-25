@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
   };
 
-  return <AuthCtx.Provider value={{ session, login, logout }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ session, ready, login, logout }}>{children}</AuthCtx.Provider>;
 }
 
 export function useAuth() {

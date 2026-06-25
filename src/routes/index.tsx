@@ -5,12 +5,13 @@ import { useAuth } from "@/lib/auth";
 export const Route = createFileRoute("/")({ component: Index });
 
 function Index() {
-  const { session } = useAuth();
+  const { session, ready } = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
+    if (!ready) return;
     if (!session) navigate({ to: "/login", replace: true });
     else if (session.kind === "admin") navigate({ to: "/admin", replace: true });
     else navigate({ to: "/user", replace: true });
-  }, [session, navigate]);
+  }, [session, ready, navigate]);
   return <div style={{ padding: 40, textAlign: "center" }}>Loading…</div>;
 }
