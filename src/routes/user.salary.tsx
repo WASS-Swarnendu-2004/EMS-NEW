@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Printer, X } from "lucide-react";
 import { useDB, type SalarySlip } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import { SalarySlipView } from "./admin.salary";
+import { SalarySlipView } from "@/components/SalarySlipView";
 
 export const Route = createFileRoute("/user/salary")({ component: Page });
 
