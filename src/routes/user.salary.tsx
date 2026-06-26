@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { Printer, X } from "lucide-react";
 import { useDB, type SalarySlip } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
 import { SalarySlipView } from "./admin.salary";
@@ -20,17 +21,19 @@ function Page() {
         <div className="card-header"><h2>Auto-generated salary slips</h2></div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Month</th><th>Basic</th><th>HRA</th><th>Allowances</th><th>Deductions</th><th>Net</th><th></th></tr></thead>
+            <thead><tr><th>Month</th><th>Gross</th><th>Earnings</th><th>Deductions</th><th>Net</th><th></th></tr></thead>
             <tbody>
               {slips.map((s) => (
                 <tr key={s.id}>
-                  <td>{s.month}</td><td>₹{s.basic.toLocaleString()}</td><td>₹{s.hra.toLocaleString()}</td>
-                  <td>₹{s.allowances.toLocaleString()}</td><td>₹{s.deductions.toLocaleString()}</td>
+                  <td>{s.month}</td>
+                  <td>₹{s.gross.toLocaleString()}</td>
+                  <td>₹{s.totalEarnings.toLocaleString()}</td>
+                  <td>- ₹{s.totalDeductions.toLocaleString()}</td>
                   <td><strong>₹{s.net.toLocaleString()}</strong></td>
                   <td><button className="btn btn-sm btn-ghost" onClick={() => setView(s)}>View</button></td>
                 </tr>
               ))}
-              {slips.length === 0 && <tr><td colSpan={7} className="empty">No salary slips yet. Ask admin to generate.</td></tr>}
+              {slips.length === 0 && <tr><td colSpan={6} className="empty">No salary slips yet. Ask admin to generate.</td></tr>}
             </tbody>
           </table>
         </div>
@@ -41,8 +44,8 @@ function Page() {
           <div className="modal lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head no-print"><h2>Salary Slip</h2>
               <div className="flex">
-                <button className="btn btn-ghost" onClick={() => window.print()}>🖨 Print</button>
-                <button className="btn btn-ghost" onClick={() => setView(null)}>✕</button>
+                <button className="btn btn-ghost" onClick={() => window.print()}><Printer size={16} /> Print</button>
+                <button className="btn btn-ghost" onClick={() => setView(null)}><X size={16} /></button>
               </div>
             </div>
             <SalarySlipView slip={view} empName={me?.name ?? ""} role={me?.role ?? ""} />
