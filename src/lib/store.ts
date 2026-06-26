@@ -75,14 +75,28 @@ export interface WorkStatus {
   projectId?: string;
 }
 
+export interface SalaryComponent {
+  id: string;
+  label: string;
+  type: "earning" | "deduction";
+  mode: "percent" | "fixed"; // percent of gross monthly salary or fixed amount
+  value: number;
+}
+
+export interface SalarySlipItem {
+  label: string;
+  type: "earning" | "deduction";
+  amount: number;
+}
+
 export interface SalarySlip {
   id: string;
   employeeId: string;
   month: string; // YYYY-MM
-  basic: number;
-  hra: number;
-  allowances: number;
-  deductions: number;
+  gross: number;
+  items: SalarySlipItem[];
+  totalEarnings: number;
+  totalDeductions: number;
   net: number;
   generatedAt: string;
 }
@@ -104,6 +118,7 @@ export interface DB {
   attendance: Attendance[];
   workStatus: WorkStatus[];
   salarySlips: SalarySlip[];
+  salaryConfig: SalaryComponent[];
   mail: MailMsg[];
 }
 
