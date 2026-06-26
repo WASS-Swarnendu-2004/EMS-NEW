@@ -186,7 +186,9 @@ function load(): DB {
       window.localStorage.setItem(KEY, JSON.stringify(d));
       return d;
     }
-    return JSON.parse(raw) as DB;
+    const parsed = JSON.parse(raw) as DB;
+    if (!parsed.salaryConfig) parsed.salaryConfig = defaultSalaryConfig();
+    return parsed;
   } catch {
     const d = seed();
     window.localStorage.setItem(KEY, JSON.stringify(d));
