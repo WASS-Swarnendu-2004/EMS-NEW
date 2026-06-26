@@ -162,8 +162,19 @@ function seed(): DB {
     attendance: att,
     workStatus: ws,
     salarySlips: [],
+    salaryConfig: defaultSalaryConfig(),
     mail: [],
   };
+}
+
+export function defaultSalaryConfig(): SalaryComponent[] {
+  return [
+    { id: "basic", label: "Basic", type: "earning", mode: "percent", value: 50 },
+    { id: "hra", label: "HRA", type: "earning", mode: "percent", value: 20 },
+    { id: "special", label: "Special Allowance", type: "earning", mode: "percent", value: 30 },
+    { id: "pf", label: "Provident Fund", type: "deduction", mode: "percent", value: 5 },
+    { id: "tax", label: "Professional Tax", type: "deduction", mode: "percent", value: 3 },
+  ];
 }
 
 function load(): DB {
@@ -292,37 +303,32 @@ export const store = {
     save(db);
   },
 
-  // Salary slips - auto generate
+  // Salary slips - auto generate using configurable breakdown
   generateSalary(employeeId: string, month: string) {
     const db = load();
     const emp = db.employees.find((e) => e.id === employeeId);
     if (!emp) return;
     if (db.salarySlips.find((s) => s.employeeId === employeeId && s.month === month)) return;
-    const basic = Math.round(emp.salary * 0.5);
-    const hra = Math.round(emp.salary * 0.2);
-    const allowances = emp.salary - basic - hra;
-    const deductions = Math.round(emp.salary * 0.08);
-    const net = basic + hra + allowances - deductions;
-    db.salarySlips.unshift({
-      id: uid(), employeeId, month, basic, hra, allowances, deductions, net,
-      generatedAt: new Date().toISOString(),
-    });
+    const slip = buildSlip(emp.id, emp.salary, month, db.salaryConfig);
+    db.salarySlips.unshift(slip);
     save(db);
   },
   generateSalaryForAll(month: string) {
     const db = load();
     db.employees.forEach((e) => {
       if (db.salarySlips.find((s) => s.employeeId === e.id && s.month === month)) return;
-      const basic = Math.round(e.salary * 0.5);
-      const hra = Math.round(e.salary * 0.2);
-      const allowances = e.salary - basic - hra;
-      const deductions = Math.round(e.salary * 0.08);
-      const net = basic + hra + allowances - deductions;
-      db.salarySlips.unshift({
-        id: uid(), employeeId: e.id, month, basic, hra, allowances, deductions, net,
-        generatedAt: new Date().toISOString(),
-      });
+      db.salarySlips.unshift(buildSlip(e.id, e.salary, month, db.salaryConfig));
     });
+    save(db);
+  },
+  setSalaryConfig(cfg: SalaryComponent[]) {
+    const db = load();
+    db.salaryConfig = cfg;
+    save(db);
+  },
+  resetSalaryConfig() {
+    const db = load();
+    db.salaryConfig = defaultSalaryConfig();
     save(db);
   },
 
@@ -333,6 +339,22 @@ export const store = {
     save(db);
   },
 };
+
+function buildSlip(employeeId: string, gross: number, month: string, cfg: SalaryComponent[]): SalarySlip {
+  const items: SalarySlipItem[] = cfg.map((c) => ({
+    label: c.label,
+    type: c.type,
+    amount: c.mode === "percent" ? Math.round((gross * c.value) / 100) : Math.round(c.value),
+  }));
+  const totalEarnings = items.filter((i) => i.type === "earning").reduce((s, i) => s + i.amount, 0);
+  const totalDeductions = items.filter((i) => i.type === "deduction").reduce((s, i) => s + i.amount, 0);
+  return {
+    id: uid(), employeeId, month, gross,
+    items, totalEarnings, totalDeductions,
+    net: totalEarnings - totalDeductions,
+    generatedAt: new Date().toISOString(),
+  };
+}
 
 import { useEffect, useState } from "react";
 export function useDB(): DB {
