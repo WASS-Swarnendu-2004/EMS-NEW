@@ -8,7 +8,8 @@ export interface Leave {
   toDate: string;
   reason: string;
   status: "Pending" | "Approved" | "Rejected";
-  adminRemark: string;
+  appliedAt: string;
+  adminRemark?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -74,7 +75,7 @@ export const applyLeave = async (
     message: string;
     leave: Leave;
   }>(
-    "/leave/apply",
+    "/leaves",
     data
   );
 
@@ -85,10 +86,9 @@ export const getMyLeaves = async (): Promise<Leave[]> => {
 
   const response = await api.get<{
     success: boolean;
-    totalLeaves: number;
     leaves: Leave[];
   }>(
-    "/leave/history"
+    "/leaves"
   );
 
   return response.data.leaves;
