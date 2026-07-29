@@ -2,7 +2,12 @@ import api from "./axios";
 
 export interface WFHApplication {
   _id: string;
-  employee: string;
+  employee:
+  | string
+  | {
+      _id: string;
+      employeeId: string;
+    };
   fromDate: string;
   toDate: string;
   reason: string;
@@ -19,18 +24,14 @@ export interface ApplyWFHPayload {
 }
 
 // Get all WFH applications
-// export const getWFHApplications = async (): Promise<WFHApplication[]> => {
-//   try {
-//     const response = await api.get<WFHApplication[]>(
-//       "" // <-- Add Get WFH Applications API Endpoint Here
-//     );
+export const getWFHApplications = async (): Promise<WFHApplication[]> => {
+  const response = await api.get<{
+    success: boolean;
+    requests: WFHApplication[];
+  }>("/admin/wfh");
 
-//     return response.data;
-//   } catch (error) {
-//     console.error("Get WFH Applications Error:", error);
-//     throw error;
-//   }
-// };
+  return response.data.requests;
+};
 
 // Apply for WFH
 export const applyWFH = async (
@@ -62,19 +63,16 @@ export const getMyWFHRequests = async (): Promise<WFHApplication[]> => {
 // Approve/Reject WFH (Admin)
 export const updateWFHStatus = async (
   id: string,
-  status: "approved" | "rejected"
+  status: "Approved" | "Rejected"
 ) => {
-  try {
-    const response = await api.patch(
-      "", // <-- Add Update WFH Status API Endpoint Here
-      {
-        status,
-      }
-    );
+  const endpoint =
+    status === "Approved"
+      ? `/admin/wfh/${id}/approve`
+      : `/admin/wfh/${id}/reject`;
 
-    return response.data;
-  } catch (error) {
-    console.error("Update WFH Status Error:", error);
-    throw error;
-  }
+  const response = await api.put(endpoint, {
+    status,
+  });
+
+  return response.data;
 };
