@@ -17,6 +17,7 @@ export interface Attendance {
   checkOut: string | null;
   workingHours: number;
   status: string;
+  mode: string;
 }
 
 export const getAttendance = async (): Promise<Attendance[]> => {
@@ -40,11 +41,9 @@ export const getAttendance = async (): Promise<Attendance[]> => {
 // USER
 export const getMyAttendance = async (): Promise<Attendance[]> => {
   try {
-    const response = await api.get(
-      "/attendance/history"
-    );
+    const response = await api.get("/attendance/history");
 
-    return response.data.attendance;
+    return response.data.history;
 
   } catch (error) {
     console.error("Get My Attendance Error:", error);

@@ -100,7 +100,7 @@ a.checkOut
 
 </tr>
 ))}
-            {rows.length === 0 && <tr><td colSpan={4} className="empty">No attendance records</td></tr>}
+            {rows.length === 0 && <tr><td colSpan={5} className="empty">No attendance records</td></tr>}
           </tbody>
         </table>
       </div>
