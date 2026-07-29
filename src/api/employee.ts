@@ -1,36 +1,37 @@
 import api from "./axios";
 
 export interface Employee {
-  id: string;
-  name: string;
+  _id: string;
+  employeeId?: string;
+  userId?: string;
+
+  fullName: string;
   email: string;
-  password: string;
+  password?: string;
   phone: string;
   role: string;
-  idProof: string;
-  salary: number;
-  address: string;
-  joinDate: string;
   department: string;
-  bankAccount: string;
+  salary: number;
+  joiningDate: string;
+  idProof: string;
   pan: string;
+  bankAccount: string;
   emergencyContact: string;
-  status: "active" | "inactive";
+  address: string;
+  status: "Active" | "Inactive";
 }
 
 export interface CreateEmployeePayload
-  extends Omit<Employee, "id"> {}
+  extends Omit<Employee, "_id" | "employeeId" | "userId"> {}
 
 export interface UpdateEmployeePayload
-  extends Omit<Employee, "id"> {}
-
+  extends Omit<Employee, "_id" | "employeeId" | "userId" | "password"> { }
+  
 export const getEmployees = async (): Promise<Employee[]> => {
   try {
-    const response = await api.get<Employee[]>(
-      "" // <-- Add Get Employees API Endpoint Here
-    );
+   const response = await api.get("/admin/employees");
 
-    return response.data;
+return response.data.employees;
   } catch (error) {
     console.error("Get Employees Error:", error);
     throw error;
@@ -41,12 +42,12 @@ export const createEmployee = async (
   data: CreateEmployeePayload
 ): Promise<Employee> => {
   try {
-    const response = await api.post<Employee>(
-      "", // <-- Add Create Employee API Endpoint Here
-      data
-    );
+  const response = await api.post(
+  "/admin/employees",
+  data
+);
 
-    return response.data;
+return response.data.employee;
   } catch (error) {
     console.error("Create Employee Error:", error);
     throw error;
@@ -58,12 +59,12 @@ export const updateEmployee = async (
   data: UpdateEmployeePayload
 ): Promise<Employee> => {
   try {
-    const response = await api.put<Employee>(
-      "", // <-- Add Update Employee API Endpoint Here
-      data
-    );
+   const response = await api.put(
+    `/admin/employees/${id}`,
+    data
+);
 
-    return response.data;
+return response.data.employee;
   } catch (error) {
     console.error("Update Employee Error:", error);
     throw error;
@@ -74,11 +75,11 @@ export const deleteEmployee = async (
   id: string
 ) => {
   try {
-    const response = await api.delete(
-      "" // <-- Add Delete Employee API Endpoint Here
-    );
+const response = await api.delete(
+    `/admin/employees/${id}`
+);
 
-    return response.data;
+return response.data;
   } catch (error) {
     console.error("Delete Employee Error:", error);
     throw error;
