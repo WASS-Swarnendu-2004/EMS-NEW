@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDB } from "@/lib/store";
 import { exportToExcel } from "@/lib/excel";
+import { getWorkStatus, type WorkStatus } from "@/api/workStatus";
 
 export const Route = createFileRoute("/admin/work-status")({ component: Page });
 
@@ -9,18 +10,49 @@ function Page() {
   const db = useDB();
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [empId, setEmpId] = useState("all");
+  const [rows, setRows] = useState<WorkStatus[]>([]);
 
-  const rows = db.workStatus
-    .filter((w) => (!date || w.date === date) && (empId === "all" || w.employeeId === empId))
-    .sort((a, b) => b.date.localeCompare(a.date));
+  useEffect(() => {
+  loadReports();
+ }, []);
+
+async function loadReports() {
+  try {
+    const data = await getWorkStatus();
+    setRows(data);
+  } catch (err) {
+    console.error(err);
+  }
+  }
+  const filteredRows = rows
+  .filter(
+    (w) =>
+      (!date || w.workDate.slice(0, 10) === date) &&
+      (empId === "all" ||
+        (typeof w.employee !== "string" && w.employee._id === empId))
+  )
+  .sort((a, b) => b.workDate.localeCompare(a.workDate));
+
+  // const rows = db.workStatus
+  //   .filter((w) => (!date || w.date === date) && (empId === "all" || w.employeeId === empId))
+  //   .sort((a, b) => b.date.localeCompare(a.date));
 
   function exportXlsx() {
-    exportToExcel(rows.map((w) => {
-      const e = db.employees.find((x) => x.id === w.employeeId);
-      const p = db.projects.find((x) => x.id === w.projectId);
-      return { Date: w.date, Employee: e?.name, Project: p?.name ?? "—", Plan: w.plan, EndOfDayStatus: w.status };
-    }), "work-status.xlsx", "WorkStatus");
-  }
+  exportToExcel(
+    filteredRows.map((w) => ({
+      Date: w.workDate.slice(0, 10),
+      Employee:
+        typeof w.employee === "string"
+          ? w.employee
+          : w.employee.employeeId,
+      Project: w.project?.projectName ?? "—",
+      Plan: w.plan,
+      EndOfDayStatus: w.endOfDayStatus,
+    })),
+    "work-status.xlsx",
+    "WorkStatus"
+  );
+}
 
   return (
     <>
@@ -39,12 +71,15 @@ function Page() {
         <table className="table">
           <thead><tr><th>Date</th><th>Employee</th><th>Project</th><th>Plan</th><th>End-of-day status</th></tr></thead>
           <tbody>
-            {rows.map((w) => {
-              const e = db.employees.find((x) => x.id === w.employeeId);
-              const p = db.projects.find((x) => x.id === w.projectId);
-              return <tr key={w.id}><td>{w.date}</td><td>{e?.name}</td><td>{p?.name ?? "—"}</td><td>{w.plan}</td><td>{w.status}</td></tr>;
-            })}
-            {rows.length === 0 && <tr><td colSpan={5} className="empty">No reports for filters</td></tr>}
+            {filteredRows.map((w) => (<tr key={w._id}><td>{w.workDate.slice(0, 10)}</td><td>{typeof w.employee === "string"
+            ? w.employee
+            : w.employee.employeeId}</td>
+            <td>{w.project?.projectName ?? "—"}</td>
+            <td>{w.plan}</td>
+            <td>{w.endOfDayStatus}</td>
+          </tr>
+    ))}
+            {filteredRows.length === 0 && <tr><td colSpan={5} className="empty">No reports for filters</td></tr>}
           </tbody>
         </table>
       </div>

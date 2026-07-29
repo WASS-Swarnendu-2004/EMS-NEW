@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { store, useDB, today } from "@/lib/store";
+import { useState, useEffect } from "react";
+import {useDB, today } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
+import {getMyWorkStatus,saveWorkStatus,type WorkStatus} from "@/api/workStatus";
 
 export const Route = createFileRoute("/user/tasks")({ component: Page });
 
@@ -10,22 +11,41 @@ function Page() {
   const { session } = useAuth();
   const empId = session!.id;
   const [date, setDate] = useState(today());
+  const [history, setHistory] = useState<WorkStatus[]>([]);
+  useEffect(() => {
+    loadHistory();
+  }, []);
+  async function loadHistory() {
+    try {
+        const data = await getMyWorkStatus();
+        setHistory(data);
+    } catch (err) {
+        console.error(err);
+    }
+  }
+  
 
-  const ws = db.workStatus.find((w) => w.employeeId === empId && w.date === date);
+  // const ws = db.workStatus.find((w) => w.employeeId === empId && w.date === date);
   const myProjects = db.projects.filter((p) => p.assigned.includes(empId));
 
-  const [plan, setPlan] = useState(ws?.plan ?? "");
-  const [status, setStatus] = useState(ws?.status ?? "");
-  const [projectId, setProjectId] = useState(ws?.projectId ?? "");
+  const [plan, setPlan] = useState("");
+  const [status, setStatus] = useState("");
+  const [projectId, setProjectId] = useState("");
 
   // when date changes, reset
-  function changeDate(d: string) {
-    setDate(d);
-    const w = db.workStatus.find((x) => x.employeeId === empId && x.date === d);
-    setPlan(w?.plan ?? ""); setStatus(w?.status ?? ""); setProjectId(w?.projectId ?? "");
-  }
+    function changeDate(d: string) {
+  setDate(d);
 
-  const history = db.workStatus.filter((w) => w.employeeId === empId).sort((a, b) => b.date.localeCompare(a.date));
+  const report = history.find(
+    (item) => item.workDate.slice(0, 10) === d
+  );
+
+  setPlan(report?.plan ?? "");
+  setStatus(report?.endOfDayStatus ?? "");
+  setProjectId(report?.project?._id ?? "");
+}
+
+  // const history = db.workStatus.filter((w) => w.employeeId === empId).sort((a, b) => b.date.localeCompare(a.date));
 
   return (
     <>
@@ -41,7 +61,25 @@ function Page() {
         </div>
         <div className="field"><label>Plan for the day</label><textarea className="textarea" value={plan} onChange={(e) => setPlan(e.target.value)} placeholder="What do you plan to accomplish today?" /></div>
         <div className="field"><label>End-of-day status / blockers</label><textarea className="textarea" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="Report what's done and any blockers." /></div>
-        <button className="btn" onClick={() => store.upsertWorkStatus({ employeeId: empId, date, plan, status, projectId: projectId || undefined })}>Save</button>
+        <button
+  className="btn"
+  onClick={async () => {
+    try {
+      await saveWorkStatus({
+        project: projectId,
+        workDate: date,
+        plan,
+        endOfDayStatus: status,
+      });
+
+      await loadHistory();
+    } catch (err) {
+      console.error(err);
+    }
+  }}
+>
+  Save
+</button>
       </div>
 
       <div className="card">
@@ -51,8 +89,8 @@ function Page() {
             <thead><tr><th>Date</th><th>Project</th><th>Plan</th><th>Status</th></tr></thead>
             <tbody>
               {history.slice(0, 20).map((w) => {
-                const p = db.projects.find((x) => x.id === w.projectId);
-                return <tr key={w.id}><td>{w.date}</td><td>{p?.name ?? "—"}</td><td>{w.plan}</td><td>{w.status}</td></tr>;
+                const projectName = w.project?.projectName ?? "—";
+                return <tr key={w._id}><td>{new Date(w.workDate).toLocaleDateString()}</td><td>{projectName}</td><td>{w.plan}</td><td>{w.endOfDayStatus}</td></tr>;
               })}
               {history.length === 0 && <tr><td colSpan={4} className="empty">No reports yet</td></tr>}
             </tbody>
