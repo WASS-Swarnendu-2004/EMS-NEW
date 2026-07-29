@@ -5,6 +5,10 @@ export interface LoginPayload {
   password: string;
   kind: "admin" | "employee"
 }
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
 
 export interface User {
   id: string;
@@ -17,24 +21,22 @@ export interface LoginResponse {
   success: boolean;
   message: string;
   token: string;
-  user: User;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    role: "admin" | "employee";
+  };
 }
 
-export const loginUser = async (
-  data: LoginPayload
-): Promise<LoginResponse> => {
-  try {
-    const response = await api.post<LoginResponse>(
-      "/auth/login", // <-- Add Login API Endpoint Here
-      data
-    );
+export async function loginUser(data: LoginRequest) {
+  const response = await api.post<LoginResponse>(
+    "/auth/login",
+    data
+  );
 
-    return response.data;
-  } catch (error) {
-    console.error("Login Error:", error);
-    throw error;
-  }
-};
+  return response.data;
+}
 
 export const logoutUser = async () => {
   try {

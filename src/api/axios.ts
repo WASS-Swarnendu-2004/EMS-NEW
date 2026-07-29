@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://one4-07-2026ems.onrender.com/api",
+    baseURL: "https://fresh-01.onrender.com/api",
     headers: {
         "Content-Type": "application/json",
     },

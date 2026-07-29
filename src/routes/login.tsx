@@ -13,7 +13,7 @@ function Login() {
   const navigate = useNavigate();
   const [kind, setKind] = useState<"admin" | "employee">("admin");
   const [email, setEmail] = useState("admin@webapps.com");
-  const [password, setPassword] = useState("admin");
+  const [password, setPassword] = useState("admin123");
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
@@ -23,9 +23,15 @@ function Login() {
   function setRole(k: "admin" | "employee") {
     setKind(k);
     setErr(null);
-    if (k === "admin") { setEmail("admin@webapps.com"); setPassword("admin"); }
-    else { setEmail("alice@webapps.com"); setPassword("user"); }
-  }
+
+    if (k === "admin") {
+        setEmail("admin@webapps.com");
+        setPassword("admin123");
+    } else {
+        setEmail("");
+        setPassword("");
+    }
+}
 
   // function submit(e: React.FormEvent) {
   //   e.preventDefault();
@@ -36,7 +42,7 @@ function Login() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
 
-    const r = await login(email, password, kind);
+    const r = await login(email, password);
 
     if (r) {
         setErr(r);
@@ -69,7 +75,7 @@ function Login() {
         </form>
         <div className="demo-creds">
           <strong>Demo credentials</strong><br />
-          Admin: <code>admin@webapps.com</code> / <code>admin</code><br />
+          Admin: <code>admin@webapps.com</code> / <code>admin123</code><br />
           Employee: <code>alice@webapps.com</code> / <code>user</code> (also rahul@, priya@)
         </div>
       </div>

@@ -17,7 +17,7 @@ const KEY = "ems_session_v1";
 interface Ctx {
   session: Session | null;
   ready: boolean;
-  login: (email: string, password: string, kind: "admin" | "employee") => Promise<string | null>;
+  login: (email: string, password: string) => Promise<string | null>;
   logout: () => void;
 }
 
@@ -36,14 +36,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login: Ctx["login"] = async (
     email,
-    password,
-    kind
+    password
 ) => {
     try {
         const res = await loginUser({
             email,
             password,
-            kind,
         });
 
         const session: Session = {
