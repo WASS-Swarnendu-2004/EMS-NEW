@@ -2,7 +2,10 @@ import api from "./axios";
 
 export interface Leave {
   _id: string;
-  employee: string;
+  employee: {
+  _id: string;
+  employeeId: string;
+};
   leaveType: "Casual" | "Sick" | "Earned";
   fromDate: string;
   toDate: string;
@@ -23,23 +26,22 @@ export interface ApplyLeavePayload {
 
 export const getLeaves = async (): Promise<Leave[]> => {
   try {
-    const response = await api.get<Leave[]>(
-      "" // <-- Add Get Leaves API Endpoint Here
-    );
+    const response = await api.get<{
+      success: boolean;
+      requests: Leave[];
+    }>("/admin/leaves");
 
-    return response.data;
+    return response.data.requests;
   } catch (error) {
     console.error("Get Leaves Error:", error);
     throw error;
   }
 };
 
-export const approveLeave = async (
-  id: string
-) => {
+export const approveLeave = async (id: string) => {
   try {
     const response = await api.put(
-      "" // <-- Add Approve Leave API Endpoint Here
+      `/admin/leaves/${id}/approve`
     );
 
     return response.data;
@@ -49,12 +51,10 @@ export const approveLeave = async (
   }
 };
 
-export const rejectLeave = async (
-  id: string
-) => {
+export const rejectLeave = async (id: string) => {
   try {
     const response = await api.put(
-      "" // <-- Add Reject Leave API Endpoint Here
+      `/admin/leaves/${id}/reject`
     );
 
     return response.data;
