@@ -45,16 +45,11 @@ export const getDashboard = async (): Promise<DashboardData> => {
 };
 
 // Check In
-export const checkIn = async (
-  mode: "office" | "wfh"
-) => {
+export const checkIn = async (mode: "office" | "wfh") => {
   try {
-    const response = await api.post(
-      "", // <-- Add Check In API Endpoint Here
-      {
-        mode,
-      }
-    );
+    const response = await api.post("/attendance/check-in", {
+      mode: mode === "office" ? "Office" : "WFH",
+    });
 
     return response.data;
   } catch (error) {
@@ -66,9 +61,7 @@ export const checkIn = async (
 // Check Out
 export const checkOut = async () => {
   try {
-    const response = await api.post(
-      "" // <-- Add Check Out API Endpoint Here
-    );
+    const response = await api.post("/attendance/check-out");
 
     return response.data;
   } catch (error) {
