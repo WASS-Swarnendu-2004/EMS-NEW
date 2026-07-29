@@ -1,25 +1,56 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { store, useDB, today } from "@/lib/store";
+import { useEffect, useState } from "react";
+import { today } from "@/lib/store";
+import { applyWFH, getMyWFHRequests } from "@/api/wfh";
+import type { WFHApplication } from "@/api/wfh";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/user/wfh")({ component: Page });
 
 function Page() {
-  const db = useDB();
+  // const db = useDB();
   const { session } = useAuth();
   const empId = session!.id;
   const [from, setFrom] = useState(today());
   const [to, setTo] = useState(today());
   const [reason, setReason] = useState("");
+ const [history, setHistory]=useState<WFHApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+  fetchHistory();
+}, []);
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    store.addWfh({ employeeId: empId, from, to, reason });
-    setReason("");
+const fetchHistory = async () => {
+  try {
+    const data = await getMyWFHRequests();
+    setHistory(data);
+  } catch (err) {
+    console.error("Failed to fetch WFH history:", err);
+  } finally {
+    setLoading(false);
   }
+};
 
-  const history = db.wfh.filter((l) => l.employeeId === empId);
+ async function submit(e: React.FormEvent) {
+  e.preventDefault();
+
+  try {
+    await applyWFH({
+      fromDate: from,
+      toDate: to,
+      reason,
+    });
+
+    setReason("");
+
+    await fetchHistory();
+  } catch (err) {
+    console.error("Failed to apply WFH:", err);
+  }
+}
+
+  // const history = db.wfh.filter((l) => l.employeeId === empId);
 
   return (
     <div className="row-2">
@@ -42,10 +73,10 @@ function Page() {
             <thead><tr><th>From</th><th>To</th><th>Reason</th><th>Status</th></tr></thead>
             <tbody>
               {history.map((l) => (
-                <tr key={l.id}>
-                  <td>{l.from}</td><td>{l.to}</td>
+                <tr key={l._id}>
+                  <td>{l.fromDate.slice(0,10)}</td><td>{l.toDate.slice(0,10)}</td>
                   <td style={{ maxWidth: 220 }}>{l.reason}</td>
-                  <td><span className={"badge " + (l.status === "approved" ? "success" : l.status === "rejected" ? "danger" : "warn")}>{l.status}</span></td>
+                  <td><span className={"badge " + (l.status === "Approved" ? "success" : l.status === "Rejected" ? "danger" : "warn")}>{l.status}</span></td>
                 </tr>
               ))}
               {history.length === 0 && <tr><td colSpan={4} className="empty">No WFH applications</td></tr>}
