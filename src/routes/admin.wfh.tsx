@@ -55,7 +55,7 @@ function Page() {
       "wfh-applications.xlsx",
       "WFH"
     );
-
+  }
     return (
       <>
         <div className="toolbar"><span className="spacer" /><button className="btn btn-ghost" onClick={exportXlsx}>⬇ Export Excel</button></div>
@@ -85,4 +85,4 @@ function Page() {
       </>
     );
   }
-}
+
