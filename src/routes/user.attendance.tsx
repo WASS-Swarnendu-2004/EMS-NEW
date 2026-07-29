@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { useDB } from "@/lib/store";
+import { useEffect, useState } from "react";
+import { getMyAttendance, type Attendance } from "@/api/attendance";
 import { useAuth } from "@/lib/auth";
 import { exportToExcel } from "@/lib/excel";
 
@@ -15,16 +15,42 @@ function startOf(period: "week" | "month" | "year") {
 }
 
 function Page() {
-  const db = useDB();
+  
   const { session } = useAuth();
-  const empId = session!.id;
+  const [attendance, setAttendance] = useState<Attendance[]>([]);
+  const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState<"week" | "month" | "year">("month");
 
+  useEffect(() => {
+  fetchAttendance();
+}, []);
+
+
+const fetchAttendance = async () => {
+  try {
+
+    const data = await getMyAttendance();
+
+    setAttendance(data);
+
+  } catch (error) {
+    console.error(error);
+
+  } finally {
+    setLoading(false);
+  }
+};
+
   const from = startOf(period);
-  const rows = useMemo(() => db.attendance.filter((a) => a.employeeId === empId && a.date >= from).sort((a, b) => b.date.localeCompare(a.date)), [db.attendance, empId, from]);
+const rows = attendance
+.filter((a)=> a.date >= from)
+.sort(
+(a,b)=> 
+new Date(b.date).getTime() - new Date(a.date).getTime()
+);
 
   function exportXlsx() {
-    exportToExcel(rows.map((a) => ({ Date: a.date, Mode: a.mode, CheckIn: a.checkIn, CheckOut: a.checkOut ?? "—" })), `my-attendance-${period}.xlsx`, "Attendance");
+    exportToExcel(rows.map((a) => ({ Date: a.date, Status:a.status, CheckIn: a.checkIn, CheckOut: a.checkOut ?? "—" })), `my-attendance-${period}.xlsx`, "Attendance");
   }
 
   return (
@@ -40,9 +66,40 @@ function Page() {
       </div>
       <div className="table-wrap">
         <table className="table">
-          <thead><tr><th>Date</th><th>Mode</th><th>Check-in</th><th>Check-out</th></tr></thead>
+          <thead><tr><th>Date</th><th>status</th><th>Check-in</th><th>Check-out</th>
+          <th>Working Hours</th></tr></thead>
           <tbody>
-            {rows.map((a) => <tr key={a.id}><td>{a.date}</td><td><span className={"badge " + (a.mode === "wfh" ? "info" : "purple")}>{a.mode}</span></td><td>{a.checkIn}</td><td>{a.checkOut ?? "—"}</td></tr>)}
+            {rows.map((a)=>(
+<tr key={a._id}>
+
+<td>
+{new Date(a.date).toLocaleDateString()}
+</td>
+
+<td>
+<span className="badge purple">
+{a.status}
+</span>
+</td>
+
+<td>
+{new Date(a.checkIn).toLocaleTimeString()}
+</td>
+
+<td>
+{
+a.checkOut 
+? new Date(a.checkOut).toLocaleTimeString()
+: "—"
+}
+</td>
+
+<td>
+{a.workingHours} hrs
+</td>
+
+</tr>
+))}
             {rows.length === 0 && <tr><td colSpan={4} className="empty">No attendance records</td></tr>}
           </tbody>
         </table>

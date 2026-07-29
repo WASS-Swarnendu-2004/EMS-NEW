@@ -1,26 +1,73 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { store, useDB, today, type LeaveApp } from "@/lib/store";
+import { useEffect, useState } from "react";
+// import { store, useDB, today, type LeaveApp } from "@/lib/store";
+import { today } from "@/lib/store";
+import { getMyLeaves, applyLeave, type Leave } from "@/api/leave";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/user/leave")({ component: Page });
 
 function Page() {
-  const db = useDB();
-  const { session } = useAuth();
-  const empId = session!.id;
-  const [type, setType] = useState<LeaveApp["type"]>("casual");
+  // const db = useDB();
+  const [history, setHistory] = useState<Leave[]>([]);
+  const [type, setType] = useState<
+  "casual" | "sick" | "earned"
+>("casual");
   const [from, setFrom] = useState(today());
   const [to, setTo] = useState(today());
   const [reason, setReason] = useState("");
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    store.addLeave({ employeeId: empId, type, from, to, reason });
-    setReason("");
-  }
+ async function submit(e: React.FormEvent) {
+  e.preventDefault();
 
-  const history = db.leaves.filter((l) => l.employeeId === empId);
+  try {
+
+    await applyLeave({
+
+      leaveType:
+        type === "casual"
+          ? "Casual"
+          : type === "sick"
+          ? "Sick"
+          : "Earned",
+
+      fromDate: from,
+      toDate: to,
+      reason,
+
+    });
+
+
+    await fetchLeaves();
+
+
+    setType("casual");
+    setFrom(today());
+    setTo(today());
+    setReason("");
+
+
+  } catch (error) {
+
+    console.error("Apply leave failed:", error);
+
+  }
+}
+
+  // const history = db.leaves.filter((l) => l.employeeId === empId);
+
+  useEffect(() => {
+    fetchLeaves();
+  }, [])
+  
+  const fetchLeaves = async () => {
+  try {
+    const data = await getMyLeaves();
+    setHistory(data);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
   return (
     <>
@@ -29,7 +76,15 @@ function Page() {
           <div className="card-header"><h2>Apply for leave</h2></div>
           <form onSubmit={submit}>
             <div className="field"><label>Type</label>
-              <select className="select" value={type} onChange={(e) => setType(e.target.value as LeaveApp["type"])}>
+              <select
+className="select"
+value={type}
+onChange={(e)=>
+setType(
+ e.target.value as "casual" | "sick" | "earned"
+)
+}
+>
                 <option value="casual">Casual</option><option value="sick">Sick</option><option value="earned">Earned</option>
               </select>
             </div>
@@ -49,10 +104,10 @@ function Page() {
               <thead><tr><th>Type</th><th>From</th><th>To</th><th>Status</th></tr></thead>
               <tbody>
                 {history.map((l) => (
-                  <tr key={l.id}>
-                    <td><span className="badge purple">{l.type}</span></td>
-                    <td>{l.from}</td><td>{l.to}</td>
-                    <td><span className={"badge " + (l.status === "approved" ? "success" : l.status === "rejected" ? "danger" : "warn")}>{l.status}</span></td>
+                  <tr key={l._id}>
+                    <td><span className="badge purple">{l.leaveType}</span></td>
+                    <td>{new Date(l.fromDate).toLocaleDateString()}</td><td>{new Date(l.toDate).toLocaleDateString()}</td>
+                    <td><span className={"badge " + (l.status === "Approved" ? "success" : l.status === "Rejected" ? "danger" : "warn")}>{l.status}</span></td>
                   </tr>
                 ))}
                 {history.length === 0 && <tr><td colSpan={4} className="empty">No leaves yet</td></tr>}

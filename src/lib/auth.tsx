@@ -1,21 +1,23 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { store } from "./store";
+// import { store } from "./store";
+import { loginUser } from "@/api/auth";
 
 export interface Session {
-  kind: "admin" | "employee";
   id: string;
   name: string;
   email: string;
+  kind: "admin" | "employee";
+  token: string;
 }
 
 const KEY = "ems_session_v1";
 
-const ADMIN = { email: "admin@webapps.com", password: "admin", name: "Admin" };
+// const ADMIN = { email: "admin@webapps.com", password: "admin", name: "Admin" };
 
 interface Ctx {
   session: Session | null;
   ready: boolean;
-  login: (email: string, password: string, kind: "admin" | "employee") => string | null;
+  login: (email: string, password: string, kind: "admin" | "employee") => Promise<string | null>;
   logout: () => void;
 }
 
@@ -32,30 +34,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setReady(true);
   }, []);
 
-  const login: Ctx["login"] = (email, password, kind) => {
-    if (kind === "admin") {
-      if (email.trim().toLowerCase() === ADMIN.email && password === ADMIN.password) {
-        const s: Session = { kind: "admin", id: "admin", name: ADMIN.name, email: ADMIN.email };
-        localStorage.setItem(KEY, JSON.stringify(s));
-        setSession(s);
+  const login: Ctx["login"] = async (
+    email,
+    password,
+    kind
+) => {
+    try {
+        const res = await loginUser({
+            email,
+            password,
+            kind,
+        });
+
+        const session: Session = {
+            id: res.user.id,
+            name: res.user.name,
+            email: res.user.email,
+            kind: res.user.role as "admin" | "employee",
+            token: res.token,
+        };
+
+
+        localStorage.setItem(KEY, JSON.stringify(session));
+
+        setSession(session);
+
         return null;
-      }
-      return "Invalid admin credentials";
+    } catch (error) {
+        return "Invalid email or password";
     }
-    const db = store.get();
-    const emp = db.employees.find((e) => e.email.trim().toLowerCase() === email.trim().toLowerCase() && e.password === password);
-    if (!emp) return "Invalid employee credentials";
-    const s: Session = { kind: "employee", id: emp.id, name: emp.name, email: emp.email };
-    localStorage.setItem(KEY, JSON.stringify(s));
-    setSession(s);
-    return null;
-  };
+};
+  //   const db = store.get();
+  //   const emp = db.employees.find((e) => e.email.trim().toLowerCase() === email.trim().toLowerCase() && e.password === password);
+  //   if (!emp) return "Invalid employee credentials";
+  //   const s: Session = { kind: "employee", id: emp.id, name: emp.name, email: emp.email };
+  //   localStorage.setItem(KEY, JSON.stringify(s));
+  //   setSession(s);
+  //   return null;
+  // };
 
   const logout = () => {
     localStorage.removeItem(KEY);
+    localStorage.removeItem("token");
     setSession(null);
-  };
-
+};
   return <AuthCtx.Provider value={{ session, ready, login, logout }}>{children}</AuthCtx.Provider>;
 }
 

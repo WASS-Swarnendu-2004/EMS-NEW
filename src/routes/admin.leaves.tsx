@@ -1,4 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import {getLeaves,approveLeave,rejectLeave,type Leave,
+} from "@/api/leave";
 import { store, useDB } from "@/lib/store";
 import { exportToExcel } from "@/lib/excel";
 
@@ -6,9 +9,19 @@ export const Route = createFileRoute("/admin/leaves")({ component: Page });
 
 function Page() {
   const db = useDB();
+  const [leaves, setLeaves] = useState<Leave[]>([]);
+
+  useEffect(() => {
+    fetchLeaves();
+}, []);
+
+const fetchLeaves = async () => {
+    const data = await getLeaves();
+    setLeaves(data);
+};
 
   function exportXlsx() {
-    exportToExcel(db.leaves.map((l) => {
+    exportToExcel(leaves.map((l) => {
       const e = db.employees.find((x) => x.id === l.employeeId);
       return { Employee: e?.name, Email: e?.email, Type: l.type, From: l.from, To: l.to, Reason: l.reason, Status: l.status, Applied: l.createdAt };
     }), "leave-applications.xlsx", "Leaves");
@@ -21,7 +34,7 @@ function Page() {
         <table className="table">
           <thead><tr><th>Employee</th><th>Type</th><th>From</th><th>To</th><th>Reason</th><th>Applied</th><th>Status</th><th></th></tr></thead>
           <tbody>
-            {db.leaves.map((l) => {
+            {leaves.map((l) => {
               const e = db.employees.find((x) => x.id === l.employeeId);
               return (
                 <tr key={l.id}>

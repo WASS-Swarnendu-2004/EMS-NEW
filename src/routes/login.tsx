@@ -27,11 +27,21 @@ function Login() {
     else { setEmail("alice@webapps.com"); setPassword("user"); }
   }
 
-  function submit(e: React.FormEvent) {
+  // function submit(e: React.FormEvent) {
+  //   e.preventDefault();
+  //   const r = login(email, password, kind);
+  //   if (r) setErr(r);
+  // }
+
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    const r = login(email, password, kind);
-    if (r) setErr(r);
-  }
+
+    const r = await login(email, password, kind);
+
+    if (r) {
+        setErr(r);
+    }
+}
 
   return (
     <div className="login-page">
