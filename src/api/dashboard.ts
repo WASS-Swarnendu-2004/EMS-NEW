@@ -1,47 +1,31 @@
 import api from "./axios";
 
-export interface AssignedProject {
-  id: string;
-  name: string;
+export interface DashboardResponse {
+  success: boolean;
+  cards: {
+    myProjects: number;
+    pendingLeaves: number;
+    pendingWFH: number;
+    salarySlips: number;
+  };
+
+  attendance: {
+    checkedIn: boolean;
+    checkIn?: string;
+    checkOut?: string;
+    mode?: "office" | "wfh";
+  } | null;
+
+  todayPlan: {
+    projectId?: string;
+    plan: string;
+    status: string;
+  } | null;
 }
 
-export interface TodayAttendance {
-  checkedIn: boolean;
-  checkIn?: string;
-  checkOut?: string;
-  mode?: "office" | "wfh";
-}
-
-export interface WorkStatus {
-  projectId?: string;
-  plan: string;
-  status: string;
-}
-
-export interface DashboardData {
-  projectsCount: number;
-  pendingLeaves: number;
-  pendingWFH: number;
-  salarySlips: number;
-
-  todayAttendance: TodayAttendance;
-  workStatus: WorkStatus;
-
-  assignedProjects: AssignedProject[];
-}
-
-// Get User Dashboard
-export const getDashboard = async (): Promise<DashboardData> => {
-  try {
-    const response = await api.get<DashboardData>(
-      "" // <-- Add User Dashboard API Endpoint Here
-    );
-
-    return response.data;
-  } catch (error) {
-    console.error("Get Dashboard Error:", error);
-    throw error;
-  }
+export const getDashboard = async (): Promise<DashboardResponse> => {
+  const { data } = await api.get<DashboardResponse>("/dashboard");
+  return data;
 };
 
 // Check In
