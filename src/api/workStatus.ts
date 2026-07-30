@@ -32,11 +32,9 @@ export interface SaveWorkStatusPayload {
 
 export const getWorkStatus = async (): Promise<WorkStatus[]> => {
   try {
-    const response = await api.get<WorkStatus[]>(
-      "/admin/daily-work" // <-- Add Get Work Status API Endpoint Here
-    );
+    const response = await api.get("/admin/daily-work");
 
-    return response.data;
+  return response.data.reports;
   } catch (error) {
     console.error("Get Work Status Error:", error);
     throw error;
@@ -45,11 +43,9 @@ export const getWorkStatus = async (): Promise<WorkStatus[]> => {
 
 export const getMyWorkStatus = async (): Promise<WorkStatus[]> => {
   try {
-    const response = await api.get<WorkStatus[]>(
-      "/daily-work" // <-- Add Get My Work Status API Endpoint Here
-    );
+    const response = await api.get("/daily-work");
 
-    return response.data;
+  return response.data.reports;
   } catch (error) {
     console.error("Get My Work Status Error:", error);
     throw error;

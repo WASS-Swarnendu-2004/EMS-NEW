@@ -1,13 +1,13 @@
 import api from "./axios";
 
 export interface Project {
-  id: string;
-  name: string;
+  _id: string;
+  projectName: string;
   consumerName: string;
   consumerDetails: string;
   startDate: string;
   endDate: string;
-  durationDays: number;
+  duration: number;
   valuation: number;
   status:
     | "planning"
@@ -16,7 +16,7 @@ export interface Project {
     | "completed"
     | "cancelled";
   description: string;
-  assigned: string[];
+  assignedEmployees: string[];
 }
 
 export interface CreateProjectPayload
