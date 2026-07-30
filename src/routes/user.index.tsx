@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { store, useDB, today, nowTime } from "@/lib/store";
 import { checkIn, checkOut, getDashboard, type DashboardResponse } from "@/api/dashboard";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
