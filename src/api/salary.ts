@@ -1,10 +1,10 @@
 import api from "./axios";
 
 export interface SalaryComponent {
-  id: string;
+  id?: string;
   label: string;
-  type: "earning" | "deduction";
-  mode: "percent" | "fixed";
+  type: "Earning" | "Deduction";
+  mode: "% of gross" | "Fixed";
   value: number;
 }
 
@@ -30,57 +30,40 @@ export interface SalarySlip {
   items: SalaryItem[];
 }
 
-export const getSalarySlips = async (): Promise<SalarySlip[]> => {
-  try {
-    const response = await api.get("/salary");
+export interface SalaryListItem {
+  employeeId: string;
+  employeeIdMongo: string;
+  fullName: string;
+  department: string;
+  role: string;
+  grossSalary: number;
+  generated: boolean;
+  salarySlipId?: string;
+  netSalary?: number;
+}
 
-    return response.data.salaries.map((s: any) => ({
-      id: s._id,
-      employeeId: s.employee,
+export const getSalaryList = async (month: string): Promise<SalaryListItem[]> => {
+  const [year, mon] = month.split("-");
 
-      month: `${new Date(s.year, s.month - 1).toLocaleString("default", {
-        month: "long",
-      })} ${s.year}`,
+  const response = await api.get("/admin/salary", {
+    params: {
+      month: Number(mon),
+      year: Number(year),
+    },
+  });
 
-      gross: s.grossSalary,
-      net: s.netSalary,
-
-      totalEarnings: s.totalEarnings,
-      totalDeductions: s.totalDeductions,
-      generatedAt: s.generatedAt,
-
-      items: [
-        ...s.earnings.map((e: any) => ({
-          label: e.label,
-          amount: e.amount,
-          type: "earning" as const,
-        })),
-        ...s.deductions.map((d: any) => ({
-          label: d.label,
-          amount: -d.amount,
-          type: "deduction" as const,
-        })),
-      ],
-    }));
-  } catch (error) {
-    console.error("Get Salary Slips Error:", error);
-    throw error;
-  }
+  return response.data.employees;
 };
 
 
-export const generateSalary = async (
-  employeeId: string,
-  month: string
-): Promise<SalarySlip> => {
+export const generateSalary = async (month: string) => {
+  const [year, mon] = month.split("-");
+
   try {
-    const response = await api.post<SalarySlip>(
-      "", // <-- Add Generate Salary API Endpoint Here
-      {
-        employeeId,
-        month,
-      }
-    );
+    const response = await api.post("/admin/salary/generate", {
+      month: Number(mon),
+      year: Number(year),
+    });
 
     return response.data;
   } catch (error) {
@@ -89,31 +72,35 @@ export const generateSalary = async (
   }
 };
 
-export const generateSalaryForAll = async (
-  month: string
-) => {
-  try {
-    const response = await api.post(
-      "", // <-- Add Generate Salary For All API Endpoint Here
-      {
-        month,
-      }
-    );
+// export const generateSalaryForAll = async (
+//   month: string
+// ) => {
+//   try {
+//     const response = await api.post(
+//       "", // <-- Add Generate Salary For All API Endpoint Here
+//       {
+//         month,
+//       }
+//     );
 
-    return response.data;
-  } catch (error) {
-    console.error("Generate Salary For All Error:", error);
-    throw error;
-  }
-};
+//     return response.data;
+//   } catch (error) {
+//     console.error("Generate Salary For All Error:", error);
+//     throw error;
+//   }
+// };
 
 export const getSalaryConfig = async (): Promise<SalaryComponent[]> => {
   try {
-    const response = await api.get<SalaryComponent[]>(
-      "" // <-- Add Get Salary Configuration API Endpoint Here
-    );
+    const response = await api.get("/admin/salary/config");
 
-    return response.data;
+return response.data.configs.map((c: any) => ({
+  id: c._id,
+  label: c.label,
+  type: c.type,
+  mode: c.mode,
+  value: c.value,
+}));
   } catch (error) {
     console.error("Get Salary Configuration Error:", error);
     throw error;
@@ -122,29 +109,70 @@ export const getSalaryConfig = async (): Promise<SalaryComponent[]> => {
 
 export const updateSalaryConfig = async (
   data: SalaryComponent[]
-): Promise<SalaryComponent[]> => {
-  try {
-    const response = await api.put<SalaryComponent[]>(
-      "", // <-- Add Update Salary Configuration API Endpoint Here
-      data
-    );
+) => {
+  const response = await api.post(
+    "/admin/salary/config",
+    data
+  );
 
-    return response.data;
-  } catch (error) {
-    console.error("Update Salary Configuration Error:", error);
-    throw error;
-  }
+  return response.data;
 };
 
-export const resetSalaryConfig = async () => {
-  try {
-    const response = await api.post(
-      "" // <-- Add Reset Salary Configuration API Endpoint Here
-    );
+export const generateSalaryForEmployee = async (
+  employeeId: string,
+  month: string
+) => {
+  const [year, mon] = month.split("-");
 
-    return response.data;
-  } catch (error) {
-    console.error("Reset Salary Configuration Error:", error);
-    throw error;
-  }
+  const response = await api.post(
+    `/admin/salary/generate/${employeeId}`,
+    {
+      month: Number(mon),
+      year: Number(year),
+    }
+  );
+
+  return response.data;
 };
+
+export const getSalarySlip = async (salarySlipId: string) => {
+  const response = await api.get(`/admin/salary/${salarySlipId}`);
+
+  const s = response.data.salary;
+
+  return {
+    id: s._id,
+    employeeId: s.employee._id,
+    month: `${s.year}-${String(s.month).padStart(2, "0")}`,
+    gross: s.grossSalary,
+    net: s.netSalary,
+    totalEarnings: s.totalEarnings,
+    totalDeductions: s.totalDeductions,
+    generatedAt: s.generatedAt,
+    items: [
+      ...s.earnings.map((e: any) => ({
+        label: e.label,
+        amount: e.amount,
+        type: "earning" as const,
+      })),
+      ...s.deductions.map((d: any) => ({
+        label: d.label,
+        amount: d.amount,
+        type: "deduction" as const,
+      })),
+    ],
+  };
+};
+
+// export const resetSalaryConfig = async () => {
+//   try {
+//     const response = await api.post(
+//       "" // <-- Add Reset Salary Configuration API Endpoint Here
+//     );
+
+//     return response.data;
+//   } catch (error) {
+//     console.error("Reset Salary Configuration Error:", error);
+//     throw error;
+//   }
+// };
