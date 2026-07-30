@@ -1,4 +1,4 @@
-import type { SalarySlip } from "@/lib/store";
+import type { SalarySlip } from "@/api/salary";
 import logo from "@/assets/logo.jpeg.asset.json";
 
 export function SalarySlipView({ slip, empName, role }: { slip: SalarySlip; empName: string; role: string }) {
