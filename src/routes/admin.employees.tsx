@@ -192,245 +192,426 @@ function Page() {
 
   return (
     <>
-      <div className="toolbar">
-        <input
-          className="input"
-          placeholder="Search employees…"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          style={{ maxWidth: 280 }}
-        />
-        <span className="spacer" />
-        <button className="btn btn-ghost" onClick={exportXlsx}>
-          ⬇ Export Excel
-        </button>
-        <button className="btn" onClick={openNew}>
-          + Add employee
+  <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <input
+      className="input w-full lg:max-w-sm"
+      placeholder="Search employees..."
+      value={q}
+      onChange={(e) => setQ(e.target.value)}
+    />
+
+    <div className="flex flex-col gap-2 sm:flex-row">
+      <button
+        className="btn btn-ghost w-full sm:w-auto"
+        onClick={exportXlsx}
+      >
+        ⬇ Export Excel
+      </button>
+
+      <button
+        className="btn w-full sm:w-auto"
+        onClick={openNew}
+      >
+        + Add Employee
+      </button>
+    </div>
+  </div>
+
+  <div className="mt-5 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+    <table className="table w-full min-w-[950px]">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Phone</th>
+          <th>Role</th>
+          <th>Department</th>
+          <th>Salary</th>
+          <th>Status</th>
+          <th className="text-center">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {filtered.map((e) => (
+          <tr key={e._id}>
+            <td>
+              <div className="font-semibold">{e.fullName}</div>
+
+              <div className="mt-1 text-xs text-gray-500">
+                Joined {e.joiningDate.slice(0, 10)}
+              </div>
+            </td>
+
+            <td>{e.email}</td>
+
+            <td>{e.phone}</td>
+
+            <td>
+              <span className="badge purple">
+                {e.role}
+              </span>
+            </td>
+
+            <td>{e.department}</td>
+
+            <td>
+              ₹{e.salary.toLocaleString()}
+            </td>
+
+            <td>
+              <span
+                className={
+                  "badge " +
+                  (e.status === "Active"
+                    ? "success"
+                    : "danger")
+                }
+              >
+                {e.status}
+              </span>
+            </td>
+
+            <td>
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
+                <button
+                  className="btn btn-sm btn-ghost w-full sm:w-auto"
+                  onClick={() => openEdit(e)}
+                >
+                  Edit
+                </button>
+
+                <button
+                  className="btn btn-sm btn-danger w-full sm:w-auto"
+                  onClick={() => remove(e._id)}
+                  disabled={deletingId === e._id}
+                >
+                  {deletingId === e._id ? (
+                    <>
+                      <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                      Deleting...
+                    </>
+                  ) : (
+                    "Delete"
+                  )}
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))}
+
+        {filtered.length === 0 && (
+          <tr>
+            <td
+              colSpan={8}
+              className="py-8 text-center text-gray-500"
+            >
+              No employees found
+            </td>
+          </tr>
+        )}
+      </tbody>
+    </table>
+  </div>
+
+  {open && (
+  <div
+    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+    onClick={() => setOpen(false)}
+  >
+    <div
+      className="w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl"
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* Header */}
+      <div className="sticky top-0 flex items-center justify-between border-b bg-white px-5 py-4">
+        <h2 className="text-lg font-semibold">
+          {editing ? "Edit Employee" : "Add Employee"}
+        </h2>
+
+        <button
+          className="btn btn-sm btn-ghost"
+          onClick={() => setOpen(false)}
+        >
+          ✕
         </button>
       </div>
 
-      <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Role</th>
-              <th>Dept</th>
-              <th>Salary</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map((e) => (
-              <tr key={e._id}>
-                <td>
-                  <strong>{e.fullName}</strong>
-                  <div className="muted" style={{ fontSize: ".75rem" }}>
-                    Joined {e.joiningDate}
-                  </div>
-                </td>
-                <td>{e.email}</td>
-                <td>{e.phone}</td>
-                <td>
-                  <span className="badge purple">{e.role}</span>
-                </td>
-                <td>{e.department}</td>
-                <td>₹{e.salary.toLocaleString()}</td>
-                <td>
-                  <span className={"badge " + (e.status === "Active" ? "success" : "danger")}>
-                    {e.status}
-                  </span>
-                </td>
-                <td className="actions">
-                  <button className="btn btn-sm btn-ghost" onClick={() => openEdit(e)}>
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => remove(e._id)}
-                    disabled={deletingId === e._id}
-                  >
-                    {deletingId === e._id ? (
-                      <>
-                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      "Delete"
-                    )}
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={8} className="empty">
-                  No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Body */}
+      <div className="p-5">
 
-      {open && (
-        <div className="modal-backdrop" onClick={() => setOpen(false)}>
-          <div className="modal lg" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head">
-              <h2>{editing ? "Edit employee" : "Add employee"}</h2>
-              <button className="btn btn-sm btn-ghost" onClick={() => setOpen(false)}>
-                ✕
-              </button>
-            </div>
-            <div className="row-2">
-              <div className="field">
-                <label>Full name *</label>
-                <input
-                  className="input"
-                  value={form.fullName}
-                  onChange={(e) => setForm({ ...form, fullName: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Email *</label>
-                <input
-                  className="input"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Password</label>
-                <input
-                  className="input"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Phone</label>
-                <input
-                  className="input"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Role</label>
-                <select
-                  className="select"
-                  value={form.role}
-                  onChange={(e) => setForm({ ...form, role: e.target.value })}
-                >
-                  {ROLES.map((r) => (
-                    <option key={r}>{r}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="field">
-                <label>Department</label>
-                <input
-                  className="input"
-                  value={form.department}
-                  onChange={(e) => setForm({ ...form, department: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Monthly salary (₹)</label>
-                <input
-                  className="input"
-                  type="number"
-                  value={form.salary}
-                  onChange={(e) => setForm({ ...form, salary: +e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Join date</label>
-                <input
-                  className="input"
-                  type="date"
-                  value={form.joiningDate}
-                  onChange={(e) => setForm({ ...form, joiningDate: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>ID proof</label>
-                <input
-                  className="input"
-                  value={form.idProof}
-                  onChange={(e) => setForm({ ...form, idProof: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>PAN</label>
-                <input
-                  className="input"
-                  value={form.pan}
-                  onChange={(e) => setForm({ ...form, pan: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Bank account</label>
-                <input
-                  className="input"
-                  value={form.bankAccount}
-                  onChange={(e) => setForm({ ...form, bankAccount: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Emergency contact</label>
-                <input
-                  className="input"
-                  value={form.emergencyContact}
-                  onChange={(e) => setForm({ ...form, emergencyContact: e.target.value })}
-                />
-              </div>
-              <div className="field">
-                <label>Status</label>
-                <select
-                  className="select"
-                  value={form.status}
-                  onChange={(e) =>
-                    setForm({ ...form, status: e.target.value as "Active" | "Inactive" })
-                  }
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
-            </div>
-            <div className="field">
-              <label>Address</label>
-              <textarea
-                className="textarea"
-                value={form.address}
-                onChange={(e) => setForm({ ...form, address: e.target.value })}
-              />
-            </div>
-            <div className="modal-foot">
-              <button className="btn btn-ghost" onClick={() => setOpen(false)}>
-                Cancel
-              </button>
-              <button className="btn" onClick={save} disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {editing ? "Saving..." : "Creating..."}
-                  </>
-                ) : editing ? (
-                  "Save changes"
-                ) : (
-                  "Create employee"
-                )}
-              </button>
-            </div>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+
+          {/* Full Name */}
+          <div className="field">
+            <label>Full name *</label>
+            <input
+              className="input w-full"
+              value={form.fullName}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  fullName: e.target.value,
+                })
+              }
+            />
           </div>
+
+          {/* Email */}
+          <div className="field">
+            <label>Email *</label>
+            <input
+              className="input w-full"
+              type="email"
+              value={form.email}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  email: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* Password */}
+          <div className="field">
+            <label>Password</label>
+            <input
+              className="input w-full"
+              value={form.password}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  password: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* Phone */}
+          <div className="field">
+            <label>Phone</label>
+            <input
+              className="input w-full"
+              value={form.phone}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  phone: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* Role */}
+          <div className="field">
+            <label>Role</label>
+
+            <select
+              className="select w-full"
+              value={form.role}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  role: e.target.value,
+                })
+              }
+            >
+              {ROLES.map((r) => (
+                <option key={r}>{r}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Department */}
+          <div className="field">
+            <label>Department</label>
+
+            <input
+              className="input w-full"
+              value={form.department}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  department: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* Salary */}
+          <div className="field">
+            <label>Monthly Salary (₹)</label>
+
+            <input
+              className="input w-full"
+              type="number"
+              value={form.salary}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  salary: +e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* Joining Date */}
+          <div className="field">
+            <label>Joining Date</label>
+
+            <input
+              className="input w-full"
+              type="date"
+              value={form.joiningDate}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  joiningDate: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* ID Proof */}
+          <div className="field">
+            <label>ID Proof</label>
+
+            <input
+              className="input w-full"
+              value={form.idProof}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  idProof: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* PAN */}
+          <div className="field">
+            <label>PAN</label>
+
+            <input
+              className="input w-full"
+              value={form.pan}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  pan: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* Bank */}
+          <div className="field">
+            <label>Bank Account</label>
+
+            <input
+              className="input w-full"
+              value={form.bankAccount}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  bankAccount: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* Emergency */}
+          <div className="field">
+            <label>Emergency Contact</label>
+
+            <input
+              className="input w-full"
+              value={form.emergencyContact}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  emergencyContact: e.target.value,
+                })
+              }
+            />
+          </div>
+
+          {/* Status */}
+          <div className="field lg:col-span-2">
+            <label>Status</label>
+
+            <select
+              className="select w-full"
+              value={form.status}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  status: e.target.value as
+                    | "Active"
+                    | "Inactive",
+                })
+              }
+            >
+              <option value="Active">
+                Active
+              </option>
+
+              <option value="Inactive">
+                Inactive
+              </option>
+            </select>
+          </div>
+
+          {/* Address */}
+          <div className="field lg:col-span-2">
+            <label>Address</label>
+
+            <textarea
+              className="textarea w-full"
+              rows={4}
+              value={form.address}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  address: e.target.value,
+                })
+              }
+            />
+          </div>
+
         </div>
-      )}
+                    {/* Footer */}
+        <div className="mt-6 flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
+          <button
+            className="btn btn-ghost w-full sm:w-auto"
+            onClick={() => setOpen(false)}
+          >
+            Cancel
+          </button>
+
+          <button
+            className="btn w-full sm:w-auto"
+            onClick={save}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {editing ? "Saving..." : "Creating..."}
+              </>
+            ) : editing ? (
+              "Save Changes"
+            ) : (
+              "Create Employee"
+            )}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
     </>
   );
 }
