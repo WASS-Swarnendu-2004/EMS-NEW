@@ -4,6 +4,8 @@ import { useDB } from "@/lib/store";
 import { exportToExcel } from "@/lib/excel";
 import { getWorkStatus, type WorkStatus } from "@/api/workStatus";
 import { getEmployees, type Employee } from "@/api/employee";
+import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export const Route = createFileRoute("/admin/work-status")({ component: Page });
 
@@ -14,6 +16,7 @@ function Page() {
   const [empId, setEmpId] = useState("all");
   const [rows, setRows] = useState<WorkStatus[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadReports();
@@ -22,25 +25,34 @@ function Page() {
 
 async function loadReports() {
   try {
+    setLoading(true);
+
     const data = await getWorkStatus();
 
-    console.log("API Data:", data);
-    console.log("Is Array:", Array.isArray(data));
-
     setRows(data);
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
+
+    toast.error(
+      err.response?.data?.message || "Failed to load work reports"
+    );
+  } finally {
+    setLoading(false);
   }
-  }
+}
   
   async function loadEmployees() {
   try {
     const data = await getEmployees();
     setEmployees(data);
-  } catch (err) {
+  } catch (err: any) {
     console.error(err);
+
+    toast.error(
+      err.response?.data?.message || "Failed to load employees"
+    );
   }
-  }
+}
   
    const filteredRows = rows
   .filter(
@@ -56,14 +68,22 @@ async function loadReports() {
   //   .sort((a, b) => b.date.localeCompare(a.date));
 
   function exportXlsx() {
+  if (filteredRows.length === 0) {
+    toast.warning("No work reports to export");
+    return;
+  }
+
   exportToExcel(
     filteredRows.map((w) => ({
       Date: w.workDate.slice(0, 10),
-      Employee:employees.find((e) =>e._id ===
-      (typeof w.employee === "string"
-        ? w.employee
-        : w.employee._id)
-  )?.fullName ?? "Unknown Employee",
+      Employee:
+        employees.find(
+          (e) =>
+            e._id ===
+            (typeof w.employee === "string"
+              ? w.employee
+              : w.employee._id)
+        )?.fullName ?? "Unknown Employee",
       Project: w.project?.projectName ?? "—",
       Plan: w.plan,
       EndOfDayStatus: w.endOfDayStatus,
@@ -71,11 +91,20 @@ async function loadReports() {
     "work-status.xlsx",
     "WorkStatus"
   );
-  }
+
+  toast.success("Work reports exported successfully");
+}
   
-  // console.log("Rows:", rows);
-  // console.log("Filtered Rows:", filteredRows);
-  // console.log("Selected Date:", date);
+ if (loading) {
+  return (
+    <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
+      <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
+      <p className="text-gray-500 text-lg font-medium">
+        Loading work reports...
+      </p>
+    </div>
+  );
+}
 
   return (
     <>

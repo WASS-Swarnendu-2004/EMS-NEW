@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 // import { useDB } from "@/lib/store";
 import { useEffect, useState } from "react";
-import {getAdminDashboard,type DashboardCards,type RecentWorkStatus,} from "@/api/adminDashboard";
+import { getAdminDashboard, type DashboardCards, type RecentWorkStatus, } from "@/api/adminDashboard";
+import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
 
@@ -20,12 +22,18 @@ function Dashboard() {
 useEffect(() => {
   async function loadDashboard() {
     try {
+      setLoading(true);
+
       const data = await getAdminDashboard();
 
       setCards(data.cards);
       setRecentWorkStatus(data.recentWorkStatus);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+
+      toast.error(
+        err.response?.data?.message || "Failed to load dashboard"
+      );
     } finally {
       setLoading(false);
     }
@@ -33,6 +41,17 @@ useEffect(() => {
 
   loadDashboard();
 }, []);
+  
+  if (loading) {
+  return (
+    <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
+      <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
+      <p className="text-gray-500 text-lg font-medium">
+        Loading dashboard...
+      </p>
+    </div>
+  );
+}
 
   return (
     <>

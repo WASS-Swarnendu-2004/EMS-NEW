@@ -3,9 +3,10 @@ import api from "./axios";
 export interface Leave {
   _id: string;
   employee: {
-  _id: string;
-  employeeId: string;
-};
+    _id: string;
+    employeeId: string;
+  } | null;
+
   leaveType: "Casual" | "Sick" | "Earned";
   fromDate: string;
   toDate: string;

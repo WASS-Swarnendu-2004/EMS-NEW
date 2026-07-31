@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useDB } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
+import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export const Route = createFileRoute("/user/projects")({ component: Page });
 
@@ -8,6 +10,7 @@ function Page() {
   const db = useDB();
   const { session } = useAuth();
   const mine = db.projects.filter((p) => p.assigned.includes(session!.id));
+  
 
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px,1fr))", gap: "1rem" }}>

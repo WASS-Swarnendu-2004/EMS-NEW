@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 // import { store, useDB, type Project } from "@/lib/store";
 import { useDB } from "@/lib/store";
 import {getProjects,createProject,type Project,
@@ -36,6 +38,8 @@ function Page() {
   const [view, setView] = useState<Project | null>(null);
   const [assignOpen, setAssignOpen] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+const [saving, setSaving] = useState(false);
 
   useEffect(() => {
   loadProjects();
@@ -43,10 +47,16 @@ function Page() {
 
 async function loadProjects() {
   try {
+    setLoading(true);
+
     const data = await getProjects();
+
     setProjects(data);
   } catch (err) {
     console.error(err);
+    toast.error("Failed to load projects");
+  } finally {
+    setLoading(false);
   }
 }
 
@@ -97,7 +107,16 @@ async function loadProjects() {
     "projects.xlsx",
     "Projects"
   );
-}
+  }
+  
+   if (loading) {
+    return (
+      <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
+        <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
+        <p className="text-gray-500 text-lg font-medium">Loading project details...</p>
+      </div>
+    );
+  }
 
   return (
     <>

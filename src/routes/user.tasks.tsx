@@ -2,7 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import {useDB, today } from "@/lib/store";
 import { useAuth } from "@/lib/auth";
-import {getMyWorkStatus,saveWorkStatus,type WorkStatus} from "@/api/workStatus";
+import { getMyWorkStatus, saveWorkStatus, type WorkStatus } from "@/api/workStatus";
+import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export const Route = createFileRoute("/user/tasks")({ component: Page });
 
@@ -12,17 +14,28 @@ function Page() {
   const empId = session!.id;
   const [date, setDate] = useState(today());
   const [history, setHistory] = useState<WorkStatus[]>([]);
+  const [loading, setLoading] = useState(true);
+const [saving, setSaving] = useState(false);
   useEffect(() => {
     loadHistory();
   }, []);
   async function loadHistory() {
-    try {
-        const data = await getMyWorkStatus();
-        setHistory(data);
-    } catch (err) {
-        console.error(err);
-    }
+  try {
+    setLoading(true);
+
+    const data = await getMyWorkStatus();
+
+    setHistory(data);
+  } catch (err: any) {
+    console.error(err);
+
+    toast.error(
+      err.response?.data?.message || "Failed to load work reports"
+    );
+  } finally {
+    setLoading(false);
   }
+}
   
 
   // const ws = db.workStatus.find((w) => w.employeeId === empId && w.date === date);
@@ -47,6 +60,17 @@ function Page() {
 
   // const history = db.workStatus.filter((w) => w.employeeId === empId).sort((a, b) => b.date.localeCompare(a.date));
 
+  if (loading) {
+  return (
+    <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
+      <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
+      <p className="text-gray-500 text-lg font-medium">
+        Loading work reports...
+      </p>
+    </div>
+  );
+}
+
   return (
     <>
       <div className="card">
@@ -63,8 +87,11 @@ function Page() {
         <div className="field"><label>End-of-day status / blockers</label><textarea className="textarea" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="Report what's done and any blockers." /></div>
         <button
   className="btn"
+  disabled={saving}
   onClick={async () => {
     try {
+      setSaving(true);
+
       await saveWorkStatus({
         project: projectId,
         workDate: date,
@@ -72,14 +99,30 @@ function Page() {
         endOfDayStatus: status,
       });
 
+      toast.success("Work report saved successfully");
+
       await loadHistory();
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
+
+      toast.error(
+        err.response?.data?.message || "Failed to save work report"
+      );
+    } finally {
+      setSaving(false);
     }
   }}
 >
-  Save
+  {saving ? (
+    <>
+      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+      Saving...
+    </>
+  ) : (
+    "Save"
+  )}
 </button>
+
       </div>
 
       <div className="card">

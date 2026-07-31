@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Zap, Download, Printer, X, Plus, Trash2, RotateCcw, Settings2 } from "lucide-react";
+import { Zap, Download, Printer, X, Plus, RotateCcw, Settings2, Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 // import { store, useDB, type SalarySlip, type SalaryComponent } from "@/lib/store";
 import { exportToExcel } from "@/lib/excel";
 import { SalarySlipView } from "@/components/SalarySlipView";
@@ -28,12 +29,27 @@ function Page() {
   const [view, setView] = useState<SalarySlip | null>(null);
   const [showCfg, setShowCfg] = useState(false);
 
-const [employees, setEmployees] = useState<SalaryListItem[]>([]);
+  const [employees, setEmployees] = useState<SalaryListItem[]>([]);
+    const [loading, setLoading] = useState(true);
+const [generating, setGenerating] = useState(false);
+const [viewLoading, setViewLoading] = useState(false);
 
  async function loadSalarySlips() {
-  const data = await getSalaryList(month);
-  setEmployees(data);
+  try {
+    setLoading(true);
+
+    const data = await getSalaryList(month);
+
+    setEmployees(data);
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to load salary list");
+  } finally {
+    setLoading(false);
+  }
 }
+  
+
  useEffect(() => {
   loadSalarySlips();
 }, [month]);
@@ -41,10 +57,19 @@ const [employees, setEmployees] = useState<SalaryListItem[]>([]);
 
 async function genAll() {
   try {
+    setGenerating(true);
+
     await generateSalary(month);
+
+    toast.success("Salary generated successfully");
+
     await loadSalarySlips();
   } catch (err) {
     console.error(err);
+
+    toast.error("Failed to generate salary");
+  } finally {
+    setGenerating(false);
   }
 }
 
@@ -63,6 +88,14 @@ async function genAll() {
 );
   }
 
+ if (loading) {
+    return (
+      <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
+        <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
+        <p className="text-gray-500 text-lg font-medium">Loading...</p>
+      </div>
+    );
+  }
   return (
     <>
       <div className="toolbar">

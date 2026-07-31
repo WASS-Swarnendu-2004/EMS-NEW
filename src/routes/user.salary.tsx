@@ -5,6 +5,8 @@ import { Printer, X } from "lucide-react";
 import { getMySalarySlips, type SalarySlip } from "@/api/salary";
 import { useAuth } from "@/lib/auth";
 import { SalarySlipView } from "@/components/SalarySlipView";
+import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export const Route = createFileRoute("/user/salary")({ component: Page });
 
@@ -19,47 +21,60 @@ function Page() {
 
   const [slips, setSlips] = useState<SalarySlip[]>([]);
   const [view, setView] = useState<SalarySlip | null>(null);
+  const [loading, setLoading] = useState(true);
 
-//   useEffect(() => {
-//     const loadSalary = async () => {
-//       try {
-//         const data = await getMySalarySlips();
-//         console.log("Salary API Response:", data);
+  //   useEffect(() => {
+  //     const loadSalary = async () => {
+  //       try {
+  //         const data = await getMySalarySlips();
+  //         console.log("Salary API Response:", data);
 
-//        setSlips(
-//   data.sort((a, b) => b.month.localeCompare(a.month))
-// );
+  //        setSlips(
+  //   data.sort((a, b) => b.month.localeCompare(a.month))
+  // );
 
-// //         console.log("Session Employee ID:", empId);
-// // console.log("All Slips:", data);
-// // console.log(
-// //   "Filtered:",
-// //   data.filter((s) => s.employeeId === empId)
-// // );
-//       } catch (err) {
-//         console.error(err);
-//       }
-//     };
+  // //         console.log("Session Employee ID:", empId);
+  // // console.log("All Slips:", data);
+  // // console.log(
+  // //   "Filtered:",
+  // //   data.filter((s) => s.employeeId === empId)
+  // // );
+  //       } catch (err) {
+  //         console.error(err);
+  //       }
+  //     };
 
-//     loadSalary();
-//   }, [empId]);
+  //     loadSalary();
+  //   }, [empId]);
 
   useEffect(() => {
-  const loadSalary = async () => {
-    try {
-      const data = await getMySalarySlips();
+    const loadSalary = async () => {
+      try {
+        setLoading(true);
 
-      setSlips(
-        data.sort((a, b) => b.month.localeCompare(a.month))
-      );
-    } catch (err) {
-      console.error(err);
-    }
-  };
+        const data = await getMySalarySlips();
 
-  loadSalary();
-}, []);
- 
+        setSlips(data.sort((a, b) => b.month.localeCompare(a.month)));
+      } catch (err: any) {
+        console.error(err);
+
+        toast.error(err.response?.data?.message || "Failed to load salary slips");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSalary();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
+        <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
+        <p className="text-gray-500 text-lg font-medium">Loading salary slips...</p>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -92,10 +107,7 @@ function Page() {
                     <strong>₹{s.net.toLocaleString()}</strong>
                   </td>
                   <td>
-                    <button
-                      className="btn btn-sm btn-ghost"
-                      onClick={() => setView(s)}
-                    >
+                    <button className="btn btn-sm btn-ghost" onClick={() => setView(s)}>
                       View
                     </button>
                   </td>
@@ -115,39 +127,29 @@ function Page() {
       </div>
 
       {view && (
-        <div
-          className="modal-backdrop"
-          onClick={() => setView(null)}
-        >
-          <div
-            className="modal lg"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="modal-backdrop" onClick={() => setView(null)}>
+          <div className="modal lg" onClick={(e) => e.stopPropagation()}>
             <div className="modal-head no-print">
               <h2>Salary Slip</h2>
 
               <div className="flex">
                 <button
                   className="btn btn-ghost"
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    toast.info("Preparing salary slip for printing...");
+                    window.print();
+                  }}
                 >
                   <Printer size={16} /> Print
                 </button>
 
-                <button
-                  className="btn btn-ghost"
-                  onClick={() => setView(null)}
-                >
+                <button className="btn btn-ghost" onClick={() => setView(null)}>
                   <X size={16} />
                 </button>
               </div>
             </div>
 
-            <SalarySlipView
-              slip={view}
-              empName={me.name}
-              role={me.role}
-            />
+            <SalarySlipView slip={view} empName={me.name} role={me.role} />
           </div>
         </div>
       )}
