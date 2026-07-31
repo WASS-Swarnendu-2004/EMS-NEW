@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import logo from "@/assets/logo.jpeg.asset.json";
 import logo1 from "@/assets/logo1.jpg"
 import { Loader2 } from "lucide-react";
+import { toast } from "react-toastify";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Login | WebApps EMS" }] }),
@@ -42,24 +43,31 @@ function Login() {
   //   if (r) setErr(r);
   // }
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+ async function submit(e: React.FormEvent) {
+  e.preventDefault();
 
-    if (loading) return;
+  if (loading) return;
 
-    setErr(null);
-    setLoading(true);
+  setErr(null);
+  setLoading(true);
 
-    try {
-      const r = await login(email, password);
+  try {
+    const r = await login(email, password);
 
-      if (r) {
-        setErr(r);
-      }
-    } finally {
-      setLoading(false);
+    if (r) {
+      setErr(r);
+      toast.error(r);
+    } else {
+      toast.success("Login successful");
     }
+  } catch (err: any) {
+    console.error(err);
+
+    toast.error("Login failed");
+  } finally {
+    setLoading(false);
   }
+}
 
   return (
     <div className="login-page">

@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import { log } from "console";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { getMyProjects, type Project } from "@/api/project";
+import { saveWorkStatus } from "@/api/workStatus";
 
 export const Route = createFileRoute("/user/")({ component: Page });
 
@@ -20,6 +22,8 @@ function Page() {
   const t = today();
 
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+
 
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
@@ -27,8 +31,31 @@ function Page() {
   const [savingWork, setSavingWork] = useState(false);
 
   useEffect(() => {
-    fetchDashboard();
+    loadData();
   }, []);
+
+  async function loadData() {
+  try {
+    setLoading(true);
+
+    const [dashboardData, projectData] = await Promise.all([
+      getDashboard(),
+      getMyProjects(),
+    ]);
+
+    setDashboard(dashboardData);
+    setProjects(projectData);
+
+    setPlan(dashboardData.todayPlan?.plan ?? "");
+    setStatus(dashboardData.todayPlan?.status ?? "");
+    setProjectId(dashboardData.todayPlan?.projectId ?? "");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to load dashboard");
+  } finally {
+    setLoading(false);
+  }
+}
 
   const fetchDashboard = async () => {
     try {
@@ -49,25 +76,26 @@ function Page() {
     }
   };
 
-  async function saveWorkStatus() {
-    try {
-      setSavingWork(true);
+  async function handleSaveWorkStatus() {
+  try {
+    setSavingWork(true);
 
-      store.upsertWorkStatus({
-        employeeId: empId,
-        date: t,
-        plan,
-        status,
-        projectId: projectId || undefined,
-      });
+    await saveWorkStatus({
+      plan,
+      status,
+      projectId: projectId || undefined,
+    });
 
-      toast.success("Work status saved");
-    } catch {
-      toast.error("Unable to save work status");
-    } finally {
-      setSavingWork(false);
-    }
+    toast.success("Work status saved");
+
+    await fetchDashboard();
+  } catch (err) {
+    console.error(err);
+    toast.error("Unable to save work status");
+  } finally {
+    setSavingWork(false);
   }
+}
   const handleCheckIn = async () => {
     try {
       setCheckingIn(true);
@@ -99,6 +127,16 @@ function Page() {
       setCheckingOut(false);
     }
   };
+
+  function formatISTTime(date: string) {
+  return new Date(date).toLocaleTimeString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+}
 
   if (loading) {
     return (
@@ -180,7 +218,7 @@ function Page() {
           {dashboard?.attendance && (
             <div>
               <p>
-                Checked in at <strong>{dashboard.attendance.checkIn}</strong> (
+                Checked in at <strong>{formatISTTime(dashboard.attendance.checkIn)}</strong> (
                 {dashboard.attendance.mode})
               </p>
               {!dashboard.attendance.checkOut && (
@@ -197,8 +235,10 @@ function Page() {
               )}
               {dashboard.attendance.checkOut && (
                 <p className="badge success">
-                  Day complete — {dashboard.attendance.checkIn} → {dashboard.attendance.checkOut}
-                </p>
+  Day complete —{" "}
+  {formatISTTime(dashboard.attendance.checkIn)} →{" "}
+  {formatISTTime(dashboard.attendance.checkOut)}
+</p>
               )}
             </div>
           )}
@@ -211,12 +251,18 @@ function Page() {
           <div className="field">
             <label>Project</label>
             <select
-              className="select"
-              value={projectId}
-              onChange={(e) => setProjectId(e.target.value)}
-            >
-              <option value="">— No project —</option>
-            </select>
+  className="select"
+  value={projectId}
+  onChange={(e) => setProjectId(e.target.value)}
+>
+  <option value="">— No project —</option>
+
+  {projects.map((project) => (
+    <option key={project._id} value={project._id}>
+      {project.projectName}
+    </option>
+  ))}
+</select>
           </div>
           <div className="field">
             <label>Morning plan</label>
@@ -230,7 +276,7 @@ function Page() {
               onChange={(e) => setStatus(e.target.value)}
             />
           </div>
-          <button className="btn" onClick={saveWorkStatus} disabled={savingWork}>
+          <button className="btn" onClick={handleSaveWorkStatus} disabled={savingWork}>
             {savingWork ? (
               <>
                 <Loader2 className="animate-spin" size={18} />

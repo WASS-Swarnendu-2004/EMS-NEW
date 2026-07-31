@@ -64,9 +64,6 @@ const [saving, setSaving] = useState(false);
 }
   
 
-  // const ws = db.workStatus.find((w) => w.employeeId === empId && w.date === date);
-  // const myProjects = db.projects.filter((p) => p.assigned.includes(empId));
-
   const [plan, setPlan] = useState("");
   const [status, setStatus] = useState("");
   const [projectId, setProjectId] = useState("");
