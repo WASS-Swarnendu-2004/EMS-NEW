@@ -1,5 +1,6 @@
 import type { SalarySlip } from "@/api/salary";
 import logo from "@/assets/logo.jpeg.asset.json";
+import logo1 from"@/assets/logo1.jpg"
 
 export function SalarySlipView({ slip, empName, role }: { slip: SalarySlip; empName: string; role: string }) {
   const earnings = slip.items.filter((i) => i.type === "earning");
@@ -8,7 +9,7 @@ export function SalarySlipView({ slip, empName, role }: { slip: SalarySlip; empN
   return (
     <div className="slip">
       <div className="slip-head">
-        <div className="flex"><img src={logo.url} alt="logo" /><div><h2>WebApps Softwares</h2><div className="muted">Salary Slip · {slip.month}</div></div></div>
+        <div className="flex"><img src={logo1} alt="logo" /><div><h2>WebApps Softwares</h2><div className="muted">Salary Slip · {slip.month}</div></div></div>
         <div className="text-right"><div className="muted">Issued</div><div>{slip.generatedAt.slice(0, 10)}</div></div>
       </div>
       <div className="slip-grid">

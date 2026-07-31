@@ -5,6 +5,7 @@ import {
   ClipboardList, Wallet, Mail, LogOut,
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg.asset.json";
+import logo1 from "@/assets/logo1.jpg"
 import { useAuth } from "@/lib/auth";
 
 type IconType = ComponentType<{ size?: number; className?: string }>;
@@ -22,7 +23,7 @@ export function Shell({ items, title, children }: { items: NavItem[]; title: str
     <div className="app">
       <aside className="sidebar">
         <div className="brand">
-          <img src={logo.url} alt="WebApps" />
+          <img src={logo1} alt="WebApps" />
           <div>
             <div className="brand-text">WebApps</div>
             <div className="brand-sub">Employee Management</div>
