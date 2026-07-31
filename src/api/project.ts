@@ -10,11 +10,11 @@ export interface Project {
   duration: number;
   valuation: number;
   status:
-    | "planning"
-    | "in_progress"
-    | "on_hold"
-    | "completed"
-    | "cancelled";
+  | "planning"
+  | "in-progress"
+  | "on-hold"
+  | "completed"
+  | "cancelled";
   description: string;
   assignedEmployees: string[];
 }
@@ -29,18 +29,37 @@ export interface CreateProjectPayload {
   assignedEmployees: string[];
 }
 
-export interface UpdateProjectPayload
-  extends Partial<CreateProjectPayload> {}
-
-interface GetProjectsResponse {
+export interface UpdateProjectPayload {
+  projectName?: string;
+  consumerName?: string;
+  startDate?: string;
+  endDate?: string;
+  valuation?: number;
+  status?: Project["status"];
+  consumerDetails?: string;
+  description?: string;
+}
+interface UpdateProjectResponse {
   success: boolean;
-  projects: Project[];
+  message: string;
+  project: Project;
+}
+
+interface GetProjectResponse {
+  success: boolean;
+  project: Project;
 }
 
 interface CreateProjectResponse {
   success: boolean;
   message: string;
   project: Project;
+}
+
+interface GetMyProjectsResponse {
+  success: boolean;
+  total: number;
+  projects: Project[];
 }
 
 export const getProjects = async (): Promise<Project[]> => {
@@ -77,12 +96,17 @@ export const createProject = async (
 export const updateProject = async (
   id: string,
   data: UpdateProjectPayload
-) => {
-  throw new Error("Update Project API not available yet");
+): Promise<Project> => {
+  const response = await api.put<UpdateProjectResponse>(
+    `/admin/projects/${id}`,
+    data
+  );
+
+  return response.data.project;
 };
 
 export const deleteProject = async (id: string) => {
-  throw new Error("Delete Project API not available yet");
+  await api.delete(`/admin/projects/${id}`);
 };
 
 export const updateProjectStatus = async (
@@ -94,7 +118,22 @@ export const updateProjectStatus = async (
 
 export const assignEmployeesToProject = async (
   id: string,
-  assigned: string[]
+  employeeIds: string[]
 ) => {
-  throw new Error("Assign Employee API not available yet");
+  const response = await api.put(
+    `/admin/projects/${id}/assign`,
+    {
+      employeeIds,
+    }
+  );
+
+  return response.data.project;
+};
+
+export const getMyProjects = async (): Promise<Project[]> => {
+  const response = await api.get<GetMyProjectsResponse>(
+    "/employee/projects/my-projects"
+  );
+
+  return response.data.projects;
 };

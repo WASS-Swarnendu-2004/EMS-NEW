@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { getMyWorkStatus, saveWorkStatus, type WorkStatus } from "@/api/workStatus";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
+import { getMyProjects, type Project } from "@/api/project";
 
 export const Route = createFileRoute("/user/tasks")({ component: Page });
 
@@ -14,11 +15,36 @@ function Page() {
   const empId = session!.id;
   const [date, setDate] = useState(today());
   const [history, setHistory] = useState<WorkStatus[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 const [saving, setSaving] = useState(false);
   useEffect(() => {
     loadHistory();
+    loadData();
   }, []);
+
+  async function loadData() {
+  try {
+    setLoading(true);
+
+    const [historyData, projectData] = await Promise.all([
+      getMyWorkStatus(),
+      getMyProjects(),
+    ]);
+
+    setHistory(historyData);
+    setProjects(projectData);
+  } catch (err: any) {
+    console.error(err);
+
+    toast.error(
+      err.response?.data?.message || "Failed to load data"
+    );
+  } finally {
+    setLoading(false);
+  }
+  }
+  
   async function loadHistory() {
   try {
     setLoading(true);
@@ -39,7 +65,7 @@ const [saving, setSaving] = useState(false);
   
 
   // const ws = db.workStatus.find((w) => w.employeeId === empId && w.date === date);
-  const myProjects = db.projects.filter((p) => p.assigned.includes(empId));
+  // const myProjects = db.projects.filter((p) => p.assigned.includes(empId));
 
   const [plan, setPlan] = useState("");
   const [status, setStatus] = useState("");
@@ -78,10 +104,19 @@ const [saving, setSaving] = useState(false);
           <input className="input" type="date" value={date} onChange={(e) => changeDate(e.target.value)} style={{ width: 180 }} />
         </div>
         <div className="field"><label>Project</label>
-          <select className="select" value={projectId} onChange={(e) => setProjectId(e.target.value)}>
-            <option value="">— Select project —</option>
-            {myProjects.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+          <select
+  className="select"
+  value={projectId}
+  onChange={(e) => setProjectId(e.target.value)}
+>
+  <option value="">— Select project —</option>
+
+  {projects.map((p) => (
+    <option key={p._id} value={p._id}>
+      {p.projectName}
+    </option>
+  ))}
+</select>
         </div>
         <div className="field"><label>Plan for the day</label><textarea className="textarea" value={plan} onChange={(e) => setPlan(e.target.value)} placeholder="What do you plan to accomplish today?" /></div>
         <div className="field"><label>End-of-day status / blockers</label><textarea className="textarea" value={status} onChange={(e) => setStatus(e.target.value)} placeholder="Report what's done and any blockers." /></div>
@@ -101,7 +136,7 @@ const [saving, setSaving] = useState(false);
 
       toast.success("Work report saved successfully");
 
-      await loadHistory();
+      await loadData();
     } catch (err: any) {
       console.error(err);
 

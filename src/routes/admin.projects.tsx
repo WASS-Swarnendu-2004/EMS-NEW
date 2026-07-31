@@ -4,7 +4,14 @@ import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 // import { store, useDB, type Project } from "@/lib/store";
 import { useDB } from "@/lib/store";
-import {getProjects,createProject,type Project,
+import {
+  getProjects,
+  createProject,
+  updateProject,
+  deleteProject,
+  assignEmployeesToProject,
+  updateProjectStatus,
+  type Project,
 } from "@/api/project";
 
 import { useEffect } from "react";
@@ -12,14 +19,29 @@ import { exportToExcel } from "@/lib/excel";
 
 export const Route = createFileRoute("/admin/projects")({ component: Page });
 
-const STATUSES: Project["status"][] = ["planning", "in_progress", "on_hold", "completed", "cancelled"];
+const STATUSES: Project["status"][] = [
+  "planning",
+  "in-progress",
+  "on-hold",
+  "completed",
+  "cancelled",
+];
 
 function diffDays(a: string, b: string) {
   if (!a || !b) return 0;
   return Math.max(0, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
 }
 
-const blank = {
+const blank: {
+  projectName: string;
+  consumerName: string;
+  consumerDetails: string;
+  startDate: string;
+  endDate: string;
+  valuation: number;
+  description: string;
+  assignedEmployees: string[];
+} = {
   projectName: "",
   consumerName: "",
   consumerDetails: "",
@@ -63,8 +85,21 @@ async function loadProjects() {
   const duration = useMemo(() => diffDays(form.startDate, form.endDate), [form.startDate, form.endDate]);
 
   function openNew() { setEditing(null); setForm(blank); setOpen(true); }
-  function openEdit() {
-  alert("Edit Project API is not available yet.");
+function openEdit(project: Project) {
+  setEditing(project);
+
+  setForm({
+    projectName: project.projectName,
+    consumerName: project.consumerName,
+    consumerDetails: project.consumerDetails,
+    startDate: project.startDate.slice(0,10),
+    endDate: project.endDate.slice(0,10),
+    valuation: project.valuation,
+    description: project.description,
+    assignedEmployees: project.assignedEmployees,
+  });
+
+  setOpen(true);
 }
   async function save() {
   try {
@@ -84,12 +119,35 @@ async function loadProjects() {
     console.error(err);
   }
 }
-  function remove() {
-  alert("Delete Project API is not available yet.");
+async function remove(id:string){
+
+if(!confirm("Delete project?")) return;
+
+await deleteProject(id);
+
+loadProjects();
+
 }
 
-  function toggleAssign() {
-  alert("Assign Employee API is not available yet.");
+async function toggleAssign(
+project:Project,
+empId:string
+){
+
+const ids=
+project.assignedEmployees.includes(empId)
+?project.assignedEmployees.filter(
+x=>x!==empId
+)
+:[...project.assignedEmployees,empId];
+
+await assignEmployeesToProject(
+project._id,
+ids
+);
+
+loadProjects();
+
 }
 
   function exportXlsx() {
@@ -137,16 +195,49 @@ async function loadProjects() {
                 <td>{p.startDate} → {p.endDate}<div className="muted" style={{ fontSize: ".75rem" }}>{p.duration} days</div></td>
                 <td>₹{p.valuation.toLocaleString()}</td>
                 <td>
-                  <select className="select"style={{ padding: ".25rem .4rem", fontSize: ".8rem" }}value={p.status} disabled>
-                    {STATUSES.map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
-                  </select>
-                </td>
+  <select
+    className="select"
+    style={{ padding: ".25rem .4rem", fontSize: ".8rem" }}
+    value={p.status}
+    onChange={async (e) => {
+      try {
+        await updateProjectStatus(
+          p._id,
+          e.target.value as Project["status"]
+        );
+
+        await loadProjects();
+
+        toast.success("Project status updated");
+      } catch (err) {
+        console.error(err);
+        toast.error("Failed to update status");
+      }
+    }}
+  >
+    {STATUSES.map((s) => (
+      <option key={s} value={s}>
+        {s.replace("-", " ")}
+      </option>
+    ))}
+  </select>
+</td>
                 <td>{p.assignedEmployees.length}</td>
                 <td className="actions">
                   <button className="btn btn-sm btn-ghost" onClick={() => setView(p)}>View</button>
                   <button className="btn btn-sm btn-ghost" onClick={() => setAssignOpen(p)}>Assign</button>
-                  <button className="btn btn-sm btn-ghost" onClick={openEdit}>Edit</button>
-                  <button className="btn btn-sm btn-danger"onClick={remove}>Del</button>
+                  <button
+  className="btn btn-sm btn-ghost"
+  onClick={() => openEdit(p)}
+>
+  Edit
+</button>
+                 <button
+  className="btn btn-sm btn-danger"
+  onClick={() => remove(p._id)}
+>
+  Del
+</button>
                 </td>
               </tr>
             ))}
@@ -203,7 +294,11 @@ async function loadProjects() {
             <p className="muted">Toggle employees to assign / unassign this project.</p>
             {db.employees.map((emp) => (
               <label key={emp.id} className="flex" style={{ padding: ".5rem .25rem", borderBottom: "1px solid #eee", cursor: "pointer" }}>
-                <input type="checkbox" checked={assignOpen.assignedEmployees.includes(emp.id)} onChange={ toggleAssign} />
+                <input
+  type="checkbox"
+  checked={assignOpen.assignedEmployees.includes(emp.id)}
+  onChange={() => toggleAssign(assignOpen, emp.id)}
+/>
                 <span>{emp.name}</span>
                 <span className="muted" style={{ marginLeft: "auto", fontSize: ".8rem" }}>{emp.role}</span>
               </label>
