@@ -1,46 +1,57 @@
 import api from "./axios";
 
-export interface Mail {
+export interface MailHistory {
   id: string;
-  toEmployeeId: string;
+  employeeId: string;
+  employeeName: string;
+  employeeEmail: string;
   subject: string;
-  body: string;
-  attachmentName?: string;
+  message: string;
+  attachment: string;
   sentAt: string;
 }
 
-export interface SendMailPayload {
-  toEmployeeId: string;
+// Send Mail
+export const sendMail = async ({
+  employee,
+  subject,
+  message,
+}: {
+  employee: string;
   subject: string;
-  body: string;
-  attachmentName?: string;
-}
-
-export const getMailHistory = async (): Promise<Mail[]> => {
+  message: string;
+}) => {
   try {
-    const response = await api.get<Mail[]>(
-      "" // <-- Add Get Mail History API Endpoint Here
-    );
-
-    return response.data;
-  } catch (error) {
-    console.error("Get Mail History Error:", error);
-    throw error;
-  }
-};
-
-export const sendMail = async (
-  data: SendMailPayload
-): Promise<Mail> => {
-  try {
-    const response = await api.post<Mail>(
-      "", // <-- Add Send Mail API Endpoint Here
-      data
-    );
+    const response = await api.post("/admin/mail", {
+      employee,
+      subject,
+      message,
+    });
 
     return response.data;
   } catch (error) {
     console.error("Send Mail Error:", error);
+    throw error;
+  }
+};
+
+// Get Mail History
+export const getMailHistory = async (): Promise<MailHistory[]> => {
+  try {
+    const response = await api.get("/admin/mail");
+
+    return response.data.mails.map((mail: any) => ({
+      id: mail._id,
+      employeeId: mail.employee._id,
+      employeeName: mail.employee.fullName,
+      employeeEmail: mail.employee.email,
+      subject: mail.subject,
+      message: mail.message,
+      attachment: mail.attachment,
+      sentAt: mail.sentAt,
+    }));
+  } catch (error) {
+    console.error("Mail History Error:", error);
     throw error;
   }
 };
