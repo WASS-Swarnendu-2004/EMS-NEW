@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { Printer, X } from "lucide-react";
 // import { useDB, type SalarySlip } from "@/lib/store";
-import { getSalarySlips, type SalarySlip } from "@/api/salary";
+import { getMySalarySlips, type SalarySlip } from "@/api/salary";
 import { useAuth } from "@/lib/auth";
 import { SalarySlipView } from "@/components/SalarySlipView";
 
@@ -20,32 +20,45 @@ function Page() {
   const [slips, setSlips] = useState<SalarySlip[]>([]);
   const [view, setView] = useState<SalarySlip | null>(null);
 
+//   useEffect(() => {
+//     const loadSalary = async () => {
+//       try {
+//         const data = await getMySalarySlips();
+//         console.log("Salary API Response:", data);
+
+//        setSlips(
+//   data.sort((a, b) => b.month.localeCompare(a.month))
+// );
+
+// //         console.log("Session Employee ID:", empId);
+// // console.log("All Slips:", data);
+// // console.log(
+// //   "Filtered:",
+// //   data.filter((s) => s.employeeId === empId)
+// // );
+//       } catch (err) {
+//         console.error(err);
+//       }
+//     };
+
+//     loadSalary();
+//   }, [empId]);
+
   useEffect(() => {
-    const loadSalary = async () => {
-      try {
-        const data = await getSalarySlips();
-        console.log("Salary API Response:", data);
+  const loadSalary = async () => {
+    try {
+      const data = await getMySalarySlips();
 
-        setSlips(
-          data
-            .filter((s) => s.employeeId === empId)
-            .sort((a, b) => b.month.localeCompare(a.month))
-        );
+      setSlips(
+        data.sort((a, b) => b.month.localeCompare(a.month))
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-        console.log("Session Employee ID:", empId);
-console.log("All Slips:", data);
-console.log(
-  "Filtered:",
-  data.filter((s) => s.employeeId === empId)
-);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    loadSalary();
-  }, [empId]);
-
+  loadSalary();
+}, []);
  
 
   return (

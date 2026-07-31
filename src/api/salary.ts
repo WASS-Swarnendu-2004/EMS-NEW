@@ -42,6 +42,34 @@ export interface SalaryListItem {
   netSalary?: number;
 }
 
+export const getMySalarySlips = async (): Promise<SalarySlip[]> => {
+  const response = await api.get("/salary");
+
+  return response.data.salaries.map((s: any) => ({
+    id: s._id,
+    employeeId: s.employee,
+    month: `${s.year}-${String(s.month).padStart(2, "0")}`,
+    gross: s.grossSalary,
+    net: s.netSalary,
+    totalEarnings: s.totalEarnings,
+    totalDeductions: s.totalDeductions,
+    generatedAt: s.generatedAt,
+
+    items: [
+      ...s.earnings.map((e: any) => ({
+        label: e.label,
+        amount: e.amount,
+        type: "earning" as const,
+      })),
+      ...s.deductions.map((d: any) => ({
+        label: d.label,
+        amount: d.amount,
+        type: "deduction" as const,
+      })),
+    ],
+  }));
+};
+
 export const getSalaryList = async (month: string): Promise<SalaryListItem[]> => {
   const [year, mon] = month.split("-");
 
