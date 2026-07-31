@@ -10,9 +10,9 @@ import {
   updateProject,
   deleteProject,
   assignEmployeesToProject,
-  updateProjectStatus,
   type Project,
 } from "@/api/project";
+import { getEmployees, type Employee } from "@/api/employee";
 
 import { useEffect } from "react";
 import { exportToExcel } from "@/lib/excel";
@@ -30,6 +30,15 @@ const STATUSES: Project["status"][] = [
 function diffDays(a: string, b: string) {
   if (!a || !b) return 0;
   return Math.max(0, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
+}
+
+function formatISTDate(date: string) {
+  return new Date(date).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 const blank: {
@@ -61,113 +70,138 @@ function Page() {
   const [assignOpen, setAssignOpen] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [employees, setEmployees] = useState<Employee[]>([]);
 
   useEffect(() => {
-  loadProjects();
-}, []);
+    loadData();
+  }, []);
 
-async function loadProjects() {
-  try {
-    setLoading(true);
+  async function loadProjects() {
+    try {
+      setLoading(true);
 
-    const data = await getProjects();
+      const data = await getProjects();
 
-    setProjects(data);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to load projects");
-  } finally {
-    setLoading(false);
+      setProjects(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load projects");
+    } finally {
+      setLoading(false);
+    }
   }
-}
+  async function loadData() {
+    try {
+      setLoading(true);
 
-  const duration = useMemo(() => diffDays(form.startDate, form.endDate), [form.startDate, form.endDate]);
+      const [projectData, employeeData] = await Promise.all([getProjects(), getEmployees()]);
 
-  function openNew() { setEditing(null); setForm(blank); setOpen(true); }
-function openEdit(project: Project) {
-  setEditing(project);
+      setProjects(projectData);
+      setEmployees(employeeData);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load data");
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  setForm({
-    projectName: project.projectName,
-    consumerName: project.consumerName,
-    consumerDetails: project.consumerDetails,
-    startDate: project.startDate.slice(0,10),
-    endDate: project.endDate.slice(0,10),
-    valuation: project.valuation,
-    description: project.description,
-    assignedEmployees: project.assignedEmployees,
-  });
+  const duration = useMemo(
+    () => diffDays(form.startDate, form.endDate),
+    [form.startDate, form.endDate],
+  );
 
-  setOpen(true);
-}
-  async function save() {
-  try {
-    await createProject({
-      projectName: form.projectName,
-      consumerName: form.consumerName,
-      startDate: form.startDate,
-      endDate: form.endDate,
-      valuation: form.valuation,
-      description: form.description,
-      assignedEmployees: form.assignedEmployees,
+  function openNew() {
+    setEditing(null);
+    setForm(blank);
+    setOpen(true);
+  }
+  function openEdit(project: Project) {
+    setEditing(project);
+
+    setForm({
+      projectName: project.projectName,
+      consumerName: project.consumerName,
+      consumerDetails: project.consumerDetails,
+      startDate: project.startDate.slice(0, 10),
+      endDate: project.endDate.slice(0, 10),
+      valuation: project.valuation,
+      description: project.description,
+      assignedEmployees: project.assignedEmployees,
     });
 
-    setOpen(false);
+    setOpen(true);
+  }
+  async function save() {
+    try {
+      await createProject({
+        projectName: form.projectName,
+        consumerName: form.consumerName,
+        startDate: form.startDate,
+        endDate: form.endDate,
+        valuation: form.valuation,
+        description: form.description,
+        assignedEmployees: form.assignedEmployees,
+      });
+
+      setOpen(false);
+      loadProjects();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  async function remove(id: string) {
+    if (!confirm("Delete project?")) return;
+
+    await deleteProject(id);
+
     loadProjects();
+  }
+
+  async function toggleAssign(
+  project: Project,
+  empId: string
+) {
+  try {
+    const ids = project.assignedEmployees.includes(empId)
+      ? project.assignedEmployees.filter(id => id !== empId)
+      : [...project.assignedEmployees, empId];
+
+    const updatedProject = await assignEmployeesToProject(
+      project._id,
+      ids
+    );
+
+    setAssignOpen(updatedProject);
+
+    await loadProjects();
+
+    toast.success("Project updated");
   } catch (err) {
     console.error(err);
+    toast.error("Failed to assign employee");
   }
-}
-async function remove(id:string){
-
-if(!confirm("Delete project?")) return;
-
-await deleteProject(id);
-
-loadProjects();
-
-}
-
-async function toggleAssign(
-project:Project,
-empId:string
-){
-
-const ids=
-project.assignedEmployees.includes(empId)
-?project.assignedEmployees.filter(
-x=>x!==empId
-)
-:[...project.assignedEmployees,empId];
-
-await assignEmployeesToProject(
-project._id,
-ids
-);
-
-loadProjects();
-
 }
 
   function exportXlsx() {
-  exportToExcel(
-    projects.map((p) => ({
-      Name: p.projectName,
-      Consumer: p.consumerName,
-      Start: p.startDate,
-      End: p.endDate,
-      Duration: p.duration,
-      Valuation: p.valuation,
-      Status: p.status,
-      AssignedCount: p.assignedEmployees.length,
-    })),
-    "projects.xlsx",
-    "Projects"
-  );
+    exportToExcel(
+      projects.map((p) => ({
+        Name: p.projectName,
+        Consumer: p.consumerName,
+        Start: p.startDate,
+        End: p.endDate,
+        Duration: p.duration,
+        Valuation: p.valuation,
+        Status: p.status,
+        AssignedCount: p.assignedEmployees.length,
+      })),
+      "projects.xlsx",
+      "Projects",
+    );
   }
-  
-   if (loading) {
+
+  if (loading) {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
@@ -180,68 +214,99 @@ loadProjects();
     <>
       <div className="toolbar">
         <span className="spacer" />
-        <button className="btn btn-ghost" onClick={exportXlsx}>⬇ Export Excel</button>
-        <button className="btn" onClick={openNew}>+ Add project</button>
+        <button className="btn btn-ghost" onClick={exportXlsx}>
+          ⬇ Export Excel
+        </button>
+        <button className="btn" onClick={openNew}>
+          + Add project
+        </button>
       </div>
 
       <div className="table-wrap">
         <table className="table">
-          <thead><tr><th>Project</th><th>Consumer</th><th>Duration</th><th>Valuation</th><th>Status</th><th>Assigned</th><th></th></tr></thead>
+          <thead>
+            <tr>
+              <th>Project</th>
+              <th>Consumer</th>
+              <th>Duration</th>
+              <th>Valuation</th>
+              <th>Status</th>
+              <th>Assigned</th>
+              <th></th>
+            </tr>
+          </thead>
           <tbody>
             {projects.map((p) => (
               <tr key={p._id}>
-                <td><strong>{p.projectName}</strong></td>
+                <td>
+                  <strong>{p.projectName}</strong>
+                </td>
                 <td>{p.consumerName}</td>
-                <td>{p.startDate} → {p.endDate}<div className="muted" style={{ fontSize: ".75rem" }}>{p.duration} days</div></td>
+                <td>
+  {formatISTDate(p.startDate)} → {formatISTDate(p.endDate)}
+  <div className="muted" style={{ fontSize: ".75rem" }}>
+    {p.duration} days
+  </div>
+</td>
                 <td>₹{p.valuation.toLocaleString()}</td>
                 <td>
-  <select
-    className="select"
-    style={{ padding: ".25rem .4rem", fontSize: ".8rem" }}
-    value={p.status}
-    onChange={async (e) => {
-      try {
-        await updateProjectStatus(
-          p._id,
-          e.target.value as Project["status"]
-        );
+                  <select
+                    className="select"
+                    style={{ padding: ".25rem .4rem", fontSize: ".8rem" }}
+                    value={p.status}
+                    onChange={async (e) => {
+  const newStatus = e.target.value as Project["status"];
 
-        await loadProjects();
+  try {
+    await updateProject(p._id, {
+      status: newStatus,
+    });
 
-        toast.success("Project status updated");
-      } catch (err) {
-        console.error(err);
-        toast.error("Failed to update status");
-      }
-    }}
-  >
-    {STATUSES.map((s) => (
-      <option key={s} value={s}>
-        {s.replace("-", " ")}
-      </option>
-    ))}
-  </select>
-</td>
+    await loadProjects();
+
+    toast.success("Project status updated");
+  } catch (err) {
+    console.error(err);
+    toast.error("Failed to update status");
+  }
+}}
+                  >
+                    {STATUSES.map((s) => (
+                      <option key={s} value={s}>
+                        {s.replace("-", " ")}
+                      </option>
+                    ))}
+                  </select>
+                </td>
                 <td>{p.assignedEmployees.length}</td>
                 <td className="actions">
-                  <button className="btn btn-sm btn-ghost" onClick={() => setView(p)}>View</button>
-                  <button className="btn btn-sm btn-ghost" onClick={() => setAssignOpen(p)}>Assign</button>
+                  {/* <button className="btn btn-sm btn-ghost" onClick={() => setView(p)}>
+                    View
+                  </button> */}
                   <button
-  className="btn btn-sm btn-ghost"
-  onClick={() => openEdit(p)}
->
-  Edit
-</button>
-                 <button
-  className="btn btn-sm btn-danger"
-  onClick={() => remove(p._id)}
->
-  Del
-</button>
+                    className="btn btn-sm btn-ghost"
+                    onClick={async () => {
+                      setAssignOpen(p);
+                    }}
+                  >
+                    Assign
+                  </button>
+                  <button className="btn btn-sm btn-ghost" onClick={() => openEdit(p)}>
+                    Edit
+                  </button>
+                  <button className="btn btn-sm btn-danger" onClick={() => remove(p._id)}>
+                    Del
+                  </button>
                 </td>
               </tr>
             ))}
-            {projects.length === 0 && <tr><td colSpan={7} className="empty">No projects yet</td></tr>}
+            {projects.length === 0 && (
+              <tr>
+                <td colSpan={7} className="empty">
+                  No projects yet
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
@@ -249,20 +314,84 @@ loadProjects();
       {open && (
         <div className="modal-backdrop" onClick={() => setOpen(false)}>
           <div className="modal lg" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head"><h2>{editing ? "Edit" : "Add"} project</h2><button className="btn btn-sm btn-ghost" onClick={() => setOpen(false)}>✕</button></div>
-            <div className="row-2">
-              <div className="field"><label>Project name *</label><input className="input" value={form.projectName} onChange={(e) => setForm({ ...form, projectName: e.target.value })} /></div>
-              <div className="field"><label>Consumer name *</label><input className="input" value={form.consumerName} onChange={(e) => setForm({ ...form, consumerName: e.target.value })} /></div>
-              <div className="field"><label>Start date</label><input className="input" type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></div>
-              <div className="field"><label>End date</label><input className="input" type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></div>
-              <div className="field"><label>Duration (auto)</label><input className="input" value={duration + " days"} readOnly /></div>
-              <div className="field"><label>Valuation (₹)</label><input className="input" type="number" value={form.valuation} onChange={(e) => setForm({ ...form, valuation: +e.target.value })} /></div>
+            <div className="modal-head">
+              <h2>{editing ? "Edit" : "Add"} project</h2>
+              <button className="btn btn-sm btn-ghost" onClick={() => setOpen(false)}>
+                ✕
+              </button>
             </div>
-            <div className="field"><label>Consumer details</label><textarea className="textarea" value={form.consumerDetails} onChange={(e) => setForm({ ...form, consumerDetails: e.target.value })} /></div>
-            <div className="field"><label>Description</label><textarea className="textarea" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
+            <div className="row-2">
+              <div className="field">
+                <label>Project name *</label>
+                <input
+                  className="input"
+                  value={form.projectName}
+                  onChange={(e) => setForm({ ...form, projectName: e.target.value })}
+                />
+              </div>
+              <div className="field">
+                <label>Consumer name *</label>
+                <input
+                  className="input"
+                  value={form.consumerName}
+                  onChange={(e) => setForm({ ...form, consumerName: e.target.value })}
+                />
+              </div>
+              <div className="field">
+                <label>Start date</label>
+                <input
+                  className="input"
+                  type="date"
+                  value={form.startDate}
+                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
+                />
+              </div>
+              <div className="field">
+                <label>End date</label>
+                <input
+                  className="input"
+                  type="date"
+                  value={form.endDate}
+                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
+                />
+              </div>
+              <div className="field">
+                <label>Duration (auto)</label>
+                <input className="input" value={duration + " days"} readOnly />
+              </div>
+              <div className="field">
+                <label>Valuation (₹)</label>
+                <input
+                  className="input"
+                  type="number"
+                  value={form.valuation}
+                  onChange={(e) => setForm({ ...form, valuation: +e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="field">
+              <label>Consumer details</label>
+              <textarea
+                className="textarea"
+                value={form.consumerDetails}
+                onChange={(e) => setForm({ ...form, consumerDetails: e.target.value })}
+              />
+            </div>
+            <div className="field">
+              <label>Description</label>
+              <textarea
+                className="textarea"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+              />
+            </div>
             <div className="modal-foot">
-              <button className="btn btn-ghost" onClick={() => setOpen(false)}>Cancel</button>
-              <button className="btn" onClick={save}>Save</button>
+              <button className="btn btn-ghost" onClick={() => setOpen(false)}>
+                Cancel
+              </button>
+              <button className="btn" onClick={save}>
+                Save
+              </button>
             </div>
           </div>
         </div>
@@ -271,18 +400,46 @@ loadProjects();
       {view && (
         <div className="modal-backdrop" onClick={() => setView(null)}>
           <div className="modal lg" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head"><h2>{view.projectName}</h2><button className="btn btn-sm btn-ghost" onClick={() => setView(null)}>✕</button></div>
-            <div className="row-2">
-              <div><strong>Consumer:</strong> {view.consumerName}</div>
-              <div><strong>Status:</strong> <span className="badge purple">{view.status.replace("_", " ")}</span></div>
-              <div><strong>Start:</strong> {view.startDate}</div>
-              <div><strong>End:</strong> {view.endDate}</div>
-              <div><strong>Duration:</strong> {view.duration} days</div>
-              <div><strong>Valuation:</strong> ₹{view.valuation.toLocaleString()}</div>
+            <div className="modal-head">
+              <h2>{view.projectName}</h2>
+              <button className="btn btn-sm btn-ghost" onClick={() => setView(null)}>
+                ✕
+              </button>
             </div>
-            <p className="mt-2"><strong>Details:</strong> {view.consumerDetails}</p>
-            <p><strong>Description:</strong> {view.description}</p>
-            <div className="mt-2"><strong>Assigned:</strong> {view.assignedEmployees.map((id) => db.employees.find((e) => e.id === id)?.name).filter(Boolean).join(", ") || "Nobody"}</div>
+            <div className="row-2">
+              <div>
+                <strong>Consumer:</strong> {view.consumerName}
+              </div>
+              <div>
+                <strong>Status:</strong>{" "}
+                <span className="badge purple">{view.status.replace("_", " ")}</span>
+              </div>
+              <div>
+                <strong>Start:</strong> {view.startDate}
+              </div>
+              <div>
+                <strong>End:</strong> {view.endDate}
+              </div>
+              <div>
+                <strong>Duration:</strong> {view.duration} days
+              </div>
+              <div>
+                <strong>Valuation:</strong> ₹{view.valuation.toLocaleString()}
+              </div>
+            </div>
+            <p className="mt-2">
+              <strong>Details:</strong> {view.consumerDetails}
+            </p>
+            <p>
+              <strong>Description:</strong> {view.description}
+            </p>
+            <div className="mt-2">
+              <strong>Assigned:</strong>{" "}
+              {view.assignedEmployees
+                .map((id) => db.employees.find((e) => e.id === id)?.name)
+                .filter(Boolean)
+                .join(", ") || "Nobody"}
+            </div>
           </div>
         </div>
       )}
@@ -290,20 +447,39 @@ loadProjects();
       {assignOpen && (
         <div className="modal-backdrop" onClick={() => setAssignOpen(null)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head"><h2>Assign — {assignOpen.projectName}</h2><button className="btn btn-sm btn-ghost" onClick={() => setAssignOpen(null)}>✕</button></div>
+            <div className="modal-head">
+              <h2>Assign — {assignOpen.projectName}</h2>
+              <button className="btn btn-sm btn-ghost" onClick={() => setAssignOpen(null)}>
+                ✕
+              </button>
+            </div>
             <p className="muted">Toggle employees to assign / unassign this project.</p>
-            {db.employees.map((emp) => (
-              <label key={emp.id} className="flex" style={{ padding: ".5rem .25rem", borderBottom: "1px solid #eee", cursor: "pointer" }}>
+            {employees.map((emp) => (
+              <label
+                key={emp._id}
+                className="flex"
+                style={{
+                  padding: ".5rem .25rem",
+                  borderBottom: "1px solid #eee",
+                  cursor: "pointer",
+                }}
+              >
                 <input
-  type="checkbox"
-  checked={assignOpen.assignedEmployees.includes(emp.id)}
-  onChange={() => toggleAssign(assignOpen, emp.id)}
-/>
-                <span>{emp.name}</span>
-                <span className="muted" style={{ marginLeft: "auto", fontSize: ".8rem" }}>{emp.role}</span>
+                  type="checkbox"
+                  checked={assignOpen.assignedEmployees.includes(emp._id)}
+                  onChange={() => toggleAssign(assignOpen, emp._id)}
+                />
+                <span>{emp.fullName}</span>
+                <span className="muted" style={{ marginLeft: "auto", fontSize: ".8rem" }}>
+                  {emp.role}
+                </span>
               </label>
             ))}
-            <div className="modal-foot"><button className="btn" onClick={() => setAssignOpen(null)}>Done</button></div>
+            <div className="modal-foot">
+              <button className="btn" onClick={() => setAssignOpen(null)}>
+                Done
+              </button>
+            </div>
           </div>
         </div>
       )}

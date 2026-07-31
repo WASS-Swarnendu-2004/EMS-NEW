@@ -74,6 +74,11 @@ export const getProjects = async (): Promise<Project[]> => {
     throw error;
   }
 };
+interface AssignEmployeesResponse {
+  success: boolean;
+  message: string;
+  project: Project;
+}
 
 export const createProject = async (
   data: CreateProjectPayload
@@ -109,18 +114,11 @@ export const deleteProject = async (id: string) => {
   await api.delete(`/admin/projects/${id}`);
 };
 
-export const updateProjectStatus = async (
-  id: string,
-  status: Project["status"]
-) => {
-  throw new Error("Update Status API not available yet");
-};
-
 export const assignEmployeesToProject = async (
   id: string,
   employeeIds: string[]
-) => {
-  const response = await api.put(
+): Promise<Project> => {
+  const response = await api.put<AssignEmployeesResponse>(
     `/admin/projects/${id}/assign`,
     {
       employeeIds,
