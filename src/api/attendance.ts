@@ -3,15 +3,14 @@ import api from "./axios";
 export interface EmployeeInfo {
   _id: string;
   employeeId: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
+  role: string;
   department: string;
-  designation: string;
 }
 
 export interface Attendance {
   _id: string;
-  employee: string;
+  employee: EmployeeInfo | null;
   date: string;
   checkIn: string;
   checkOut: string | null;
@@ -20,11 +19,18 @@ export interface Attendance {
   mode: string;
 }
 
+interface GetAttendanceResponse {
+    success: boolean;
+    total: number;
+    attendance: Attendance[];
+}
+
 export const getAttendance = async (): Promise<Attendance[]> => {
   try {
 
-    const response = await api.get(
-      "/admin/attendance"
+    const response =
+    await api.get<GetAttendanceResponse>(
+        "/admin/attendance"
     );
 
     return response.data.attendance;
