@@ -100,7 +100,8 @@ const [saving, setSaving] = useState(false);
         <div className="card-header"><h2>Daily task plan</h2>
           <input className="input" type="date" value={date} onChange={(e) => changeDate(e.target.value)} style={{ width: 180 }} />
         </div>
-        <div className="field"><label>Project</label>
+        <div className="field">
+          <label>Project</label>
           <select
   className="select"
   value={projectId}
@@ -161,11 +162,15 @@ const [saving, setSaving] = useState(false);
         <div className="card-header"><h2>My recent reports</h2></div>
         <div className="table-wrap">
           <table className="table">
-            <thead><tr><th>Date</th><th>Project</th><th>Plan</th><th>Status</th></tr></thead>
+            <thead><tr><th>Date</th>
+              {/* <th>Project</th> */}
+              <th>Plan</th><th>Status</th></tr></thead>
             <tbody>
               {history.slice(0, 20).map((w) => {
                 const projectName = w.project?.projectName ?? "—";
-                return <tr key={w._id}><td>{new Date(w.workDate).toLocaleDateString()}</td><td>{projectName}</td><td>{w.plan}</td><td>{w.endOfDayStatus}</td></tr>;
+                return <tr key={w._id}><td>{new Date(w.workDate).toLocaleDateString()}</td>
+                  {/* <td>{projectName}</td> */}
+                  <td>{w.plan}</td><td>{w.endOfDayStatus}</td></tr>;
               })}
               {history.length === 0 && <tr><td colSpan={4} className="empty">No reports yet</td></tr>}
             </tbody>

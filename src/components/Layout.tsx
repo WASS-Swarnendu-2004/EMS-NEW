@@ -1,23 +1,52 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import type { ReactNode, ComponentType } from "react";
+import { useEffect, useState, type ReactNode, type ComponentType } from "react";
 import {
-  LayoutDashboard, Users, FolderKanban, PlaneTakeoff, Home, Clock,
-  ClipboardList, Wallet, Mail, LogOut,
+  LayoutDashboard,
+  Users,
+  FolderKanban,
+  PlaneTakeoff,
+  Home,
+  Clock,
+  ClipboardList,
+  Wallet,
+  Mail,
+  LogOut,
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg.asset.json";
-import logo1 from "@/assets/logo1.jpg"
+import logo1 from "@/assets/logo1.jpg";
 import { useAuth } from "@/lib/auth";
 
 type IconType = ComponentType<{ size?: number; className?: string }>;
-interface NavItem { to: string; label: string; icon: IconType }
+interface NavItem {
+  to: string;
+  label: string;
+  icon: IconType;
+}
 
-export function Shell({ items, title, children }: { items: NavItem[]; title: string; children: ReactNode }) {
+export function Shell({
+  items,
+  title,
+  children,
+}: {
+  items: NavItem[];
+  title: string;
+  children: ReactNode;
+}) {
   const { session, logout } = useAuth();
   const navigate = useNavigate();
+  const [currentTime, setCurrentTime] = useState(new Date());
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const current = [...items]
-    .sort((a, b) => b.to.length - a.to.length)
-    .find((i) => pathname === i.to || pathname.startsWith(i.to + "/"))?.label ?? "Dashboard";
+  const current =
+    [...items]
+      .sort((a, b) => b.to.length - a.to.length)
+      .find((i) => pathname === i.to || pathname.startsWith(i.to + "/"))?.label ?? "Dashboard";
 
   return (
     <div className="app">
@@ -33,7 +62,11 @@ export function Shell({ items, title, children }: { items: NavItem[]; title: str
           {items.map((i) => {
             const Icon = i.icon;
             return (
-              <Link key={i.to} to={i.to} activeOptions={{ exact: i.to.endsWith("/admin") || i.to.endsWith("/user") }}>
+              <Link
+                key={i.to}
+                to={i.to}
+                activeOptions={{ exact: i.to.endsWith("/admin") || i.to.endsWith("/user") }}
+              >
                 <Icon size={16} className="nav-icon" />
                 <span>{i.label}</span>
               </Link>
@@ -43,7 +76,13 @@ export function Shell({ items, title, children }: { items: NavItem[]; title: str
         <div className="sidebar-foot">
           <div className="user-name">{session?.name}</div>
           <div className="user-role">{session?.kind}</div>
-          <button className="btn btn-gold btn-sm" onClick={() => { logout(); navigate({ to: "/login" }); }}>
+          <button
+            className="btn btn-gold btn-sm"
+            onClick={() => {
+              logout();
+              navigate({ to: "/login" });
+            }}
+          >
             <LogOut size={14} /> Sign out
           </button>
         </div>
@@ -51,7 +90,17 @@ export function Shell({ items, title, children }: { items: NavItem[]; title: str
       <div className="main">
         <header className="topbar">
           <div className="page-title">{title === "auto" ? current : title}</div>
-          <div className="muted" style={{ fontSize: ".8rem" }}>{new Date().toDateString()}</div>
+
+          <div
+            className="muted"
+            style={{
+              fontSize: ".85rem",
+              textAlign: "right",
+            }}
+          >
+            <div>{currentTime.toLocaleDateString()}</div>
+            <div>{currentTime.toLocaleTimeString()}</div>
+          </div>
         </header>
         <div className="content">{children}</div>
       </div>
@@ -79,4 +128,4 @@ export const userNav: NavItem[] = [
   { to: "/user/wfh", label: "Work From Home", icon: Home },
   { to: "/user/attendance", label: "My Attendance", icon: Clock },
   { to: "/user/salary", label: "Salary Slips", icon: Wallet },
-]; 
+];
