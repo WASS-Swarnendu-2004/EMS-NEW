@@ -79,4 +79,4 @@ export const userNav: NavItem[] = [
   { to: "/user/wfh", label: "Work From Home", icon: Home },
   { to: "/user/attendance", label: "My Attendance", icon: Clock },
   { to: "/user/salary", label: "Salary Slips", icon: Wallet },
-];
+]; 
