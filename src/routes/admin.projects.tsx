@@ -19,13 +19,7 @@ import { exportToExcel } from "@/lib/excel";
 
 export const Route = createFileRoute("/admin/projects")({ component: Page });
 
-const STATUSES: Project["status"][] = [
-  "planning",
-  "in-progress",
-  "on-hold",
-  "completed",
-  "cancelled",
-];
+const STATUSES: Project["status"][] = ["planning", "in-progress", "hold", "completed", "cancelled"];
 
 function diffDays(a: string, b: string) {
   if (!a || !b) return 0;
@@ -72,6 +66,7 @@ function Page() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
 
   useEffect(() => {
     loadData();
@@ -135,54 +130,94 @@ function Page() {
   }
   async function save() {
     try {
-      await createProject({
-        projectName: form.projectName,
-        consumerName: form.consumerName,
-        startDate: form.startDate,
-        endDate: form.endDate,
-        valuation: form.valuation,
-        description: form.description,
-        assignedEmployees: form.assignedEmployees,
-      });
+      if (editing) {
+        await updateProject(editing._id, {
+          projectName: form.projectName,
+          consumerName: form.consumerName,
+          consumerDetails: form.consumerDetails,
+          startDate: form.startDate,
+          endDate: form.endDate,
+          valuation: form.valuation,
+          description: form.description,
+          assignedEmployees: form.assignedEmployees,
+        });
+
+        toast.success("Project updated successfully");
+      } else {
+        await createProject({
+          projectName: form.projectName,
+          consumerName: form.consumerName,
+          startDate: form.startDate,
+          endDate: form.endDate,
+          valuation: form.valuation,
+          description: form.description,
+          assignedEmployees: form.assignedEmployees,
+        });
+
+        toast.success("Project created successfully");
+      }
 
       setOpen(false);
-      loadProjects();
+      setEditing(null);
+
+      await loadProjects();
     } catch (err) {
       console.error(err);
+      toast.error("Failed to save project");
     }
   }
-  async function remove(id: string) {
-    if (!confirm("Delete project?")) return;
 
+ async function remove(id: string) {
+  // if (!confirm("Delete project?")) return;
+
+  try {
     await deleteProject(id);
 
-    loadProjects();
-  }
+    setProjects((prev) => prev.filter((project) => project._id !== id));
 
-  async function toggleAssign(
-  project: Project,
-  empId: string
-) {
-  try {
-    const ids = project.assignedEmployees.includes(empId)
-      ? project.assignedEmployees.filter(id => id !== empId)
-      : [...project.assignedEmployees, empId];
-
-    const updatedProject = await assignEmployeesToProject(
-      project._id,
-      ids
-    );
-
-    setAssignOpen(updatedProject);
-
-    await loadProjects();
-
-    toast.success("Project updated");
+    toast.success("Project deleted successfully");
   } catch (err) {
     console.error(err);
-    toast.error("Failed to assign employee");
+    toast.error("Failed to delete project");
   }
 }
+
+  // async function toggleAssign(project: Project, empId: string) {
+  //   try {
+  //     const ids = project.assignedEmployees.includes(empId)
+  //       ? project.assignedEmployees.filter((id) => id !== empId)
+  //       : [...project.assignedEmployees, empId];
+
+  //     const updatedProject = await assignEmployeesToProject(project._id, ids);
+
+  //     setAssignOpen(updatedProject);
+
+  //     setProjects((prev) => prev.map((p) => (p._id === updatedProject._id ? updatedProject : p)));
+
+  //     // toast.success("Project updated");
+  //   } catch (err) {
+  //     console.error(err);
+  //     toast.error("Failed to assign employee");
+  //   }
+  // }
+
+  async function saveAssignments() {
+    if (!assignOpen) return;
+
+    try {
+      const updatedProject = await assignEmployeesToProject(assignOpen._id, selectedEmployees);
+
+      setProjects((prev) => prev.map((p) => (p._id === updatedProject._id ? updatedProject : p)));
+
+      toast.success("Employees assigned successfully");
+
+      setAssignOpen(null);
+      setSelectedEmployees([]);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to assign employees");
+    }
+  }
 
   function exportXlsx() {
     exportToExcel(
@@ -243,11 +278,11 @@ function Page() {
                 </td>
                 <td>{p.consumerName}</td>
                 <td>
-  {formatISTDate(p.startDate)} → {formatISTDate(p.endDate)}
-  <div className="muted" style={{ fontSize: ".75rem" }}>
-    {p.duration} days
-  </div>
-</td>
+                  {formatISTDate(p.startDate)} → {formatISTDate(p.endDate)}
+                  <div className="muted" style={{ fontSize: ".75rem" }}>
+                    {p.duration} days
+                  </div>
+                </td>
                 <td>₹{p.valuation.toLocaleString()}</td>
                 <td>
                   <select
@@ -255,21 +290,25 @@ function Page() {
                     style={{ padding: ".25rem .4rem", fontSize: ".8rem" }}
                     value={p.status}
                     onChange={async (e) => {
-  const newStatus = e.target.value as Project["status"];
+                      const newStatus = e.target.value as Project["status"];
 
-  try {
-    await updateProject(p._id, {
-      status: newStatus,
-    });
+                      try {
+                        const updatedProject = await updateProject(p._id, {
+                          status: newStatus,
+                        });
 
-    await loadProjects();
+                        setProjects((prev) =>
+                          prev.map((project) =>
+                            project._id === updatedProject._id ? updatedProject : project,
+                          ),
+                        );
 
-    toast.success("Project status updated");
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to update status");
-  }
-}}
+                        toast.success("Project status updated");
+                      } catch (err) {
+                        console.error(err);
+                        toast.error("Failed to update status");
+                      }
+                    }}
                   >
                     {STATUSES.map((s) => (
                       <option key={s} value={s}>
@@ -287,6 +326,7 @@ function Page() {
                     className="btn btn-sm btn-ghost"
                     onClick={async () => {
                       setAssignOpen(p);
+                      setSelectedEmployees(p.assignedEmployees);
                     }}
                   >
                     Assign
@@ -466,8 +506,14 @@ function Page() {
               >
                 <input
                   type="checkbox"
-                  checked={assignOpen.assignedEmployees.includes(emp._id)}
-                  onChange={() => toggleAssign(assignOpen, emp._id)}
+                  checked={selectedEmployees.includes(emp._id)}
+                  onChange={() => {
+                    setSelectedEmployees((prev) =>
+                      prev.includes(emp._id)
+                        ? prev.filter((id) => id !== emp._id)
+                        : [...prev, emp._id],
+                    );
+                  }}
                 />
                 <span>{emp.fullName}</span>
                 <span className="muted" style={{ marginLeft: "auto", fontSize: ".8rem" }}>
@@ -476,8 +522,8 @@ function Page() {
               </label>
             ))}
             <div className="modal-foot">
-              <button className="btn" onClick={() => setAssignOpen(null)}>
-                Done
+              <button className="btn" onClick={saveAssignments}>
+                Save
               </button>
             </div>
           </div>

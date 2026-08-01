@@ -12,7 +12,7 @@ export interface Project {
   status:
   | "planning"
   | "in-progress"
-  | "on-hold"
+  | "hold"
   | "completed"
   | "cancelled";
   description: string;
@@ -38,6 +38,7 @@ export interface UpdateProjectPayload {
   status?: Project["status"];
   consumerDetails?: string;
   description?: string;
+  assignedEmployees?: string[];
 }
 interface UpdateProjectResponse {
   success: boolean;
@@ -135,3 +136,4 @@ export const getMyProjects = async (): Promise<Project[]> => {
 
   return response.data.projects;
 };
+
