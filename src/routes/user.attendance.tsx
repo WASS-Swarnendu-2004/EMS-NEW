@@ -119,9 +119,17 @@ function Page() {
                   <span className="badge purple">{a.status}</span>
                 </td>
 
-                <td>{new Date(a.checkIn).toLocaleTimeString()}</td>
+                <td>
+                  {a.status === "Leave" || !a.checkIn
+                    ? "—"
+                    : new Date(a.checkIn).toLocaleTimeString()}
+                </td>
 
-                <td>{a.checkOut ? new Date(a.checkOut).toLocaleTimeString() : "—"}</td>
+                <td>
+                  {a.status === "Leave" || !a.checkOut
+                    ? "—"
+                    : new Date(a.checkOut).toLocaleTimeString()}
+                </td>
 
                 <td>{a.workingHours} hrs</td>
               </tr>

@@ -21,6 +21,7 @@ import { Route as UserSalaryRouteImport } from './routes/user.salary'
 import { Route as UserProjectsRouteImport } from './routes/user.projects'
 import { Route as UserLeaveRouteImport } from './routes/user.leave'
 import { Route as UserAttendanceRouteImport } from './routes/user.attendance'
+import { Route as UserAdvanceAmountRouteImport } from './routes/user.advance-amount'
 import { Route as AdminWorkStatusRouteImport } from './routes/admin.work-status'
 import { Route as AdminWfhRouteImport } from './routes/admin.wfh'
 import { Route as AdminSalaryRouteImport } from './routes/admin.salary'
@@ -29,6 +30,7 @@ import { Route as AdminMailRouteImport } from './routes/admin.mail'
 import { Route as AdminLeavesRouteImport } from './routes/admin.leaves'
 import { Route as AdminEmployeesRouteImport } from './routes/admin.employees'
 import { Route as AdminAttendanceRouteImport } from './routes/admin.attendance'
+import { Route as AdminAdvanceAmountRouteImport } from './routes/admin.advance-amount'
 
 const UserRoute = UserRouteImport.update({
   id: '/user',
@@ -90,6 +92,11 @@ const UserAttendanceRoute = UserAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => UserRoute,
 } as any)
+const UserAdvanceAmountRoute = UserAdvanceAmountRouteImport.update({
+  id: '/advance-amount',
+  path: '/advance-amount',
+  getParentRoute: () => UserRoute,
+} as any)
 const AdminWorkStatusRoute = AdminWorkStatusRouteImport.update({
   id: '/work-status',
   path: '/work-status',
@@ -130,12 +137,18 @@ const AdminAttendanceRoute = AdminAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminAdvanceAmountRoute = AdminAdvanceAmountRouteImport.update({
+  id: '/advance-amount',
+  path: '/advance-amount',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/user': typeof UserRouteWithChildren
+  '/admin/advance-amount': typeof AdminAdvanceAmountRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/employees': typeof AdminEmployeesRoute
   '/admin/leaves': typeof AdminLeavesRoute
@@ -144,6 +157,7 @@ export interface FileRoutesByFullPath {
   '/admin/salary': typeof AdminSalaryRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
+  '/user/advance-amount': typeof UserAdvanceAmountRoute
   '/user/attendance': typeof UserAttendanceRoute
   '/user/leave': typeof UserLeaveRoute
   '/user/projects': typeof UserProjectsRoute
@@ -156,6 +170,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
+  '/admin/advance-amount': typeof AdminAdvanceAmountRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/employees': typeof AdminEmployeesRoute
   '/admin/leaves': typeof AdminLeavesRoute
@@ -164,6 +179,7 @@ export interface FileRoutesByTo {
   '/admin/salary': typeof AdminSalaryRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
+  '/user/advance-amount': typeof UserAdvanceAmountRoute
   '/user/attendance': typeof UserAttendanceRoute
   '/user/leave': typeof UserLeaveRoute
   '/user/projects': typeof UserProjectsRoute
@@ -179,6 +195,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/login': typeof LoginRoute
   '/user': typeof UserRouteWithChildren
+  '/admin/advance-amount': typeof AdminAdvanceAmountRoute
   '/admin/attendance': typeof AdminAttendanceRoute
   '/admin/employees': typeof AdminEmployeesRoute
   '/admin/leaves': typeof AdminLeavesRoute
@@ -187,6 +204,7 @@ export interface FileRoutesById {
   '/admin/salary': typeof AdminSalaryRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
+  '/user/advance-amount': typeof UserAdvanceAmountRoute
   '/user/attendance': typeof UserAttendanceRoute
   '/user/leave': typeof UserLeaveRoute
   '/user/projects': typeof UserProjectsRoute
@@ -203,6 +221,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/user'
+    | '/admin/advance-amount'
     | '/admin/attendance'
     | '/admin/employees'
     | '/admin/leaves'
@@ -211,6 +230,7 @@ export interface FileRouteTypes {
     | '/admin/salary'
     | '/admin/wfh'
     | '/admin/work-status'
+    | '/user/advance-amount'
     | '/user/attendance'
     | '/user/leave'
     | '/user/projects'
@@ -223,6 +243,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/login'
+    | '/admin/advance-amount'
     | '/admin/attendance'
     | '/admin/employees'
     | '/admin/leaves'
@@ -231,6 +252,7 @@ export interface FileRouteTypes {
     | '/admin/salary'
     | '/admin/wfh'
     | '/admin/work-status'
+    | '/user/advance-amount'
     | '/user/attendance'
     | '/user/leave'
     | '/user/projects'
@@ -245,6 +267,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/login'
     | '/user'
+    | '/admin/advance-amount'
     | '/admin/attendance'
     | '/admin/employees'
     | '/admin/leaves'
@@ -253,6 +276,7 @@ export interface FileRouteTypes {
     | '/admin/salary'
     | '/admin/wfh'
     | '/admin/work-status'
+    | '/user/advance-amount'
     | '/user/attendance'
     | '/user/leave'
     | '/user/projects'
@@ -356,6 +380,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UserAttendanceRouteImport
       parentRoute: typeof UserRoute
     }
+    '/user/advance-amount': {
+      id: '/user/advance-amount'
+      path: '/advance-amount'
+      fullPath: '/user/advance-amount'
+      preLoaderRoute: typeof UserAdvanceAmountRouteImport
+      parentRoute: typeof UserRoute
+    }
     '/admin/work-status': {
       id: '/admin/work-status'
       path: '/work-status'
@@ -412,10 +443,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAttendanceRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/advance-amount': {
+      id: '/admin/advance-amount'
+      path: '/advance-amount'
+      fullPath: '/admin/advance-amount'
+      preLoaderRoute: typeof AdminAdvanceAmountRouteImport
+      parentRoute: typeof AdminRoute
+    }
   }
 }
 
 interface AdminRouteChildren {
+  AdminAdvanceAmountRoute: typeof AdminAdvanceAmountRoute
   AdminAttendanceRoute: typeof AdminAttendanceRoute
   AdminEmployeesRoute: typeof AdminEmployeesRoute
   AdminLeavesRoute: typeof AdminLeavesRoute
@@ -428,6 +467,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminAdvanceAmountRoute: AdminAdvanceAmountRoute,
   AdminAttendanceRoute: AdminAttendanceRoute,
   AdminEmployeesRoute: AdminEmployeesRoute,
   AdminLeavesRoute: AdminLeavesRoute,
@@ -442,6 +482,7 @@ const AdminRouteChildren: AdminRouteChildren = {
 const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 interface UserRouteChildren {
+  UserAdvanceAmountRoute: typeof UserAdvanceAmountRoute
   UserAttendanceRoute: typeof UserAttendanceRoute
   UserLeaveRoute: typeof UserLeaveRoute
   UserProjectsRoute: typeof UserProjectsRoute
@@ -452,6 +493,7 @@ interface UserRouteChildren {
 }
 
 const UserRouteChildren: UserRouteChildren = {
+  UserAdvanceAmountRoute: UserAdvanceAmountRoute,
   UserAttendanceRoute: UserAttendanceRoute,
   UserLeaveRoute: UserLeaveRoute,
   UserProjectsRoute: UserProjectsRoute,

@@ -95,7 +95,7 @@ function Page() {
               >
                 <option value="casual">Casual</option>
                 <option value="sick">Sick</option>
-                <option value="earned">Earned</option>
+                {/* <option value="earned">Earned</option> */}
               </select>
             </div>
             <div className="row-2">

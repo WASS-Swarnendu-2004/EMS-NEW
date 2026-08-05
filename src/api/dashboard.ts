@@ -2,6 +2,7 @@ import api from "./axios";
 
 export interface DashboardResponse {
   success: boolean;
+
   cards: {
     myProjects: number;
     pendingLeaves: number;
@@ -21,6 +22,16 @@ export interface DashboardResponse {
     plan: string;
     status: string;
   } | null;
+
+
+  // ADD THIS
+  onLeave: boolean;
+
+  leaveDetails?: {
+    leaveType: "Casual" | "Sick" | "Earned";
+    fromDate: string;
+    toDate: string;
+  };
 }
 
 export const getDashboard = async (): Promise<DashboardResponse> => {

@@ -115,7 +115,7 @@ function Page() {
 
         Status: a.status,
 
-        CheckIn: new Date(a.checkIn).toLocaleTimeString(),
+        CheckIn: a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : "—",
 
         CheckOut: a.checkOut ? new Date(a.checkOut).toLocaleTimeString() : "—",
 
@@ -171,21 +171,6 @@ function Page() {
             />
           </>
         )}
-
-        {/* <select
-          className="select"
-          value={empId}
-          onChange={(e) => setEmpId(e.target.value)}
-          style={{ width: 220 }}
-        >
-          <option value="all">All employees</option>
-
-          {employees.map((e) => (
-            <option key={e._id} value={e._id}>
-              {e.fullName}
-            </option>
-          ))}
-        </select> */}
         <select
           className="select"
           value={empId}
@@ -260,7 +245,7 @@ function Page() {
                     <span className="badge purple">{a.status}</span>
                   </td>
 
-                  <td>{new Date(a.checkIn).toLocaleTimeString()}</td>
+                  <td>{a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : "—"}</td>
 
                   <td>
                     {a.checkOut ? (

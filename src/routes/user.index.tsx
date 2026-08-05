@@ -24,7 +24,6 @@ function Page() {
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
 
-
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
   const [checkingOut, setCheckingOut] = useState(false);
@@ -35,27 +34,24 @@ function Page() {
   }, []);
 
   async function loadData() {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const [dashboardData, projectData] = await Promise.all([
-      getDashboard(),
-      getMyProjects(),
-    ]);
+      const [dashboardData, projectData] = await Promise.all([getDashboard(), getMyProjects()]);
 
-    setDashboard(dashboardData);
-    setProjects(projectData);
+      setDashboard(dashboardData);
+      setProjects(projectData);
 
-    setPlan(dashboardData.todayPlan?.plan ?? "");
-    setStatus(dashboardData.todayPlan?.status ?? "");
-    setProjectId(dashboardData.todayPlan?.projectId ?? "");
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to load dashboard");
-  } finally {
-    setLoading(false);
+      setPlan(dashboardData.todayPlan?.plan ?? "");
+      setStatus(dashboardData.todayPlan?.status ?? "");
+      setProjectId(dashboardData.todayPlan?.projectId ?? "");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load dashboard");
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   const fetchDashboard = async () => {
     try {
@@ -77,25 +73,25 @@ function Page() {
   };
 
   async function handleSaveWorkStatus() {
-  try {
-    setSavingWork(true);
+    try {
+      setSavingWork(true);
 
-    await saveWorkStatus({
-      plan,
-      status,
-      projectId: projectId || undefined,
-    });
+      await saveWorkStatus({
+        plan,
+        status,
+        projectId: projectId || undefined,
+      });
 
-    toast.success("Work status saved");
+      toast.success("Work status saved");
 
-    await fetchDashboard();
-  } catch (err) {
-    console.error(err);
-    toast.error("Unable to save work status");
-  } finally {
-    setSavingWork(false);
+      await fetchDashboard();
+    } catch (err) {
+      console.error(err);
+      toast.error("Unable to save work status");
+    } finally {
+      setSavingWork(false);
+    }
   }
-}
   const handleCheckIn = async () => {
     try {
       setCheckingIn(true);
@@ -129,14 +125,14 @@ function Page() {
   };
 
   function formatISTTime(date: string) {
-  return new Date(date).toLocaleTimeString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-  });
-}
+    return new Date(date).toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+  }
 
   if (loading) {
     return (
@@ -190,7 +186,9 @@ function Page() {
           <div className="card-header">
             <h2>Attendance — {t}</h2>
           </div>
-          {!dashboard?.attendance && (
+          {dashboard?.attendance?.status === "Leave" ? (
+            <p className="badge">You are on approved leave today.</p>
+          ) : !dashboard?.attendance ? (
             <div>
               <div className="field">
                 <label>Mode</label>
@@ -203,6 +201,7 @@ function Page() {
                   <option value="wfh">Work from home</option>
                 </select>
               </div>
+
               <button className="btn btn-gold" onClick={handleCheckIn} disabled={checkingIn}>
                 {checkingIn ? (
                   <>
@@ -214,13 +213,13 @@ function Page() {
                 )}
               </button>
             </div>
-          )}
-          {dashboard?.attendance && (
+          ) : (
             <div>
               <p>
-                Checked in at <strong>{formatISTTime(dashboard.attendance.checkIn)}</strong> (
+                Checked in at <strong>{formatISTTime(dashboard.attendance.checkIn!)}</strong> (
                 {dashboard.attendance.mode})
               </p>
+
               {!dashboard.attendance.checkOut && (
                 <button className="btn" onClick={handleCheckOut} disabled={checkingOut}>
                   {checkingOut ? (
@@ -233,12 +232,12 @@ function Page() {
                   )}
                 </button>
               )}
+
               {dashboard.attendance.checkOut && (
                 <p className="badge success">
-  Day complete —{" "}
-  {formatISTTime(dashboard.attendance.checkIn)} →{" "}
-  {formatISTTime(dashboard.attendance.checkOut)}
-</p>
+                  Day complete — {formatISTTime(dashboard.attendance.checkIn!)} →{" "}
+                  {formatISTTime(dashboard.attendance.checkOut)}
+                </p>
               )}
             </div>
           )}
@@ -251,18 +250,18 @@ function Page() {
           <div className="field">
             <label>Project</label>
             <select
-  className="select"
-  value={projectId}
-  onChange={(e) => setProjectId(e.target.value)}
->
-  <option value="">— No project —</option>
+              className="select"
+              value={projectId}
+              onChange={(e) => setProjectId(e.target.value)}
+            >
+              <option value="">— No project —</option>
 
-  {projects.map((project) => (
-    <option key={project._id} value={project._id}>
-      {project.projectName}
-    </option>
-  ))}
-</select>
+              {projects.map((project) => (
+                <option key={project._id} value={project._id}>
+                  {project.projectName}
+                </option>
+              ))}
+            </select>
           </div>
           <div className="field">
             <label>Morning plan</label>
