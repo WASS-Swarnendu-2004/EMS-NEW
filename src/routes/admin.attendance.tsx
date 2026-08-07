@@ -38,33 +38,31 @@ function Page() {
     }
   };
 
-async function fetchEmployees() {
-  try {
-    const firstPage = await getEmployees(1);
+  async function fetchEmployees() {
+    try {
+      const firstPage = await getEmployees(1);
 
-    console.log("TOTAL EMPLOYEES:", firstPage.totalEmployees);
-    console.log("TOTAL PAGES:", firstPage.totalPages);
+      console.log("TOTAL EMPLOYEES:", firstPage.totalEmployees);
+      console.log("TOTAL PAGES:", firstPage.totalPages);
 
-    let allEmployees = [...firstPage.employees];
+      let allEmployees = [...firstPage.employees];
 
-    // Fetch remaining pages
-    for (let page = 2; page <= firstPage.totalPages; page++) {
-      const data = await getEmployees(page);
+      // Fetch remaining pages
+      for (let page = 2; page <= firstPage.totalPages; page++) {
+        const data = await getEmployees(page);
 
-      allEmployees = [...allEmployees, ...data.employees];
+        allEmployees = [...allEmployees, ...data.employees];
+      }
+
+      console.log("ALL EMPLOYEES:", allEmployees.length);
+
+      setEmployees(allEmployees);
+    } catch (err: any) {
+      console.error(err);
+
+      toast.error(err.response?.data?.message || "Failed to load employees");
     }
-
-    console.log("ALL EMPLOYEES:", allEmployees.length);
-
-    setEmployees(allEmployees);
-  } catch (err: any) {
-    console.error(err);
-
-    toast.error(
-      err.response?.data?.message || "Failed to load employees"
-    );
   }
-}
 
   useEffect(() => {
     Promise.all([fetchAttendance(), fetchEmployees()]);
@@ -242,7 +240,7 @@ async function fetchEmployees() {
 
             {!loading &&
               filtered.map((a) => (
-                <tr key={a._id}>
+                <tr key={a._id} className={a.status.toLowerCase() === "leave" ? "bg-red-500" : ""}>
                   <td>{new Date(a.date).toLocaleDateString()}</td>
 
                   <td>

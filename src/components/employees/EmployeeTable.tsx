@@ -1,11 +1,12 @@
-import { Loader2 } from "lucide-react";
 import type { Employee } from "@/api/employee";
+import { Loader2 } from "lucide-react";
 
 type EmployeeTableProps = {
   employees: Employee[];
   deletingId: string | null;
   onEdit: (employee: Employee) => void;
   onDelete: (id: string) => void;
+  onView: (employee: Employee) => void;
 };
 
 export function EmployeeTable({
@@ -13,94 +14,121 @@ export function EmployeeTable({
   deletingId,
   onEdit,
   onDelete,
+  onView,
 }: EmployeeTableProps) {
   return (
-    <div className="mt-5 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-      <table className="table w-full min-w-[950px]">
+    <div className="table-wrap">
+      <table className="table min-w-[950px]">
         <thead>
           <tr>
-            <th>Name</th>
+            <th>Employee</th>
             <th>Email</th>
             <th>Phone</th>
             <th>Role</th>
             <th>Department</th>
             <th>Salary</th>
             <th>Status</th>
-            <th className="text-center">Actions</th>
+            <th>Actions</th>
           </tr>
         </thead>
 
         <tbody>
-          {employees.map((e) => (
-            <tr key={e._id}>
-              <td>
-                <div className="font-semibold">{e.fullName}</div>
-
-                <div className="mt-1 text-xs text-gray-500">
-                  Joined {e.joiningDate.slice(0, 10)}
-                </div>
-              </td>
-
-              <td>{e.email}</td>
-
-              <td>{e.phone}</td>
-
-              <td>
-                <span className="badge purple">{e.role}</span>
-              </td>
-
-              <td>{e.department}</td>
-
-              <td>₹{e.salary.toLocaleString()}</td>
-
-              <td>
-                <span
-                  className={
-                    "badge " +
-                    (e.status === "Active" ? "success" : "danger")
-                  }
-                >
-                  {e.status}
-                </span>
-              </td>
-
-              <td>
-                <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-                  <button
-                    className="btn btn-sm btn-ghost w-full sm:w-auto"
-                    onClick={() => onEdit(e)}
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    className="btn btn-sm btn-danger w-full sm:w-auto"
-                    onClick={() => onDelete(e._id)}
-                    disabled={deletingId === e._id}
-                  >
-                    {deletingId === e._id ? (
-                      <>
-                        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                        Deleting...
-                      </>
-                    ) : (
-                      "Delete"
-                    )}
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-
-          {employees.length === 0 && (
+          {employees.length === 0 ? (
             <tr>
-              <td
-                colSpan={8}
-                className="py-8 text-center text-gray-500"
-              >
+              <td colSpan={8} className="empty">
                 No employees found
               </td>
             </tr>
+          ) : (
+            employees.map((employee) => (
+              <tr
+                key={employee._id}
+                onClick={() => onView(employee)}
+                className="cursor-pointer hover:bg-gray-50"
+              >
+                <td>
+                  <div className="flex items-center gap-3">
+                    {employee.profileImage ? (
+                      <img
+                        src={`https://fresh-01.onrender.com/${employee.profileImage.replace(
+                          /^src\//,
+                          "",
+                        )}`}
+                        alt={employee.fullName}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gray-200 font-semibold text-gray-600">
+                        {employee.fullName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+
+                    <div>
+                      <div className="font-medium">
+                        {employee.fullName}
+                      </div>
+
+                      <div className="text-xs text-gray-500">
+                        {employee.employeeId ?? "-"}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <td>{employee.email}</td>
+
+                <td>{employee.phone}</td>
+
+                <td>{employee.role}</td>
+
+                <td>{employee.department}</td>
+
+                <td>
+                  ₹{employee.salary.toLocaleString("en-IN")}
+                </td>
+
+                <td>
+                  <span
+                    className={
+                      employee.status === "Active"
+                        ? "badge green"
+                        : "badge gray"
+                    }
+                  >
+                    {employee.status}
+                  </span>
+                </td>
+
+                <td>
+                  <div className="flex items-center gap-2">
+                    <button
+                      className="btn btn-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(employee);
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="btn btn-sm btn-error"
+                      disabled={deletingId === employee._id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(employee._id);
+                      }}
+                    >
+                      {deletingId === employee._id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Delete"
+                      )}
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))
           )}
         </tbody>
       </table>

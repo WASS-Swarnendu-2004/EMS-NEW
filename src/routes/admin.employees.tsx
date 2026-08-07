@@ -27,6 +27,7 @@ import { EmployeeFormFields } from "@/components/employees/EmployeeFormFields";
 import { EmployeeFormModal } from "@/components/employees/EmployeeFormModal";
 import { RoleManagementModal } from "@/components/employees/RoleManagementModal";
 import { EmployeePhotoUpload } from "@/components/employees/EmployeePhotoUpload";
+import { EmployeeDetailsModal } from "@/components/employees/EmployeeDetailsModal";
 
 export const Route = createFileRoute("/admin/employees")({ component: Page });
 
@@ -55,8 +56,11 @@ function Page() {
   const [q, setQ] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployee, setSelectedEmployee] =
+  useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+
   const [totalPages, setTotalPages] = useState(1);
   const [totalEmployees, setTotalEmployees] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -71,6 +75,7 @@ function Page() {
   const [loadingRoles, setLoadingRoles] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
 
   const [newRole, setNewRole] = useState({
     roleName: "",
@@ -410,6 +415,7 @@ function Page() {
         deletingId={deletingId}
         onEdit={openEdit}
         onDelete={remove}
+        onView={(employee) => setSelectedEmployee(employee)}
       />
 
       {totalPages > 1 && (
@@ -489,6 +495,40 @@ function Page() {
         onDeleteRole={removeRole}
         onNewRoleChange={setNewRole}
       />
+      <EmployeeFormModal
+  open={open}
+  editing={editing}
+  form={form}
+  fields={fields}
+  roles={roles}
+  newField={newField}
+  saving={saving}
+  photoFile={photoFile}
+  photoPreview={photoPreview}
+  onPhotoChange={handlePhotoChange}
+  onClose={() => setOpen(false)}
+  onSave={save}
+  onAddField={addField}
+  onRemoveField={removeField}
+  onOpenRoleModal={openRoleModal}
+  onNewFieldChange={handleNewFieldChange}
+  onFieldChange={handleFieldChange}
+/>
+
+<RoleManagementModal
+  open={roleModalOpen}
+  roles={roles}
+  newRole={newRole}
+  onClose={() => setRoleModalOpen(false)}
+  onAddRole={addRole}
+  onDeleteRole={removeRole}
+  onNewRoleChange={setNewRole}
+/>
+
+<EmployeeDetailsModal
+  employee={selectedEmployee}
+  onClose={() => setSelectedEmployee(null)}
+/>
     </>
   );
 }
