@@ -112,7 +112,7 @@ function Page() {
           </thead>
           <tbody>
             {rows.map((a) => (
-              <tr key={a._id}>
+              <tr key={a._id} className={a.status.toLowerCase() === "leave" ? "bg-red-900" : ""}>
                 <td>{new Date(a.date).toLocaleDateString()}</td>
 
                 <td>

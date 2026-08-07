@@ -240,7 +240,7 @@ function Page() {
 
             {!loading &&
               filtered.map((a) => (
-                <tr key={a._id} className={a.status.toLowerCase() === "leave" ? "bg-red-500" : ""}>
+                <tr key={a._id} className={a.status.toLowerCase() === "leave" ? "bg-red-900" : ""}>
                   <td>{new Date(a.date).toLocaleDateString()}</td>
 
                   <td>
