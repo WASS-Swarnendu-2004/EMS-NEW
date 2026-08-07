@@ -38,15 +38,33 @@ function Page() {
     }
   };
 
-  const fetchEmployees = async () => {
-    try {
-      const data = await getEmployees();
-      setEmployees(data);
-    } catch (error) {
-      console.error("Employee fetch error:", error);
-      toast.error("Failed to load employees.");
+async function fetchEmployees() {
+  try {
+    const firstPage = await getEmployees(1);
+
+    console.log("TOTAL EMPLOYEES:", firstPage.totalEmployees);
+    console.log("TOTAL PAGES:", firstPage.totalPages);
+
+    let allEmployees = [...firstPage.employees];
+
+    // Fetch remaining pages
+    for (let page = 2; page <= firstPage.totalPages; page++) {
+      const data = await getEmployees(page);
+
+      allEmployees = [...allEmployees, ...data.employees];
     }
-  };
+
+    console.log("ALL EMPLOYEES:", allEmployees.length);
+
+    setEmployees(allEmployees);
+  } catch (err: any) {
+    console.error(err);
+
+    toast.error(
+      err.response?.data?.message || "Failed to load employees"
+    );
+  }
+}
 
   useEffect(() => {
     Promise.all([fetchAttendance(), fetchEmployees()]);

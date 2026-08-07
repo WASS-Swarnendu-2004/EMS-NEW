@@ -42,16 +42,33 @@ function Page() {
     }
   }
 
-  async function loadEmployees() {
-    try {
-      const data = await getEmployees();
-      setEmployees(data);
-    } catch (err: any) {
-      console.error(err);
+async function loadEmployees() {
+  try {
+    const firstPage = await getEmployees(1);
 
-      toast.error(err.response?.data?.message || "Failed to load employees");
+    console.log("TOTAL EMPLOYEES:", firstPage.totalEmployees);
+    console.log("TOTAL PAGES:", firstPage.totalPages);
+
+    let allEmployees = [...firstPage.employees];
+
+    // Fetch remaining pages
+    for (let page = 2; page <= firstPage.totalPages; page++) {
+      const data = await getEmployees(page);
+
+      allEmployees = [...allEmployees, ...data.employees];
     }
+
+    console.log("ALL EMPLOYEES:", allEmployees.length);
+
+    setEmployees(allEmployees);
+  } catch (err: any) {
+    console.error(err);
+
+    toast.error(
+      err.response?.data?.message || "Failed to load employees"
+    );
   }
+}
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);

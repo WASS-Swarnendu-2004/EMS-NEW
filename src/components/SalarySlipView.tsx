@@ -9,7 +9,7 @@ export function SalarySlipView({ slip, empName, role }: { slip: SalarySlip; empN
   return (
     <div className="slip">
       <div className="slip-head">
-        <div className="flex"><img src={logo1} alt="logo" /><div><h2>WebApps Softwares</h2><div className="muted">Salary Slip · {slip.month}</div></div></div>
+        <div className="flex"><img src={logo1} alt="logo" /><div><h2>Webapps Software Solution</h2><div className="muted">Salary Slip · {slip.month}</div></div></div>
         <div className="text-right"><div className="muted">Issued</div><div>{slip.generatedAt.slice(0, 10)}</div></div>
       </div>
       <div className="slip-grid">

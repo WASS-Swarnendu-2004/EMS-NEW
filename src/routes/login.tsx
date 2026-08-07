@@ -69,7 +69,7 @@ function Login() {
       <div className="login-card">
         <div className="login-brand">
           <img src={logo1} alt="WebApps" />
-          <h1>WebApps EMS</h1>
+          <h1>Webapps EMS</h1>
           <p>Employee Management System</p>
         </div>
         <div className="role-tabs">

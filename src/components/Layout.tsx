@@ -11,6 +11,7 @@ import {
   Wallet,
   Mail,
   LogOut,
+  Settings
 } from "lucide-react";
 import logo from "@/assets/logo.jpeg.asset.json";
 import logo1 from "@/assets/logo1.jpg";
@@ -54,7 +55,7 @@ export function Shell({
         <div className="brand">
           <img src={logo1} alt="WebApps" />
           <div>
-            <div className="brand-text">WebApps</div>
+            <div className="brand-text">WASS</div>
             <div className="brand-sub">Employee Management</div>
           </div>
         </div>
@@ -129,5 +130,10 @@ export const userNav: NavItem[] = [
   { to: "/user/wfh", label: "Work From Home", icon: Home },
   { to: "/user/attendance", label: "My Attendance", icon: Clock },
   { to: "/user/advance-amount", label: "Advance Amount", icon: Wallet },
+  {
+  label: "Task Management",
+  icon: ClipboardList,
+  to: "/user/task-management",
+},
   { to: "/user/salary", label: "Salary Slips", icon: Wallet },
 ];

@@ -6,16 +6,27 @@ import { defaultEmployeeFields, type EmployeeField } from "@/config/employeeForm
 import {
   getEmployees,
   createEmployee,
+  createEmployeeWithPhoto,
   updateEmployee,
+  updateEmployeeWithPhoto,
   deleteEmployee,
   type Employee,
   type CreateEmployeePayload,
   type UpdateEmployeePayload,
 } from "@/api/employee";
+
 import { exportToExcel } from "@/lib/excel";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { getRoles, createRole, deleteRole, type Role } from "@/api/role";
+
+import { EmployeeToolbar } from "@/components/employees/EmployeeToolbar";
+import { EmployeeTable } from "@/components/employees/EmployeeTable";
+import { CustomizeEmployeeForm } from "@/components/employees/CustomizeEmployeeForm";
+import { EmployeeFormFields } from "@/components/employees/EmployeeFormFields";
+import { EmployeeFormModal } from "@/components/employees/EmployeeFormModal";
+import { RoleManagementModal } from "@/components/employees/RoleManagementModal";
+import { EmployeePhotoUpload } from "@/components/employees/EmployeePhotoUpload";
 
 export const Route = createFileRoute("/admin/employees")({ component: Page });
 
@@ -42,8 +53,12 @@ function Page() {
   const [form, setForm] = useState<CreateEmployeePayload>(blank);
   const [fields, setFields] = useState<EmployeeField[]>(defaultEmployeeFields);
   const [q, setQ] = useState("");
+  const [selectedRole, setSelectedRole] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEmployees, setTotalEmployees] = useState(0);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newField, setNewField] = useState({
@@ -54,6 +69,8 @@ function Page() {
   const [roles, setRoles] = useState<Role[]>([]);
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [loadingRoles, setLoadingRoles] = useState(false);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
   const [newRole, setNewRole] = useState({
     roleName: "",
@@ -61,13 +78,16 @@ function Page() {
     status: "Active",
   });
 
-  const fetchEmployees = async () => {
+  const fetchEmployees = async (page: number = currentPage) => {
     try {
       setLoading(true);
 
-      const data = await getEmployees();
+      const data = await getEmployees(page);
 
-      setEmployees(data);
+      setEmployees(data.employees);
+      setCurrentPage(data.currentPage);
+      setTotalPages(data.totalPages);
+      setTotalEmployees(data.totalEmployees);
     } catch (err: any) {
       console.error(err);
 
@@ -92,12 +112,16 @@ function Page() {
   };
 
   useEffect(() => {
-    fetchEmployees();
-  }, []);
+  fetchEmployees();
+  fetchRoles();
+}, []);
 
   async function openNew() {
     setEditing(null);
     setForm(blank);
+
+    setPhotoFile(null);
+    setPhotoPreview(null);
 
     await fetchRoles();
 
@@ -106,6 +130,13 @@ function Page() {
 
   async function openEdit(e: Employee) {
     setEditing(e);
+    setPhotoFile(null);
+
+    if (e.profileImage) {
+      setPhotoPreview(`https://fresh-01.onrender.com/${e.profileImage.replace(/^src\//, "")}`);
+    } else {
+      setPhotoPreview(null);
+    }
 
     setForm({
       fullName: e.fullName,
@@ -126,6 +157,17 @@ function Page() {
 
     await fetchRoles();
     setOpen(true);
+  }
+
+  function handlePhotoChange(file: File | null) {
+    setPhotoFile(file);
+
+    if (file) {
+      const previewUrl = URL.createObjectURL(file);
+      setPhotoPreview(previewUrl);
+    } else {
+      setPhotoPreview(null);
+    }
   }
 
   async function addRole() {
@@ -165,25 +207,63 @@ function Page() {
     }
   }
 
+  function handleFieldChange(fieldName: string, value: string | number) {
+    setForm((prev) => ({
+      ...prev,
+      [fieldName]: value,
+    }));
+  }
+
+  function handleNewFieldChange(value: { label: string; name: string; type: string }) {
+    setNewField(value);
+  }
+
   async function save() {
     try {
-      if (!form.fullName || !form.email) {
-        toast.warning("Name and email are required");
+      if (
+        !form.fullName.trim() ||
+        !form.email.trim() ||
+        !form.phone.trim() ||
+        !form.role.trim() ||
+        !form.department.trim() ||
+        !form.salary ||
+        !form.joiningDate
+      ) {
+        toast.warning("Please fill all required fields");
+        return;
+      }
+
+      if (!editing && !form.password?.trim()) {
+        toast.warning("Password is required");
         return;
       }
 
       setSaving(true);
 
       if (editing) {
-        await updateEmployee(editing._id, form);
+        if (photoFile) {
+          await updateEmployeeWithPhoto(editing._id, form, photoFile);
+        } else {
+          await updateEmployee(editing._id, form);
+        }
+
         toast.success("Employee updated successfully");
       } else {
-        await createEmployee(form);
+        console.log("PHOTO FILE:", photoFile);
+        console.log("IS FILE:", photoFile instanceof File);
+        if (photoFile) {
+          await createEmployeeWithPhoto(form, photoFile);
+        } else {
+          await createEmployee(form);
+        }
+
         toast.success("Employee created successfully");
       }
 
       await fetchEmployees();
 
+      setPhotoFile(null);
+      setPhotoPreview(null);
       setOpen(false);
     } catch (err: any) {
       console.error(err);
@@ -265,11 +345,15 @@ function Page() {
     setForm(updated);
   }
 
-  const filtered = employees.filter((e) =>
-    [e.fullName, e.email, e.role, e.department].some((x) =>
+  const filtered = employees.filter((e) => {
+    const matchesSearch = [e.fullName, e.email, e.role, e.department].some((x) =>
       x.toLowerCase().includes(q.toLowerCase()),
-    ),
-  );
+    );
+
+    const matchesRole = selectedRole === "" || e.role === selectedRole;
+
+    return matchesSearch && matchesRole;
+  });
 
   function exportXlsx() {
     if (filtered.length === 0) {
@@ -312,384 +396,99 @@ function Page() {
 
   return (
     <>
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <input
-          className="input w-full lg:max-w-sm"
-          placeholder="Search employees..."
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
+      <EmployeeToolbar
+        q={q}
+        setQ={setQ}
+        selectedRole={selectedRole}
+        roles={roles}
+        onRoleChange={setSelectedRole}
+        onExport={exportXlsx}
+        onAdd={openNew}
+      />
+      <EmployeeTable
+        employees={filtered}
+        deletingId={deletingId}
+        onEdit={openEdit}
+        onDelete={remove}
+      />
 
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button className="btn btn-ghost w-full sm:w-auto" onClick={exportXlsx}>
-            ⬇ Export Excel
-          </button>
-
-          <button className="btn w-full sm:w-auto" onClick={openNew}>
-            + Add Employee
-          </button>
-        </div>
-      </div>
-
-      <div className="mt-5 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-        <table className="table w-full min-w-[950px]">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Role</th>
-              <th>Department</th>
-              <th>Salary</th>
-              <th>Status</th>
-              <th className="text-center">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filtered.map((e) => (
-              <tr key={e._id}>
-                <td>
-                  <div className="font-semibold">{e.fullName}</div>
-
-                  <div className="mt-1 text-xs text-gray-500">
-                    Joined {e.joiningDate.slice(0, 10)}
-                  </div>
-                </td>
-
-                <td>{e.email}</td>
-
-                <td>{e.phone}</td>
-
-                <td>
-                  <span className="badge purple">{e.role}</span>
-                </td>
-
-                <td>{e.department}</td>
-
-                <td>₹{e.salary.toLocaleString()}</td>
-
-                <td>
-                  <span className={"badge " + (e.status === "Active" ? "success" : "danger")}>
-                    {e.status}
-                  </span>
-                </td>
-
-                <td>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
-                    <button
-                      className="btn btn-sm btn-ghost w-full sm:w-auto"
-                      onClick={() => openEdit(e)}
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      className="btn btn-sm btn-danger w-full sm:w-auto"
-                      onClick={() => remove(e._id)}
-                      disabled={deletingId === e._id}
-                    >
-                      {deletingId === e._id ? (
-                        <>
-                          <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-                          Deleting...
-                        </>
-                      ) : (
-                        "Delete"
-                      )}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-
-            {filtered.length === 0 && (
-              <tr>
-                <td colSpan={8} className="py-8 text-center text-gray-500">
-                  No employees found
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="sticky top-0 flex items-center justify-between border-b bg-white px-5 py-4">
-              <h2 className="text-lg font-semibold">
-                {editing ? "Edit Employee" : "Add Employee"}
-              </h2>
-
-              <button className="btn btn-sm btn-ghost" onClick={() => setOpen(false)}>
-                ✕
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-5">
-              <div className="mb-6 rounded-lg border bg-gray-50 p-4">
-                <h3 className="mb-4 text-lg font-semibold">Customize Employee Form</h3>
-
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-                  <input
-                    className="input"
-                    placeholder="Field Label"
-                    value={newField.label}
-                    onChange={(e) =>
-                      setNewField({
-                        ...newField,
-                        label: e.target.value,
-                      })
-                    }
-                  />
-
-                  <input
-                    className="input"
-                    placeholder="Field Name"
-                    value={newField.name}
-                    onChange={(e) =>
-                      setNewField({
-                        ...newField,
-                        name: e.target.value,
-                      })
-                    }
-                  />
-
-                  <select
-                    className="select"
-                    value={newField.type}
-                    onChange={(e) =>
-                      setNewField({
-                        ...newField,
-                        type: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="text">Text</option>
-                    <option value="email">Email</option>
-                    <option value="number">Number</option>
-                    <option value="date">Date</option>
-                    <option value="textarea">Textarea</option>
-                  </select>
-
-                  <button type="button" className="btn" onClick={addField}>
-                    + Add Field
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                {fields.map((field) => {
-                  const value = (form as any)[field.name] ?? "";
-
-                  return (
-                    <div
-                      key={field.id}
-                      className={field.type === "textarea" ? "field lg:col-span-2" : "field"}
-                    >
-                      <div className="mb-2 flex items-center justify-between">
-                        <label>
-                          {field.label}
-                          {field.required && " *"}
-                        </label>
-
-                        <div className="flex items-center gap-2">
-                          {field.name === "role" && (
-                            <button
-                              type="button"
-                              className="text-sm font-medium text-blue-600 hover:underline"
-                              onClick={openRoleModal}
-                            >
-                              + Manage Roles
-                            </button>
-                          )}
-
-                          {field.removable && (
-                            <button
-                              type="button"
-                              className="text-sm text-red-500 hover:text-red-700"
-                              onClick={() => removeField(field.id)}
-                            >
-                              Remove
-                            </button>
-                          )}
-                        </div>
-                      </div>
-
-                      {field.type === "textarea" ? (
-                        <textarea
-                          rows={4}
-                          className="textarea w-full"
-                          value={value}
-                          onChange={(e) =>
-                            setForm({
-                              ...form,
-                              [field.name]: e.target.value,
-                            } as CreateEmployeePayload)
-                          }
-                        />
-                      ) : field.type === "select" ? (
-                        <>
-                          <select
-                            className="select w-full"
-                            value={value}
-                            onChange={(e) =>
-                              setForm({
-                                ...form,
-                                [field.name]: e.target.value,
-                              } as CreateEmployeePayload)
-                            }
-                          >
-                            {field.name === "role"
-                              ? roles.map((role) => (
-                                  <option key={role._id} value={role.roleName}>
-                                    {role.roleName}
-                                  </option>
-                                ))
-                              : field.options?.map((option) => (
-                                  <option key={option} value={option}>
-                                    {option}
-                                  </option>
-                                ))}
-                          </select>
-                        </>
-                      ) : (
-                        <input
-                          className="input w-full"
-                          type={field.type}
-                          value={value}
-                          onChange={(e) =>
-                            setForm({
-                              ...form,
-                              [field.name]:
-                                field.type === "number" ? Number(e.target.value) : e.target.value,
-                            } as CreateEmployeePayload)
-                          }
-                        />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Footer */}
-              <div className="mt-6 flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
-                <button className="btn btn-ghost w-full sm:w-auto" onClick={() => setOpen(false)}>
-                  Cancel
-                </button>
-
-                <button className="btn w-full sm:w-auto" onClick={save} disabled={saving}>
-                  {saving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {editing ? "Saving..." : "Creating..."}
-                    </>
-                  ) : editing ? (
-                    "Save Changes"
-                  ) : (
-                    "Create Employee"
-                  )}
-                </button>
-              </div>
-            </div>
+      {totalPages > 1 && (
+        <div className="mt-5 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-gray-500">
+            Showing <span className="font-medium text-gray-700">{(currentPage - 1) * 10 + 1}</span>{" "}
+            to{" "}
+            <span className="font-medium text-gray-700">
+              {Math.min(currentPage * 10, totalEmployees)}
+            </span>{" "}
+            of <span className="font-medium text-gray-700">{totalEmployees}</span> employees
           </div>
-        </div>
-      )}
 
-      {roleModalOpen && (
-        <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50"
-          onClick={() => setRoleModalOpen(false)}
-        >
-          <div
-            className="w-full max-w-lg rounded-xl bg-white shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between border-b p-5">
-              <h2 className="text-lg font-semibold">Manage Roles</h2>
+          <div className="flex items-center justify-center gap-2">
+            <button
+              className="btn btn-sm btn-ghost"
+              disabled={currentPage === 1 || loading}
+              onClick={() => fetchEmployees(currentPage - 1)}
+            >
+              Previous
+            </button>
 
-              <button className="btn btn-sm btn-ghost" onClick={() => setRoleModalOpen(false)}>
-                ✕
-              </button>
-            </div>
-            <div className="space-y-3">
-              <input
-                className="input w-full"
-                placeholder="Role Name"
-                value={newRole.roleName}
-                onChange={(e) =>
-                  setNewRole({
-                    ...newRole,
-                    roleName: e.target.value,
-                  })
-                }
-              />
+            {Array.from({ length: totalPages }, (_, index) => {
+              const page = index + 1;
 
-              {/* <input
-                className="input w-full"
-                placeholder="Description"
-                value={newRole.description}
-                onChange={(e) =>
-                  setNewRole({
-                    ...newRole,
-                    description: e.target.value,
-                  })
-                }
-              /> */}
-
-              {/* <select
-                className="select w-full"
-                value={newRole.status}
-                onChange={(e) =>
-                  setNewRole({
-                    ...newRole,
-                    status: e.target.value,
-                  })
-                }
-              >
-                <option>Active</option>
-                <option>Inactive</option>
-              </select> */}
-
-              <button className="btn w-full" onClick={addRole}>
-                + Add Role
-              </button>
-            </div>
-            <div className="max-h-72 space-y-2 overflow-y-auto">
-              {roles.map((role) => (
-                <div
-                  key={role._id}
-                  className="flex items-center justify-between rounded-lg border p-3"
+              return (
+                <button
+                  key={page}
+                  className={`btn btn-sm ${currentPage === page ? "" : "btn-ghost"}`}
+                  disabled={loading}
+                  onClick={() => fetchEmployees(page)}
                 >
-                  <div>
-                    <div className="font-medium">{role.roleName}</div>
+                  {page}
+                </button>
+              );
+            })}
 
-                    <div className="text-sm text-gray-500">{role.description}</div>
-                  </div>
-
-                  <button className="btn btn-danger btn-sm" onClick={() => removeRole(role._id)}>
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
-            <div className="border-t p-5 text-right">
-              <button className="btn" onClick={() => setRoleModalOpen(false)}>
-                Close
-              </button>
-            </div>
+            <button
+              className="btn btn-sm btn-ghost"
+              disabled={currentPage === totalPages || loading}
+              onClick={() => fetchEmployees(currentPage + 1)}
+            >
+              Next
+            </button>
           </div>
         </div>
       )}
+
+      <EmployeeFormModal
+        open={open}
+        editing={editing}
+        form={form}
+        fields={fields}
+        roles={roles}
+        newField={newField}
+        saving={saving}
+
+        photoFile={photoFile}
+        photoPreview={photoPreview}
+        onPhotoChange={handlePhotoChange}
+
+        onClose={() => setOpen(false)}
+        onSave={save}
+        onAddField={addField}
+        onRemoveField={removeField}
+        onOpenRoleModal={openRoleModal}
+        onNewFieldChange={handleNewFieldChange}
+        onFieldChange={handleFieldChange}
+      />
+
+      <RoleManagementModal
+        open={roleModalOpen}
+        roles={roles}
+        newRole={newRole}
+        onClose={() => setRoleModalOpen(false)}
+        onAddRole={addRole}
+        onDeleteRole={removeRole}
+        onNewRoleChange={setNewRole}
+      />
     </>
   );
 }

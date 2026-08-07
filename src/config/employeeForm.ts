@@ -37,6 +37,7 @@ export const defaultEmployeeFields: EmployeeField[] = [
     label: "Password",
     name: "password",
     type: "text",
+    required: true,
     removable: false,
   },
   {
@@ -44,6 +45,7 @@ export const defaultEmployeeFields: EmployeeField[] = [
     label: "Phone",
     name: "phone",
     type: "text",
+    required: true,
     removable: false,
   },
   {
@@ -60,6 +62,7 @@ export const defaultEmployeeFields: EmployeeField[] = [
       "DevOps",
       "Analyst",
     ],
+    required: true,
     removable: false,
   },
   {
@@ -67,6 +70,7 @@ export const defaultEmployeeFields: EmployeeField[] = [
     label: "Department",
     name: "department",
     type: "text",
+    required: true,
     removable: false,
   },
   {
@@ -74,6 +78,7 @@ export const defaultEmployeeFields: EmployeeField[] = [
     label: "Monthly Salary (₹)",
     name: "salary",
     type: "number",
+    required: true,
     removable: false,
   },
   {
@@ -81,6 +86,7 @@ export const defaultEmployeeFields: EmployeeField[] = [
     label: "Joining Date",
     name: "joiningDate",
     type: "date",
+    required: true,
     removable: false,
   },
   {

@@ -17,6 +17,7 @@ import { Route as UserIndexRouteImport } from './routes/user.index'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
 import { Route as UserWfhRouteImport } from './routes/user.wfh'
 import { Route as UserTasksRouteImport } from './routes/user.tasks'
+import { Route as UserTaskManagementRouteImport } from './routes/user.task-management'
 import { Route as UserSalaryRouteImport } from './routes/user.salary'
 import { Route as UserProjectsRouteImport } from './routes/user.projects'
 import { Route as UserLeaveRouteImport } from './routes/user.leave'
@@ -70,6 +71,11 @@ const UserWfhRoute = UserWfhRouteImport.update({
 const UserTasksRoute = UserTasksRouteImport.update({
   id: '/tasks',
   path: '/tasks',
+  getParentRoute: () => UserRoute,
+} as any)
+const UserTaskManagementRoute = UserTaskManagementRouteImport.update({
+  id: '/task-management',
+  path: '/task-management',
   getParentRoute: () => UserRoute,
 } as any)
 const UserSalaryRoute = UserSalaryRouteImport.update({
@@ -162,6 +168,7 @@ export interface FileRoutesByFullPath {
   '/user/leave': typeof UserLeaveRoute
   '/user/projects': typeof UserProjectsRoute
   '/user/salary': typeof UserSalaryRoute
+  '/user/task-management': typeof UserTaskManagementRoute
   '/user/tasks': typeof UserTasksRoute
   '/user/wfh': typeof UserWfhRoute
   '/admin/': typeof AdminIndexRoute
@@ -184,6 +191,7 @@ export interface FileRoutesByTo {
   '/user/leave': typeof UserLeaveRoute
   '/user/projects': typeof UserProjectsRoute
   '/user/salary': typeof UserSalaryRoute
+  '/user/task-management': typeof UserTaskManagementRoute
   '/user/tasks': typeof UserTasksRoute
   '/user/wfh': typeof UserWfhRoute
   '/admin': typeof AdminIndexRoute
@@ -209,6 +217,7 @@ export interface FileRoutesById {
   '/user/leave': typeof UserLeaveRoute
   '/user/projects': typeof UserProjectsRoute
   '/user/salary': typeof UserSalaryRoute
+  '/user/task-management': typeof UserTaskManagementRoute
   '/user/tasks': typeof UserTasksRoute
   '/user/wfh': typeof UserWfhRoute
   '/admin/': typeof AdminIndexRoute
@@ -235,6 +244,7 @@ export interface FileRouteTypes {
     | '/user/leave'
     | '/user/projects'
     | '/user/salary'
+    | '/user/task-management'
     | '/user/tasks'
     | '/user/wfh'
     | '/admin/'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/user/leave'
     | '/user/projects'
     | '/user/salary'
+    | '/user/task-management'
     | '/user/tasks'
     | '/user/wfh'
     | '/admin'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/user/leave'
     | '/user/projects'
     | '/user/salary'
+    | '/user/task-management'
     | '/user/tasks'
     | '/user/wfh'
     | '/admin/'
@@ -350,6 +362,13 @@ declare module '@tanstack/react-router' {
       path: '/tasks'
       fullPath: '/user/tasks'
       preLoaderRoute: typeof UserTasksRouteImport
+      parentRoute: typeof UserRoute
+    }
+    '/user/task-management': {
+      id: '/user/task-management'
+      path: '/task-management'
+      fullPath: '/user/task-management'
+      preLoaderRoute: typeof UserTaskManagementRouteImport
       parentRoute: typeof UserRoute
     }
     '/user/salary': {
@@ -487,6 +506,7 @@ interface UserRouteChildren {
   UserLeaveRoute: typeof UserLeaveRoute
   UserProjectsRoute: typeof UserProjectsRoute
   UserSalaryRoute: typeof UserSalaryRoute
+  UserTaskManagementRoute: typeof UserTaskManagementRoute
   UserTasksRoute: typeof UserTasksRoute
   UserWfhRoute: typeof UserWfhRoute
   UserIndexRoute: typeof UserIndexRoute
@@ -498,6 +518,7 @@ const UserRouteChildren: UserRouteChildren = {
   UserLeaveRoute: UserLeaveRoute,
   UserProjectsRoute: UserProjectsRoute,
   UserSalaryRoute: UserSalaryRoute,
+  UserTaskManagementRoute: UserTaskManagementRoute,
   UserTasksRoute: UserTasksRoute,
   UserWfhRoute: UserWfhRoute,
   UserIndexRoute: UserIndexRoute,
