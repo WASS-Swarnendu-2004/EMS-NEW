@@ -5,7 +5,7 @@ export interface SalaryComponent {
   label: string;
   type: "Earning" | "Deduction";
   mode: "% of gross" | "Fixed";
-  value: number;
+  value: number | "";
 }
 
 export interface SalaryItem {

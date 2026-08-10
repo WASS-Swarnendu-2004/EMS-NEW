@@ -34,6 +34,7 @@ function formatISTDate(date: string) {
     year: "numeric",
   });
 }
+const today = new Date().toISOString().slice(0, 10);
 
 const blank: {
   projectName: string;
@@ -41,15 +42,15 @@ const blank: {
   consumerDetails: string;
   startDate: string;
   endDate: string;
-  valuation: number;
+  valuation: number | "";
   description: string;
   assignedEmployees: string[];
 } = {
   projectName: "",
   consumerName: "",
   consumerDetails: "",
-  startDate: new Date().toISOString().slice(0, 10),
-  endDate: new Date().toISOString().slice(0, 10),
+  startDate: today,
+  endDate: today,
   valuation: 0,
   description: "",
   assignedEmployees: [],
@@ -129,6 +130,25 @@ function Page() {
     setOpen(true);
   }
   async function save() {
+    if (!form.projectName.trim()) {
+      toast.warning("Project name is required");
+      return;
+    }
+
+    if (!/^[A-Za-z ]+$/.test(form.projectName.trim())) {
+      toast.warning("Project name should contain alphabets only");
+      return;
+    }
+
+    if (!form.consumerName.trim()) {
+      toast.warning("Consumer name is required");
+      return;
+    }
+
+    if (!/^[A-Za-z ]+$/.test(form.consumerName.trim())) {
+      toast.warning("Consumer name should contain alphabets only");
+      return;
+    }
     try {
       if (editing) {
         await updateProject(editing._id, {
@@ -167,39 +187,20 @@ function Page() {
     }
   }
 
- async function remove(id: string) {
-  // if (!confirm("Delete project?")) return;
+  async function remove(id: string) {
+    // if (!confirm("Delete project?")) return;
 
-  try {
-    await deleteProject(id);
+    try {
+      await deleteProject(id);
 
-    setProjects((prev) => prev.filter((project) => project._id !== id));
+      setProjects((prev) => prev.filter((project) => project._id !== id));
 
-    toast.success("Project deleted successfully");
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to delete project");
+      toast.success("Project deleted successfully");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete project");
+    }
   }
-}
-
-  // async function toggleAssign(project: Project, empId: string) {
-  //   try {
-  //     const ids = project.assignedEmployees.includes(empId)
-  //       ? project.assignedEmployees.filter((id) => id !== empId)
-  //       : [...project.assignedEmployees, empId];
-
-  //     const updatedProject = await assignEmployeesToProject(project._id, ids);
-
-  //     setAssignOpen(updatedProject);
-
-  //     setProjects((prev) => prev.map((p) => (p._id === updatedProject._id ? updatedProject : p)));
-
-  //     // toast.success("Project updated");
-  //   } catch (err) {
-  //     console.error(err);
-  //     toast.error("Failed to assign employee");
-  //   }
-  // }
 
   async function saveAssignments() {
     if (!assignOpen) return;
@@ -319,9 +320,6 @@ function Page() {
                 </td>
                 <td>{p.assignedEmployees.length}</td>
                 <td className="actions">
-                  {/* <button className="btn btn-sm btn-ghost" onClick={() => setView(p)}>
-                    View
-                  </button> */}
                   <button
                     className="btn btn-sm btn-ghost"
                     onClick={async () => {
@@ -366,7 +364,12 @@ function Page() {
                 <input
                   className="input"
                   value={form.projectName}
-                  onChange={(e) => setForm({ ...form, projectName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      projectName: e.target.value.replace(/[^A-Za-z ]/g, ""),
+                    })
+                  }
                 />
               </div>
               <div className="field">
@@ -374,7 +377,12 @@ function Page() {
                 <input
                   className="input"
                   value={form.consumerName}
-                  onChange={(e) => setForm({ ...form, consumerName: e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      consumerName: e.target.value.replace(/[^A-Za-z ]/g, ""),
+                    })
+                  }
                 />
               </div>
               <div className="field">
@@ -382,6 +390,7 @@ function Page() {
                 <input
                   className="input"
                   type="date"
+                  min={today}
                   value={form.startDate}
                   onChange={(e) => setForm({ ...form, startDate: e.target.value })}
                 />
@@ -391,6 +400,7 @@ function Page() {
                 <input
                   className="input"
                   type="date"
+                  min={today}
                   value={form.endDate}
                   onChange={(e) => setForm({ ...form, endDate: e.target.value })}
                 />
@@ -404,8 +414,14 @@ function Page() {
                 <input
                   className="input"
                   type="number"
+                  min="0"
                   value={form.valuation}
-                  onChange={(e) => setForm({ ...form, valuation: +e.target.value })}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      valuation: e.target.value === "" ? "" : Number(e.target.value),
+                    })
+                  }
                 />
               </div>
             </div>

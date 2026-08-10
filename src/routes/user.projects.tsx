@@ -233,15 +233,15 @@ function Page() {
                   }}
                 >
                   <div>
-                    📅 {p.startDate} → {p.endDate}
+                     {p.startDate} → {p.endDate}
                   </div>
 
                   <div>
-                    ⏱️ {p.duration} days
+                    ⏱ {p.duration} days
                   </div>
 
                   <div>
-                    👥 {p.assignedEmployees.length} assigned
+                     {p.assignedEmployees.length} assigned
                   </div>
                 </div>
               </div>
@@ -352,16 +352,16 @@ function Page() {
                     }}
                   >
                     <div>
-                      👤 Assigned by: {task.assignedBy.fullName}
+                       Assigned by: {task.assignedBy.fullName}
                     </div>
 
                     <div>
-                      🆔 Employee ID:{" "}
+                       Employee ID:{" "}
                       {task.assignedBy.employeeId}
                     </div>
 
                     <div>
-                      📅 Due date:{" "}
+                       Due date:{" "}
                       {new Date(
                         task.dueDate
                       ).toLocaleDateString()}

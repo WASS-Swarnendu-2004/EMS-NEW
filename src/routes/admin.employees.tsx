@@ -56,8 +56,7 @@ function Page() {
   const [q, setQ] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedEmployee, setSelectedEmployee] =
-  useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -75,7 +74,6 @@ function Page() {
   const [loadingRoles, setLoadingRoles] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-
 
   const [newRole, setNewRole] = useState({
     roleName: "",
@@ -117,9 +115,9 @@ function Page() {
   };
 
   useEffect(() => {
-  fetchEmployees();
-  fetchRoles();
-}, []);
+    fetchEmployees();
+    fetchRoles();
+  }, []);
 
   async function openNew() {
     setEditing(null);
@@ -472,11 +470,9 @@ function Page() {
         roles={roles}
         newField={newField}
         saving={saving}
-
         photoFile={photoFile}
         photoPreview={photoPreview}
         onPhotoChange={handlePhotoChange}
-
         onClose={() => setOpen(false)}
         onSave={save}
         onAddField={addField}
@@ -495,40 +491,8 @@ function Page() {
         onDeleteRole={removeRole}
         onNewRoleChange={setNewRole}
       />
-      <EmployeeFormModal
-  open={open}
-  editing={editing}
-  form={form}
-  fields={fields}
-  roles={roles}
-  newField={newField}
-  saving={saving}
-  photoFile={photoFile}
-  photoPreview={photoPreview}
-  onPhotoChange={handlePhotoChange}
-  onClose={() => setOpen(false)}
-  onSave={save}
-  onAddField={addField}
-  onRemoveField={removeField}
-  onOpenRoleModal={openRoleModal}
-  onNewFieldChange={handleNewFieldChange}
-  onFieldChange={handleFieldChange}
-/>
 
-<RoleManagementModal
-  open={roleModalOpen}
-  roles={roles}
-  newRole={newRole}
-  onClose={() => setRoleModalOpen(false)}
-  onAddRole={addRole}
-  onDeleteRole={removeRole}
-  onNewRoleChange={setNewRole}
-/>
-
-<EmployeeDetailsModal
-  employee={selectedEmployee}
-  onClose={() => setSelectedEmployee(null)}
-/>
+      <EmployeeDetailsModal employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} />
     </>
   );
 }

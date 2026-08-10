@@ -8,10 +8,7 @@ type EmployeeFormFieldsProps = {
   roles: Role[];
   onRemoveField: (id: string) => void;
   onOpenRoleModal: () => void;
-  onChange: (
-    fieldName: string,
-    value: string | number,
-  ) => void;
+  onChange: (fieldName: string, value: string | number) => void;
 };
 
 export function EmployeeFormFields({
@@ -30,11 +27,7 @@ export function EmployeeFormFields({
         return (
           <div
             key={field.id}
-            className={
-              field.type === "textarea"
-                ? "field lg:col-span-2"
-                : "field"
-            }
+            className={field.type === "textarea" ? "field lg:col-span-2" : "field"}
           >
             <div className="mb-2 flex items-center justify-between">
               <label>
@@ -70,24 +63,17 @@ export function EmployeeFormFields({
                 rows={4}
                 className="textarea w-full"
                 value={String(value)}
-                onChange={(e) =>
-                  onChange(field.name, e.target.value)
-                }
+                onChange={(e) => onChange(field.name, e.target.value)}
               />
             ) : field.type === "select" ? (
               <select
                 className="select w-full"
                 value={String(value)}
-                onChange={(e) =>
-                  onChange(field.name, e.target.value)
-                }
+                onChange={(e) => onChange(field.name, e.target.value)}
               >
                 {field.name === "role"
                   ? roles.map((role) => (
-                      <option
-                        key={role._id}
-                        value={role.roleName}
-                      >
+                      <option key={role._id} value={role.roleName}>
                         {role.roleName}
                       </option>
                     ))
@@ -101,11 +87,14 @@ export function EmployeeFormFields({
               <input
                 className="input w-full"
                 type={field.type}
+                min={
+                  field.name === "joiningDate" ? new Date().toISOString().split("T")[0] : undefined
+                }
                 value={String(value)}
                 onChange={(e) =>
                   onChange(
                     field.name,
-                    field.type === "number"
+                    field.type === "number" && e.target.value !== ""
                       ? Number(e.target.value)
                       : e.target.value,
                   )
