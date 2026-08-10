@@ -2,6 +2,7 @@ import { useState } from "react";
 
 type Employee = {
   _id: string;
+  employeeId?: string;
   fullName: string;
 };
 
@@ -11,7 +12,7 @@ type Project = {
 };
 
 export type TaskFormData = {
-  assignedTo: string;
+  assignedTo: string[];
   projectId: string;
   title: string;
   description: string;
@@ -32,18 +33,37 @@ export default function TaskAssignmentForm({
   loading = false,
 }: Props) {
   const [form, setForm] = useState<TaskFormData>({
-    assignedTo: "",
+    assignedTo: [],
     projectId: "",
     title: "",
     description: "",
     dueDate: "",
   });
 
+  const [employeeDropdownOpen, setEmployeeDropdownOpen] =
+    useState(false);
+
+  function toggleEmployee(employeeId: string) {
+    setForm((prev) => {
+      const alreadySelected =
+        prev.assignedTo.includes(employeeId);
+
+      return {
+        ...prev,
+        assignedTo: alreadySelected
+          ? prev.assignedTo.filter(
+              (id) => id !== employeeId
+            )
+          : [...prev.assignedTo, employeeId],
+      };
+    });
+  }
+
   function submit(e: React.FormEvent) {
     e.preventDefault();
 
     if (
-      !form.assignedTo ||
+      form.assignedTo.length === 0 ||
       !form.title ||
       !form.description ||
       !form.dueDate
@@ -54,7 +74,7 @@ export default function TaskAssignmentForm({
     onAssign(form);
 
     setForm({
-      assignedTo: "",
+      assignedTo: [],
       projectId: "",
       title: "",
       description: "",
@@ -62,36 +82,137 @@ export default function TaskAssignmentForm({
     });
   }
 
+  const selectedEmployees = employees.filter((employee) =>
+    form.assignedTo.includes(employee._id)
+  );
+
   return (
-    <div className="card">
-      <div className="card-header">
-        <h2>Assign New Task</h2>
-      </div>
+    <div>
+      <h2 className="text-lg font-semibold mb-5">
+        Assign New Task
+      </h2>
 
       <form onSubmit={submit}>
+        {/* EMPLOYEE */}
         <div className="field">
           <label>Assign To</label>
 
-          <select
-            className="select"
-            value={form.assignedTo}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                assignedTo: e.target.value,
-              })
-            }
-          >
-            <option value="">Select Employee</option>
+          <div style={{ position: "relative" }}>
+            <button
+              type="button"
+              className="select"
+              style={{
+                width: "100%",
+                textAlign: "left",
+                background: "white",
+                cursor: "pointer",
+              }}
+              onClick={() =>
+                setEmployeeDropdownOpen(
+                  !employeeDropdownOpen
+                )
+              }
+            >
+              {selectedEmployees.length === 0
+                ? "Select Employee"
+                : `${selectedEmployees.length} employee${
+                    selectedEmployees.length > 1
+                      ? "s"
+                      : ""
+                  } selected`}
+            </button>
 
-            {employees.map((emp) => (
-              <option key={emp._id} value={emp._id}>
-                {emp.fullName}
-              </option>
-            ))}
-          </select>
+            {employeeDropdownOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  zIndex: 50,
+                  background: "white",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  maxHeight: "250px",
+                  overflowY: "auto",
+                  marginTop: "4px",
+                  boxShadow:
+                    "0 4px 12px rgba(0,0,0,0.12)",
+                }}
+              >
+                {employees.length === 0 ? (
+                  <div style={{ padding: "12px" }}>
+                    No employees available
+                  </div>
+                ) : (
+                  employees.map((employee) => {
+                    const checked =
+                      form.assignedTo.includes(
+                        employee._id
+                      );
+
+                    return (
+                      <label
+                        key={employee._id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "10px 12px",
+                          cursor: "pointer",
+                          borderBottom:
+                            "1px solid #f0f0f0",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() =>
+                            toggleEmployee(
+                              employee._id
+                            )
+                          }
+                        />
+
+                        <span>
+                          {employee.fullName}
+                        </span>
+                      </label>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* SELECTED EMPLOYEES */}
+          {selectedEmployees.length > 0 && (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "6px",
+                marginTop: "8px",
+              }}
+            >
+              {selectedEmployees.map((employee) => (
+                <span
+                  key={employee._id}
+                  style={{
+                    padding: "4px 8px",
+                    background: "#f3f4f6",
+                    borderRadius: "6px",
+                    fontSize: "13px",
+                  }}
+                >
+                  {employee.fullName}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
+        {/* PROJECT */}
         <div className="field">
           <label>Project</label>
 
@@ -118,6 +239,7 @@ export default function TaskAssignmentForm({
           </select>
         </div>
 
+        {/* DUE DATE */}
         <div className="field">
           <label>Due Date</label>
 
@@ -134,6 +256,7 @@ export default function TaskAssignmentForm({
           />
         </div>
 
+        {/* TITLE */}
         <div className="field">
           <label>Task Title</label>
 
@@ -150,6 +273,7 @@ export default function TaskAssignmentForm({
           />
         </div>
 
+        {/* DESCRIPTION */}
         <div className="field">
           <label>Description</label>
 
@@ -170,9 +294,14 @@ export default function TaskAssignmentForm({
         <button
           className="btn btn-gold"
           type="submit"
-          disabled={loading}
+          disabled={
+            loading ||
+            form.assignedTo.length === 0
+          }
         >
-          {loading ? "Assigning..." : "Assign Task"}
+          {loading
+            ? "Assigning..."
+            : "Assign Task"}
         </button>
       </form>
     </div>

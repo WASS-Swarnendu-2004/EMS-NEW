@@ -1,29 +1,34 @@
-type Task = {
+import type { CreatedTask } from "@/api/task";
+
+type Employee = {
   _id: string;
-  title: string;
-  description: string;
-  assignedByName: string;
-  assignedToName: string;
-  projectName?: string;
-  status: "Pending" | "In Progress" | "Completed";
-  progress: number;
-  remarks: string;
-  dueDate: string;
-  createdAt: string;
+  fullName: string;
 };
 
 type Props = {
-  tasks: Task[];
-  onView: (task: Task) => void;
-  onUpdate: (task: Task) => void;
+  tasks: CreatedTask[];
+  employees: Employee[];
+  onView: (task: CreatedTask) => void;
+  onUpdate: (task: CreatedTask) => void;
 };
 
-export default function TaskHistory({ tasks, onView, onUpdate }: Props) {
+export default function TaskHistory({
+  tasks,
+  employees,
+  onView,
+  onUpdate,
+}: Props) {
+  function getEmployeeName(employeeId: string) {
+    const employee = employees.find(
+      (employee) => employee._id === employeeId
+    );
+
+    return employee?.fullName || employeeId;
+  }
+
   return (
-    <div className="card">
-      <div className="card-header">
-        <h2>Assigned Task History</h2>
-      </div>
+    <div>
+      <h2>Assigned Task History</h2>
 
       {tasks.length === 0 ? (
         <div
@@ -52,6 +57,7 @@ export default function TaskHistory({ tasks, onView, onUpdate }: Props) {
                 padding: "16px",
               }}
             >
+              {/* TASK TITLE */}
               <div
                 style={{
                   marginBottom: "10px",
@@ -60,28 +66,94 @@ export default function TaskHistory({ tasks, onView, onUpdate }: Props) {
                 <strong>{task.title}</strong>
               </div>
 
+              {/* DESCRIPTION */}
               <p className="muted">
-                <strong>Assigned To:</strong> {task.assignedToName}
+                <strong>Description:</strong>{" "}
+                {task.description}
               </p>
 
-              {task.projectName && (
+              {/* PROJECT */}
+              {task.project?.projectName && (
                 <p className="muted">
-                  <strong>Project:</strong> {task.projectName}
+                  <strong>Project:</strong>{" "}
+                  {task.project.projectName}
                 </p>
               )}
 
+              {/* ASSIGNEES */}
+              <div className="muted">
+                <strong>Assigned To:</strong>
+
+                {task.assignees?.length > 0 ? (
+                  <div
+                    style={{
+                      marginTop: "6px",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "6px",
+                    }}
+                  >
+                    {task.assignees.map((assignee) => (
+                      <div
+                        key={assignee._id}
+                        style={{
+                          padding: "8px",
+                          background: "#f9fafb",
+                          borderRadius: "6px",
+                        }}
+                      >
+                        <div>
+                          {assignee.employee.fullName}
+                        </div>
+
+                        <div
+                          style={{
+                            fontSize: "13px",
+                            marginTop: "3px",
+                          }}
+                        >
+                          Status: {assignee.status}
+                          {" | "}
+                          Progress: {assignee.progress}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : task.assignedTo ? (
+                  <span>
+                    {" "}
+                    {getEmployeeName(task.assignedTo)}
+                  </span>
+                ) : (
+                  <span> No employee assigned</span>
+                )}
+              </div>
+
+              {/* OLD SINGLE TASK STATUS */}
+              {task.assignees?.length === 0 &&
+                task.status && (
+                  <>
+                    <p className="muted">
+                      <strong>Status:</strong>{" "}
+                      {task.status}
+                    </p>
+
+                    <p className="muted">
+                      <strong>Progress:</strong>{" "}
+                      {task.progress ?? 0}%
+                    </p>
+                  </>
+                )}
+
+              {/* DUE DATE */}
               <p className="muted">
-                <strong>Status:</strong> {task.status}
+                <strong>Due Date:</strong>{" "}
+                {new Date(
+                  task.dueDate
+                ).toLocaleDateString()}
               </p>
 
-              <p className="muted">
-                <strong>Progress:</strong> {task.progress}%
-              </p>
-
-              <p className="muted">
-                <strong>Due Date:</strong> {task.dueDate}
-              </p>
-
+              {/* BUTTONS */}
               <div
                 style={{
                   marginTop: "12px",
@@ -90,11 +162,17 @@ export default function TaskHistory({ tasks, onView, onUpdate }: Props) {
                   gap: "10px",
                 }}
               >
-                <button className="btn btn-sm btn-ghost" onClick={() => onView(task)}>
+                <button
+                  className="btn btn-sm btn-ghost"
+                  onClick={() => onView(task)}
+                >
                   View
                 </button>
 
-                <button className="btn btn-sm" onClick={() => onUpdate(task)}>
+                <button
+                  className="btn btn-sm"
+                  onClick={() => onUpdate(task)}
+                >
                   Update
                 </button>
               </div>

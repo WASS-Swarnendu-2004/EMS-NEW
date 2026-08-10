@@ -37,7 +37,7 @@ export interface EmployeePagination {
   totalPages: number;
 }
 export const getEmployees = async (
-  page: number = 1,
+  page: number = 1
 ): Promise<EmployeePagination> => {
   try {
     const response = await api.get("/admin/employees", {
@@ -164,6 +164,35 @@ export const updateEmployeeWithPhoto = async (
     return response.data.employee;
   } catch (error) {
     console.error("Update Employee With Photo Error:", error);
+    throw error;
+  }
+};
+
+
+export interface TaskEmployee {
+  _id: string;
+  employeeId: string;
+  fullName: string;
+  role: string;
+  department: string;
+  profileImage?: string;
+}
+
+export interface TaskEmployeesResponse {
+  success: boolean;
+  total: number;
+  employees: TaskEmployee[];
+}
+
+export const getTaskEmployees = async (): Promise<TaskEmployee[]> => {
+  try {
+    const response = await api.get<TaskEmployeesResponse>(
+      "/tasks/employees"
+    );
+
+    return response.data.employees;
+  } catch (error) {
+    console.error("Get Task Employees Error:", error);
     throw error;
   }
 };
