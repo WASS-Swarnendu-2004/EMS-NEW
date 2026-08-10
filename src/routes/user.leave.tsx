@@ -22,6 +22,31 @@ function Page() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
 
+    if (!from) {
+      toast.warning("Please select a From date");
+      return;
+    }
+
+    if (!to) {
+      toast.warning("Please select a To date");
+      return;
+    }
+
+    if (from < today()) {
+      toast.warning("From date cannot be in the past");
+      return;
+    }
+
+    if (to < from) {
+      toast.warning("To date cannot be before From date");
+      return;
+    }
+
+    if (!reason.trim()) {
+      toast.warning("Please enter a reason");
+      return;
+    }
+
     try {
       setSubmitting(true);
 
@@ -105,6 +130,7 @@ function Page() {
                   className="input"
                   type="date"
                   value={from}
+                  min={today()}
                   onChange={(e) => setFrom(e.target.value)}
                 />
               </div>
@@ -114,6 +140,7 @@ function Page() {
                   className="input"
                   type="date"
                   value={to}
+                  min={from}
                   onChange={(e) => setTo(e.target.value)}
                 />
               </div>

@@ -1,18 +1,22 @@
-
 import { createFileRoute } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 import { useEffect, useState } from "react";
 import { getMyProjects, type Project } from "@/api/project";
-import {
-  getMyTasks,
-  updateTaskProgress,
-  type MyTask,
-} from "@/api/task";
+import { getMyTasks, updateTaskProgress, type MyTask } from "@/api/task";
 
 export const Route = createFileRoute("/user/projects")({
   component: Page,
 });
+
+function formatISTDate(date: string) {
+  return new Date(date).toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
 
 function Page() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -23,9 +27,7 @@ function Page() {
 
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
-  const [progressValues, setProgressValues] = useState<
-    Record<string, number>
-  >({});
+  const [progressValues, setProgressValues] = useState<Record<string, number>>({});
 
   useEffect(() => {
     loadProjects();
@@ -95,22 +97,19 @@ function Page() {
     try {
       setUpdatingTaskId(taskId);
 
-      const updatedTask = await updateTaskProgress(
-        taskId,
-        progress
-      );
+      const updatedTask = await updateTaskProgress(taskId, progress);
 
-     setTasks((prevTasks) =>
-  prevTasks.map((task) =>
-    task._id === taskId
-      ? {
-          ...task,
-          progress: updatedTask.progress,
-          status: updatedTask.status,
-        }
-      : task
-  )
-);
+      setTasks((prevTasks) =>
+        prevTasks.map((task) =>
+          task._id === taskId
+            ? {
+                ...task,
+                progress: updatedTask.progress,
+                status: updatedTask.status,
+              }
+            : task,
+        ),
+      );
 
       setProgressValues((prev) => ({
         ...prev,
@@ -159,14 +158,10 @@ function Page() {
       ================================= */}
 
       <section>
-        <h2 style={{ marginBottom: "1rem" }}>
-          Assigned Projects
-        </h2>
+        <h2 style={{ marginBottom: "1rem" }}>Assigned Projects</h2>
 
         {projects.length === 0 ? (
-          <div className="muted">
-            No projects assigned to you yet.
-          </div>
+          <div className="muted">No projects assigned to you yet.</div>
         ) : (
           <div
             style={{
@@ -191,11 +186,9 @@ function Page() {
                     gap: "1rem",
                   }}
                 >
-                  <h3 style={{ margin: 0 }}>
-                    {p.projectName}
-                  </h3>
+                  <h3 style={{ margin: 0 }}>{p.projectName}</h3>
 
-                  <span
+                  {/* <span
                     style={{
                       fontSize: ".75rem",
                       padding: "0.25rem 0.5rem",
@@ -204,7 +197,7 @@ function Page() {
                     }}
                   >
                     {p.status.replace("-", " ")}
-                  </span>
+                  </span> */}
                 </div>
 
                 <p
@@ -233,16 +226,12 @@ function Page() {
                   }}
                 >
                   <div>
-                     {p.startDate} → {p.endDate}
+                    {formatISTDate(p.startDate)} → {formatISTDate(p.endDate)}
                   </div>
 
-                  <div>
-                    ⏱ {p.duration} days
-                  </div>
+                  <div>{p.duration} days</div>
 
-                  <div>
-                     {p.assignedEmployees.length} assigned
-                  </div>
+                  <div>{p.assignedEmployees.length} assigned</div>
                 </div>
               </div>
             ))}
@@ -255,14 +244,10 @@ function Page() {
       ================================= */}
 
       <section>
-        <h2 style={{ marginBottom: "1rem" }}>
-          My Assigned Tasks
-        </h2>
+        <h2 style={{ marginBottom: "1rem" }}>My Assigned Tasks</h2>
 
         {tasks.length === 0 ? (
-          <div className="muted">
-            No tasks assigned to you yet.
-          </div>
+          <div className="muted">No tasks assigned to you yet.</div>
         ) : (
           <div
             style={{
@@ -271,11 +256,9 @@ function Page() {
             }}
           >
             {tasks.map((task) => {
-              const currentProgress =
-                progressValues[task._id] ?? task.progress;
+              const currentProgress = progressValues[task._id] ?? task.progress;
 
-              const isUpdating =
-                updatingTaskId === task._id;
+              const isUpdating = updatingTaskId === task._id;
 
               return (
                 <div
@@ -351,21 +334,11 @@ function Page() {
                       lineHeight: 1.8,
                     }}
                   >
-                    <div>
-                       Assigned by: {task.assignedBy.fullName}
-                    </div>
+                    <div>Assigned by: {task.assignedBy.fullName}</div>
 
-                    <div>
-                       Employee ID:{" "}
-                      {task.assignedBy.employeeId}
-                    </div>
+                    <div>Employee ID: {task.assignedBy.employeeId}</div>
 
-                    <div>
-                       Due date:{" "}
-                      {new Date(
-                        task.dueDate
-                      ).toLocaleDateString()}
-                    </div>
+                    <div>Due date: {new Date(task.dueDate).toLocaleDateString()}</div>
                   </div>
 
                   {/* Progress */}
@@ -384,9 +357,7 @@ function Page() {
                       }}
                     >
                       <span>Progress</span>
-                      <strong>
-                        {currentProgress}%
-                      </strong>
+                      <strong>{currentProgress}%</strong>
                     </div>
 
                     <div
@@ -424,12 +395,7 @@ function Page() {
                       min={0}
                       max={100}
                       value={currentProgress}
-                      onChange={(e) =>
-                        handleProgressChange(
-                          task._id,
-                          e.target.value
-                        )
-                      }
+                      onChange={(e) => handleProgressChange(task._id, e.target.value)}
                       disabled={isUpdating}
                       style={{
                         width: "90px",
@@ -443,31 +409,13 @@ function Page() {
 
                     <button
                       type="button"
-                      onClick={() =>
-                        handleUpdateProgress(task._id)
-                      }
+                      className="btn"
+                      onClick={() => handleUpdateProgress(task._id)}
                       disabled={isUpdating}
-                      style={{
-                        padding: ".5rem .9rem",
-                        border: "none",
-                        borderRadius: "6px",
-                        cursor: isUpdating
-                          ? "not-allowed"
-                          : "pointer",
-                        opacity: isUpdating ? 0.7 : 1,
-                      }}
                     >
                       {isUpdating ? (
                         <>
-                          <Loader2
-                            size={15}
-                            className="animate-spin"
-                            style={{
-                              display: "inline-block",
-                              verticalAlign: "middle",
-                              marginRight: ".35rem",
-                            }}
-                          />
+                          <Loader2 size={15} className="animate-spin" />
                           Updating...
                         </>
                       ) : (

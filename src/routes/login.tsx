@@ -25,6 +25,28 @@ function Login() {
     if (session) navigate({ to: session.kind === "admin" ? "/admin" : "/user", replace: true });
   }, [session, navigate]);
 
+  useEffect(() => {
+  const preventCopyPaste = (e: ClipboardEvent) => {
+    e.preventDefault();
+  };
+
+  const preventContextMenu = (e: MouseEvent) => {
+    e.preventDefault();
+  };
+
+  document.addEventListener("copy", preventCopyPaste);
+  document.addEventListener("cut", preventCopyPaste);
+  document.addEventListener("paste", preventCopyPaste);
+  document.addEventListener("contextmenu", preventContextMenu);
+
+  return () => {
+    document.removeEventListener("copy", preventCopyPaste);
+    document.removeEventListener("cut", preventCopyPaste);
+    document.removeEventListener("paste", preventCopyPaste);
+    document.removeEventListener("contextmenu", preventContextMenu);
+  };
+}, []);
+
   function setRole(k: "admin" | "employee") {
     setKind(k);
     setErr(null);
