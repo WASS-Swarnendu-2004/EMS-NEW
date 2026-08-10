@@ -37,8 +37,17 @@ const [sending, setSending] = useState(false);
   
 async function loadEmployees() {
   try {
-    const data = await getEmployees();
-    setEmployees(data);
+    const firstPage = await getEmployees(1);
+
+    let allEmployees = [...firstPage.employees];
+
+    for (let page = 2; page <= firstPage.totalPages; page++) {
+      const data = await getEmployees(page);
+
+      allEmployees = [...allEmployees, ...data.employees];
+    }
+
+    setEmployees(allEmployees);
   } catch (err) {
     console.error(err);
     toast.error("Failed to load employees");
