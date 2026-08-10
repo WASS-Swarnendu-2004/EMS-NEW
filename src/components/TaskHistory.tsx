@@ -162,19 +162,6 @@ export default function TaskHistory({
                   gap: "10px",
                 }}
               >
-                <button
-                  className="btn btn-sm btn-ghost"
-                  onClick={() => onView(task)}
-                >
-                  View
-                </button>
-
-                <button
-                  className="btn btn-sm"
-                  onClick={() => onUpdate(task)}
-                >
-                  Update
-                </button>
               </div>
             </div>
           ))}
