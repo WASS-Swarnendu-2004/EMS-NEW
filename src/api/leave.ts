@@ -1,19 +1,30 @@
 import api from "./axios";
 
+export interface LeaveEmployee {
+  _id: string;
+  employeeId: string;
+  fullName: string;
+  role: string;
+  department: string;
+  profileImage?: string;
+}
+
 export interface Leave {
   _id: string;
-  employee: {
-    _id: string;
-    employeeId: string;
-  } | null;
+
+  employee: LeaveEmployee | null;
 
   leaveType: "Casual" | "Sick" | "Earned";
   fromDate: string;
   toDate: string;
   reason: string;
   status: "Pending" | "Approved" | "Rejected";
+
   appliedAt: string;
+
+  rejectionRemark?: string;
   adminRemark?: string;
+
   createdAt: string;
   updatedAt: string;
 }
@@ -52,10 +63,16 @@ export const approveLeave = async (id: string) => {
   }
 };
 
-export const rejectLeave = async (id: string) => {
+export const rejectLeave = async (
+  id: string,
+  rejectionRemark: string
+) => {
   try {
     const response = await api.put(
-      `/admin/leaves/${id}/reject`
+      `/admin/leaves/${id}/reject`,
+      {
+        rejectionRemark,
+      }
     );
 
     return response.data;
@@ -65,32 +82,25 @@ export const rejectLeave = async (id: string) => {
   }
 };
 
+// USER
 
-//USER
 export const applyLeave = async (
   data: ApplyLeavePayload
 ): Promise<Leave> => {
-
   const response = await api.post<{
     success: boolean;
     message: string;
     leave: Leave;
-  }>(
-    "/leaves",
-    data
-  );
+  }>("/leaves", data);
 
   return response.data.leave;
 };
 
 export const getMyLeaves = async (): Promise<Leave[]> => {
-
   const response = await api.get<{
     success: boolean;
     leaves: Leave[];
-  }>(
-    "/leaves"
-  );
+  }>("/leaves");
 
   return response.data.leaves;
 };

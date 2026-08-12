@@ -1,13 +1,22 @@
 import api from "./axios";
 
+export interface WFHEmployee {
+  _id: string;
+  employeeId: string;
+  fullName: string;
+  profileImage?: string;
+  role?: string;
+  department?: string;
+}
+
 export interface WFHApplication {
   _id: string;
+
   employee:
-  | string
-  | {
-      _id: string;
-      employeeId: string;
-    };
+    | string
+    | WFHEmployee
+    | null;
+
   fromDate: string;
   toDate: string;
   reason: string;
@@ -23,8 +32,13 @@ export interface ApplyWFHPayload {
   reason: string;
 }
 
-// Get all WFH applications
-export const getWFHApplications = async (): Promise<WFHApplication[]> => {
+// --------------------------------------------------
+// GET ALL WFH APPLICATIONS - ADMIN
+// --------------------------------------------------
+
+export const getWFHApplications = async (): Promise<
+  WFHApplication[]
+> => {
   const response = await api.get<{
     success: boolean;
     requests: WFHApplication[];
@@ -33,7 +47,10 @@ export const getWFHApplications = async (): Promise<WFHApplication[]> => {
   return response.data.requests;
 };
 
-// Apply for WFH
+// --------------------------------------------------
+// APPLY WFH - EMPLOYEE
+// --------------------------------------------------
+
 export const applyWFH = async (
   data: ApplyWFHPayload
 ): Promise<WFHApplication> => {
@@ -51,7 +68,13 @@ export const applyWFH = async (
   }
 };
 
-export const getMyWFHRequests = async (): Promise<WFHApplication[]> => {
+// --------------------------------------------------
+// GET MY WFH REQUESTS
+// --------------------------------------------------
+
+export const getMyWFHRequests = async (): Promise<
+  WFHApplication[]
+> => {
   const response = await api.get<{
     success: boolean;
     requests: WFHApplication[];
@@ -60,7 +83,10 @@ export const getMyWFHRequests = async (): Promise<WFHApplication[]> => {
   return response.data.requests;
 };
 
-// Approve/Reject WFH (Admin)
+// --------------------------------------------------
+// APPROVE / REJECT WFH - ADMIN
+// --------------------------------------------------
+
 export const updateWFHStatus = async (
   id: string,
   status: "Approved" | "Rejected"

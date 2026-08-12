@@ -292,3 +292,13 @@ h3 { font-size: 1.05rem; }
   .content { padding: 0; }
   body { background: #fff; }
 }
+
+.table tbody tr.leave-row {
+  background-color: #fee2e2;
+  color: #7f1d1d;
+}
+
+.table tbody tr.leave-row:hover {
+  background-color: #fee2e2 !important;
+  color: #7f1d1d;
+}
