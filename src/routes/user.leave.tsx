@@ -190,18 +190,24 @@ function Page() {
                     <td>{new Date(l.fromDate).toLocaleDateString()}</td>
                     <td>{new Date(l.toDate).toLocaleDateString()}</td>
                     <td>
-                      <span
-                        className={
-                          "badge " +
-                          (l.status === "Approved"
-                            ? "success"
-                            : l.status === "Rejected"
-                              ? "danger"
-                              : "warn")
-                        }
-                      >
-                        {l.status}
-                      </span>
+                      <div className="flex flex-col items-start gap-1">
+                        <span
+                          className={
+                            "badge " +
+                            (l.status === "Approved"
+                              ? "success"
+                              : l.status === "Rejected"
+                                ? "danger"
+                                : "warn")
+                          }
+                        >
+                          {l.status}
+                        </span>
+
+                        {l.status === "Rejected" && l.rejectionRemark && (
+                          <span className="text-xs text-red-600">{l.rejectionRemark}</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
