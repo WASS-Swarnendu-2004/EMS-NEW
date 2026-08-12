@@ -129,7 +129,7 @@ export const userNav: NavItem[] = [
   { to: "/user/leave", label: "Leave", icon: PlaneTakeoff },
   { to: "/user/wfh", label: "Work From Home", icon: Home },
   { to: "/user/attendance", label: "My Attendance", icon: Clock },
-  { to: "/user/advance-amount", label: "Advance Amount", icon: Wallet },
+  { to: "/user/advance-amount", label: "Advance & Claim", icon: Wallet },
   {
   label: "Task Management",
   icon: ClipboardList,

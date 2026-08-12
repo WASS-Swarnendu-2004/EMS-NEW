@@ -68,9 +68,7 @@ function Page() {
 
     setTimeout(() => {
       setRequests((prev) =>
-        prev.map((item) =>
-          item._id === id ? { ...item, status: "Approved" } : item
-        )
+        prev.map((item) => (item._id === id ? { ...item, status: "Approved" } : item)),
       );
 
       toast.success("Advance request approved");
@@ -84,9 +82,7 @@ function Page() {
 
     setTimeout(() => {
       setRequests((prev) =>
-        prev.map((item) =>
-          item._id === id ? { ...item, status: "Rejected" } : item
-        )
+        prev.map((item) => (item._id === id ? { ...item, status: "Rejected" } : item)),
       );
 
       toast.success("Advance request rejected");
@@ -110,7 +106,7 @@ function Page() {
         Applied: r.appliedAt,
       })),
       "advance-amount-requests.xlsx",
-      "Advance Amount"
+      "Advance Amount",
     );
 
     toast.success("Advance requests exported successfully");
@@ -120,9 +116,7 @@ function Page() {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
-        <p className="text-gray-500 text-lg font-medium">
-          Loading advance amount requests...
-        </p>
+        <p className="text-gray-500 text-lg font-medium">Loading advance amount requests...</p>
       </div>
     );
   }
@@ -139,16 +133,16 @@ function Page() {
 
       <div className="table-wrap">
         <table className="table">
-         <thead>
-  <tr>
-    <th>Employee ID</th>
-    <th>Employee Name</th>
-    <th>Amount</th>
-    <th>Applied On</th>
-    <th>Status</th>
-    <th style={{ width: "170px", textAlign: "center" }}>Action</th>
-  </tr>
-</thead>
+          <thead>
+            <tr>
+              <th>Employee ID</th>
+              <th>Employee Name</th>
+              <th>Amount</th>
+              <th>Applied On</th>
+              <th>Status</th>
+              <th style={{ width: "170px", textAlign: "center" }}>Action</th>
+            </tr>
+          </thead>
           <tbody>
             {requests.map((item) => (
               <tr key={item._id}>
@@ -158,9 +152,7 @@ function Page() {
 
                 <td>₹ {item.amount.toLocaleString()}</td>
 
-                <td>
-                  {new Date(item.appliedAt).toLocaleDateString()}
-                </td>
+                <td>{new Date(item.appliedAt).toLocaleDateString()}</td>
 
                 <td>
                   <span
@@ -169,8 +161,8 @@ function Page() {
                       (item.status === "Approved"
                         ? "success"
                         : item.status === "Rejected"
-                        ? "danger"
-                        : "warn")
+                          ? "danger"
+                          : "warn")
                     }
                   >
                     {item.status}
@@ -178,51 +170,51 @@ function Page() {
                 </td>
 
                 <td
-  style={{
-    minWidth: "170px",
-    whiteSpace: "nowrap",
-    textAlign: "center",
-  }}
->
+                  style={{
+                    minWidth: "170px",
+                    whiteSpace: "nowrap",
+                    textAlign: "center",
+                  }}
+                >
                   {item.status === "Pending" && (
                     <>
                       <div
-  style={{
-    display: "flex",
-    justifyContent: "center",
-    gap: "8px",
-  }}
->
-  <button
-    className="btn btn-sm btn-success"
-    onClick={() => handleApprove(item._id)}
-    disabled={processingId === item._id}
-  >
-    {processingId === item._id ? (
-      <>
-        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-        Processing...
-      </>
-    ) : (
-      "Approve"
-    )}
-  </button>
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        <button
+                          className="btn btn-sm btn-success"
+                          onClick={() => handleApprove(item._id)}
+                          disabled={processingId === item._id}
+                        >
+                          {processingId === item._id ? (
+                            <>
+                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            "Approve"
+                          )}
+                        </button>
 
-  <button
-    className="btn btn-sm btn-danger"
-    onClick={() => handleReject(item._id)}
-    disabled={processingId === item._id}
-  >
-    {processingId === item._id ? (
-      <>
-        <Loader2 className="mr-1 h-4 w-4 animate-spin" />
-        Processing...
-      </>
-    ) : (
-      "Reject"
-    )}
-  </button>
-</div>
+                        <button
+                          className="btn btn-sm btn-danger"
+                          onClick={() => handleReject(item._id)}
+                          disabled={processingId === item._id}
+                        >
+                          {processingId === item._id ? (
+                            <>
+                              <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            "Reject"
+                          )}
+                        </button>
+                      </div>
                     </>
                   )}
                 </td>
