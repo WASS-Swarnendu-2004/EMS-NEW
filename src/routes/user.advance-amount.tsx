@@ -1,28 +1,25 @@
-// src/routes/user/advance-amount.tsx
-
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 
+import {
+  getAdvanceHistory,
+  requestAdvance,
+  type AdvanceRequest,
+} from "@/api/advance";
+
+import {
+  getReimbursementHistory,
+  requestReimbursement,
+  type ReimbursementRequest,
+} from "@/api/reimbursement";
+
 export const Route = createFileRoute("/user/advance-amount")({
   component: Page,
 });
 
-interface AdvanceRequest {
-  _id: string;
-  amount: number;
-  status: "Pending" | "Approved" | "Rejected";
-  createdAt: string;
-}
 
-interface ReimbursementRequest {
-  _id: string;
-  amount: number;
-  reason: string;
-  status: "Pending" | "Approved" | "Rejected";
-  createdAt: string;
-}
 
 function Page() {
   // Advance
@@ -49,161 +46,115 @@ function Page() {
   }, []);
 
   async function fetchHistory() {
+  try {
     setLoading(true);
 
-    // Dummy advance data
-    const advanceData: AdvanceRequest[] = [
-      {
-        _id: "1",
-        amount: 5000,
-        status: "Approved",
-        createdAt: "2026-07-31",
-      },
-      {
-        _id: "2",
-        amount: 12000,
-        status: "Pending",
-        createdAt: "2026-08-01",
-      },
-      {
-        _id: "3",
-        amount: 8000,
-        status: "Rejected",
-        createdAt: "2026-08-02",
-      },
-      {
-        _id: "4",
-        amount: 15000,
-        status: "Approved",
-        createdAt: "2026-08-03",
-      },
-      {
-        _id: "5",
-        amount: 7000,
-        status: "Pending",
-        createdAt: "2026-08-04",
-      },
-      {
-        _id: "6",
-        amount: 9500,
-        status: "Rejected",
-        createdAt: "2026-08-05",
-      },
-    ];
+    const [advanceResponse, reimbursementResponse] = await Promise.all([
+      getAdvanceHistory(),
+      getReimbursementHistory(),
+    ]);
 
-    // Dummy reimbursement data
-    const reimbursementData: ReimbursementRequest[] = [
-      {
-        _id: "r1",
-        amount: 2500,
-        reason: "Travel expenses",
-        status: "Approved",
-        createdAt: "2026-07-29",
-      },
-      {
-        _id: "r2",
-        amount: 1800,
-        reason: "Client meeting expenses",
-        status: "Pending",
-        createdAt: "2026-08-01",
-      },
-      {
-        _id: "r3",
-        amount: 3200,
-        reason: "Office related expenses",
-        status: "Rejected",
-        createdAt: "2026-08-03",
-      },
-      {
-        _id: "r4",
-        amount: 4500,
-        reason: "Local transportation",
-        status: "Approved",
-        createdAt: "2026-08-05",
-      },
-      {
-        _id: "r5",
-        amount: 2100,
-        reason: "Business meeting expenses",
-        status: "Pending",
-        createdAt: "2026-08-06",
-      },
-      {
-        _id: "r6",
-        amount: 3800,
-        reason: "Travel and food expenses",
-        status: "Approved",
-        createdAt: "2026-08-07",
-      },
-    ];
+    setHistory(advanceResponse.advances);
+    setReimbursementHistory(reimbursementResponse.reimbursements);
+  } catch (error) {
+    console.error("Fetch Advance/Reimbursement History Error:", error);
 
-    setTimeout(() => {
-      setHistory(advanceData);
-      setReimbursementHistory(reimbursementData);
-      setLoading(false);
-    }, 500);
+    toast.error("Failed to load advance and reimbursement history");
+  } finally {
+    setLoading(false);
   }
+}
 
   async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!amount) {
-      toast.error("Please enter amount");
-      return;
-    }
+  if (!amount) {
+    toast.error("Please enter amount");
+    return;
+  }
 
+  const numericAmount = Number(amount);
+
+  if (numericAmount <= 0) {
+    toast.error("Amount must be greater than 0");
+    return;
+  }
+
+  try {
     setSubmitting(true);
 
-    setTimeout(() => {
-      const newRequest: AdvanceRequest = {
-        _id: Date.now().toString(),
-        amount: Number(amount),
-        status: "Pending",
-        createdAt: new Date().toISOString(),
-      };
+    const response = await requestAdvance({
+      amount: numericAmount,
+    });
 
-      setHistory((prev) => [newRequest, ...prev]);
+    toast.success(
+      response.message || "Advance request submitted successfully"
+    );
 
-      toast.success("Advance request submitted");
+    setAmount("");
 
-      setAmount("");
-      setSubmitting(false);
-    }, 700);
+    await fetchHistory();
+  } catch (error: any) {
+    console.error("Submit Advance Error:", error);
+
+    const message =
+      error?.response?.data?.message ||
+      "Failed to submit advance request";
+
+    toast.error(message);
+  } finally {
+    setSubmitting(false);
   }
+}
 
   async function submitReimbursement(e: React.FormEvent) {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!reimbursementAmount) {
-      toast.error("Please enter reimbursement amount");
-      return;
-    }
+  if (!reimbursementAmount) {
+    toast.error("Please enter reimbursement amount");
+    return;
+  }
 
-    if (!reimbursementReason.trim()) {
-      toast.error("Please enter reimbursement reason");
-      return;
-    }
+  if (!reimbursementReason.trim()) {
+    toast.error("Please enter reimbursement reason");
+    return;
+  }
 
+  const numericAmount = Number(reimbursementAmount);
+
+  if (numericAmount <= 0) {
+    toast.error("Amount must be greater than 0");
+    return;
+  }
+
+  try {
     setReimbursementSubmitting(true);
 
-    setTimeout(() => {
-      const newRequest: ReimbursementRequest = {
-        _id: `reimbursement-${Date.now()}`,
-        amount: Number(reimbursementAmount),
-        reason: reimbursementReason.trim(),
-        status: "Pending",
-        createdAt: new Date().toISOString(),
-      };
+    const response = await requestReimbursement({
+      amount: numericAmount,
+      reason: reimbursementReason.trim(),
+    });
 
-      setReimbursementHistory((prev) => [newRequest, ...prev]);
+    toast.success(
+      response.message || "Reimbursement request submitted successfully"
+    );
 
-      toast.success("Reimbursement request submitted");
+    setReimbursementAmount("");
+    setReimbursementReason("");
 
-      setReimbursementAmount("");
-      setReimbursementReason("");
-      setReimbursementSubmitting(false);
-    }, 700);
+    await fetchHistory();
+  } catch (error: any) {
+    console.error("Submit Reimbursement Error:", error);
+
+    const message =
+      error?.response?.data?.message ||
+      "Failed to submit reimbursement request";
+
+    toast.error(message);
+  } finally {
+    setReimbursementSubmitting(false);
   }
+}
 
   if (loading) {
     return (
