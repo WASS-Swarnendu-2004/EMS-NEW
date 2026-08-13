@@ -117,6 +117,7 @@ export const adminNav: NavItem[] = [
   { to: "/admin/wfh", label: "WFH Requests", icon: Home },
   { to: "/admin/attendance", label: "Attendance", icon: Clock },
   { to: "/admin/work-status", label: "Daily Work Status", icon: ClipboardList },
+  { to: "/admin/tasks", label: "Tasks", icon: ClipboardList },
   { to: "/admin/advance-amount", label: "Advance Amount", icon: Wallet },
   { to: "/admin/salary", label: "Salary Slips", icon: Wallet },
   { to: "/admin/mail", label: "Mailing", icon: Mail },
