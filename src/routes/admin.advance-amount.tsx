@@ -31,12 +31,19 @@ interface ReimbursementRequest {
 
 function Page() {
   const [requests, setRequests] = useState<AdvanceRequest[]>([]);
-  const [reimbursementRequests, setReimbursementRequests] = useState<
-    ReimbursementRequest[]
-  >([]);
+  const [reimbursementRequests, setReimbursementRequests] = useState<ReimbursementRequest[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+
+  // Active tab
+  const [activeTab, setActiveTab] = useState<"advance" | "reimbursement">("advance");
+
+  const pendingAdvanceCount = requests.filter((item) => item.status === "Pending").length;
+
+  const pendingReimbursementCount = reimbursementRequests.filter(
+    (item) => item.status === "Pending",
+  ).length;
 
   useEffect(() => {
     fetchRequests();
@@ -205,11 +212,7 @@ function Page() {
 
     setTimeout(() => {
       setRequests((prev) =>
-        prev.map((item) =>
-          item._id === id
-            ? { ...item, status: "Approved" }
-            : item,
-        ),
+        prev.map((item) => (item._id === id ? { ...item, status: "Approved" } : item)),
       );
 
       toast.success("Advance request approved");
@@ -223,11 +226,7 @@ function Page() {
 
     setTimeout(() => {
       setRequests((prev) =>
-        prev.map((item) =>
-          item._id === id
-            ? { ...item, status: "Rejected" }
-            : item,
-        ),
+        prev.map((item) => (item._id === id ? { ...item, status: "Rejected" } : item)),
       );
 
       toast.success("Advance request rejected");
@@ -245,11 +244,7 @@ function Page() {
 
     setTimeout(() => {
       setReimbursementRequests((prev) =>
-        prev.map((item) =>
-          item._id === id
-            ? { ...item, status: "Approved" }
-            : item,
-        ),
+        prev.map((item) => (item._id === id ? { ...item, status: "Approved" } : item)),
       );
 
       toast.success("Reimbursement request approved");
@@ -263,11 +258,7 @@ function Page() {
 
     setTimeout(() => {
       setReimbursementRequests((prev) =>
-        prev.map((item) =>
-          item._id === id
-            ? { ...item, status: "Rejected" }
-            : item,
-        ),
+        prev.map((item) => (item._id === id ? { ...item, status: "Rejected" } : item)),
       );
 
       toast.success("Reimbursement request rejected");
@@ -342,41 +333,60 @@ function Page() {
   return (
     <>
       {/* =========================
-          EXPORT BUTTONS
+          TABS
       ========================== */}
 
-      <div className="toolbar">
-        <span className="spacer" />
-
+      <div className="mb-4 flex gap-2">
         <button
-          className="btn btn-ghost"
-          onClick={exportAdvanceXlsx}
+          className={`btn ${activeTab === "advance" ? "btn-primary" : "btn-ghost"}`}
+          onClick={() => setActiveTab("advance")}
         >
-          ⬇ Export Advance Excel
+          <span>Advance Amount</span>
+
+          {pendingAdvanceCount > 0 && (
+            <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+              {pendingAdvanceCount}
+            </span>
+          )}
         </button>
 
         <button
-          className="btn btn-ghost"
-          onClick={exportReimbursementXlsx}
+          className={`btn ${activeTab === "reimbursement" ? "btn-primary" : "btn-ghost"}`}
+          onClick={() => setActiveTab("reimbursement")}
         >
-          ⬇ Export Reimbursement Excel
+          <span>Reimbursement</span>
+
+          {pendingReimbursementCount > 0 && (
+            <span className="ml-2 rounded-full bg-red-500 px-2 py-0.5 text-xs font-semibold text-white">
+              {pendingReimbursementCount}
+            </span>
+          )}
         </button>
       </div>
 
       {/* =========================
-          TWO HISTORY SECTIONS
+          ACTIVE TABLE CARD
       ========================== */}
 
-      <div className="row-2">
+      <div className="card">
+        <div className="card-header">
+          <div className="flex items-center justify-between gap-4">
+            <h2>{activeTab === "advance" ? "Advance Amount History" : "Reimbursement History"}</h2>
+
+            <button
+              className="btn btn-ghost"
+              onClick={activeTab === "advance" ? exportAdvanceXlsx : exportReimbursementXlsx}
+            >
+              ⬇ Export Excel
+            </button>
+          </div>
+        </div>
+
         {/* =========================
-            ADVANCE HISTORY
+            ADVANCE TABLE
         ========================== */}
 
-        <div className="card">
-          <div className="card-header">
-            <h2>Advance Amount History</h2>
-          </div>
-
+        {activeTab === "advance" && (
           <div className="history-table-wrap">
             <table className="table">
               <thead className="sticky top-0 z-10">
@@ -404,15 +414,9 @@ function Page() {
 
                     <td>{item.employeeName}</td>
 
-                    <td>
-                      ₹ {item.amount.toLocaleString()}
-                    </td>
+                    <td>₹ {item.amount.toLocaleString()}</td>
 
-                    <td>
-                      {new Date(
-                        item.appliedAt,
-                      ).toLocaleDateString()}
-                    </td>
+                    <td>{new Date(item.appliedAt).toLocaleDateString()}</td>
 
                     <td>
                       <span
@@ -446,12 +450,8 @@ function Page() {
                         >
                           <button
                             className="btn btn-sm btn-success"
-                            onClick={() =>
-                              handleApproveAdvance(item._id)
-                            }
-                            disabled={
-                              processingId === item._id
-                            }
+                            onClick={() => handleApproveAdvance(item._id)}
+                            disabled={processingId === item._id}
                           >
                             {processingId === item._id ? (
                               <>
@@ -465,12 +465,8 @@ function Page() {
 
                           <button
                             className="btn btn-sm btn-danger"
-                            onClick={() =>
-                              handleRejectAdvance(item._id)
-                            }
-                            disabled={
-                              processingId === item._id
-                            }
+                            onClick={() => handleRejectAdvance(item._id)}
+                            disabled={processingId === item._id}
                           >
                             {processingId === item._id ? (
                               <>
@@ -497,17 +493,13 @@ function Page() {
               </tbody>
             </table>
           </div>
-        </div>
+        )}
 
         {/* =========================
-            REIMBURSEMENT HISTORY
+            REIMBURSEMENT TABLE
         ========================== */}
 
-        <div className="card">
-          <div className="card-header">
-            <h2>Reimbursement History</h2>
-          </div>
-
+        {activeTab === "reimbursement" && (
           <div className="history-table-wrap">
             <table className="table">
               <thead className="sticky top-0 z-10">
@@ -536,17 +528,11 @@ function Page() {
 
                     <td>{item.employeeName}</td>
 
-                    <td>
-                      ₹ {item.amount.toLocaleString()}
-                    </td>
+                    <td>₹ {item.amount.toLocaleString()}</td>
 
                     <td>{item.reason}</td>
 
-                    <td>
-                      {new Date(
-                        item.appliedAt,
-                      ).toLocaleDateString()}
-                    </td>
+                    <td>{new Date(item.appliedAt).toLocaleDateString()}</td>
 
                     <td>
                       <span
@@ -580,14 +566,8 @@ function Page() {
                         >
                           <button
                             className="btn btn-sm btn-success"
-                            onClick={() =>
-                              handleApproveReimbursement(
-                                item._id,
-                              )
-                            }
-                            disabled={
-                              processingId === item._id
-                            }
+                            onClick={() => handleApproveReimbursement(item._id)}
+                            disabled={processingId === item._id}
                           >
                             {processingId === item._id ? (
                               <>
@@ -601,14 +581,8 @@ function Page() {
 
                           <button
                             className="btn btn-sm btn-danger"
-                            onClick={() =>
-                              handleRejectReimbursement(
-                                item._id,
-                              )
-                            }
-                            disabled={
-                              processingId === item._id
-                            }
+                            onClick={() => handleRejectReimbursement(item._id)}
+                            disabled={processingId === item._id}
                           >
                             {processingId === item._id ? (
                               <>
@@ -635,7 +609,7 @@ function Page() {
               </tbody>
             </table>
           </div>
-        </div>
+        )}
       </div>
     </>
   );

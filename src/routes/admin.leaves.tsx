@@ -18,6 +18,9 @@ function Page() {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const pendingLeaveCount = leaves.filter(
+  (leave) => leave.status === "Pending",
+).length;
 
   // Employee hover popup
   const [hoveredEmployee, setHoveredEmployee] = useState<LeaveEmployee | null>(null);
@@ -240,12 +243,24 @@ function Page() {
       {/* ========================================= */}
 
       <div className="toolbar">
-        <span className="spacer" />
+  <div className="flex items-center gap-2">
+    <h2 className="text-lg font-semibold text-gray-900">
+      Leave Applications
+    </h2>
 
-        <button className="btn btn-ghost" onClick={exportXlsx}>
-          ⬇ Export Excel
-        </button>
-      </div>
+    {pendingLeaveCount > 0 && (
+      <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-semibold text-white">
+        {pendingLeaveCount} Pending
+      </span>
+    )}
+  </div>
+
+  <span className="spacer" />
+
+  <button className="btn btn-ghost" onClick={exportXlsx}>
+    ⬇ Export Excel
+  </button>
+</div>
 
       {/* ========================================= */}
       {/* TABLE */}

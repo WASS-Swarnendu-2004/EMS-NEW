@@ -22,18 +22,17 @@ type HoverPosition = {
 function Page() {
   const [requests, setRequests] = useState<WFHApplication[]>([]);
   const [loading, setLoading] = useState(true);
-  const [processingId, setProcessingId] =
-    useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const pendingWFHCount = requests.filter((request) => request.status === "Pending").length;
 
   // --------------------------------------------------
   // EMPLOYEE HOVER POPUP
   // --------------------------------------------------
 
-  const [hoveredEmployee, setHoveredEmployee] =
-    useState<WFHEmployee | null>(null);
+  const [hoveredEmployee, setHoveredEmployee] = useState<WFHEmployee | null>(null);
 
-  const [hoverPosition, setHoverPosition] =
-    useState<HoverPosition | null>(null);
+  const [hoverPosition, setHoverPosition] = useState<HoverPosition | null>(null);
 
   // --------------------------------------------------
   // FETCH WFH REQUESTS
@@ -50,16 +49,11 @@ function Page() {
       const data = await getWFHApplications();
 
       // Ignore requests whose employee no longer exists
-      setRequests(
-        data.filter((request) => request.employee !== null)
-      );
+      setRequests(data.filter((request) => request.employee !== null));
     } catch (err: any) {
       console.error(err);
 
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to load WFH requests"
-      );
+      toast.error(err.response?.data?.message || "Failed to load WFH requests");
     } finally {
       setLoading(false);
     }
@@ -69,17 +63,12 @@ function Page() {
   // EMPLOYEE IMAGE URL
   // --------------------------------------------------
 
-  const getEmployeeImageUrl = (
-    profileImage?: string
-  ) => {
+  const getEmployeeImageUrl = (profileImage?: string) => {
     if (!profileImage) {
       return null;
     }
 
-    return `https://fresh-01.onrender.com/${profileImage.replace(
-      /^src\//,
-      ""
-    )}`;
+    return `https://fresh-01.onrender.com/${profileImage.replace(/^src\//, "")}`;
   };
 
   // --------------------------------------------------
@@ -88,10 +77,9 @@ function Page() {
 
   const handleEmployeeMouseEnter = (
     employee: WFHEmployee,
-    event: React.MouseEvent<HTMLDivElement>
+    event: React.MouseEvent<HTMLDivElement>,
   ) => {
-    const rect =
-      event.currentTarget.getBoundingClientRect();
+    const rect = event.currentTarget.getBoundingClientRect();
 
     const popupWidth = 280;
     const gap = 12;
@@ -99,14 +87,8 @@ function Page() {
     let left = rect.right + gap;
 
     // If popup does not fit on right
-    if (
-      left + popupWidth >
-      window.innerWidth - 10
-    ) {
-      left =
-        rect.left -
-        popupWidth -
-        gap;
+    if (left + popupWidth > window.innerWidth - 10) {
+      left = rect.left - popupWidth - gap;
     }
 
     // Prevent going outside left
@@ -131,10 +113,7 @@ function Page() {
   // APPROVE / REJECT
   // --------------------------------------------------
 
-  const handleStatusUpdate = async (
-    id: string,
-    status: "Approved" | "Rejected"
-  ) => {
+  const handleStatusUpdate = async (id: string, status: "Approved" | "Rejected") => {
     try {
       setProcessingId(id);
 
@@ -143,17 +122,14 @@ function Page() {
       toast.success(
         status === "Approved"
           ? "WFH request approved successfully"
-          : "WFH request rejected successfully"
+          : "WFH request rejected successfully",
       );
 
       await fetchRequests();
     } catch (err: any) {
       console.error(err);
 
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to update WFH request"
-      );
+      toast.error(err.response?.data?.message || "Failed to update WFH request");
     } finally {
       setProcessingId(null);
     }
@@ -175,14 +151,9 @@ function Page() {
 
         return {
           Employee:
-            typeof employee === "string"
-              ? employee
-              : employee?.fullName ?? "Unknown Employee",
+            typeof employee === "string" ? employee : (employee?.fullName ?? "Unknown Employee"),
 
-          EmployeeID:
-            typeof employee === "string"
-              ? employee
-              : employee?.employeeId ?? "Unknown",
+          EmployeeID: typeof employee === "string" ? employee : (employee?.employeeId ?? "Unknown"),
 
           From: request.fromDate.slice(0, 10),
 
@@ -196,12 +167,10 @@ function Page() {
         };
       }),
       "wfh-applications.xlsx",
-      "WFH"
+      "WFH",
     );
 
-    toast.success(
-      "WFH requests exported successfully"
-    );
+    toast.success("WFH requests exported successfully");
   }
 
   // --------------------------------------------------
@@ -213,33 +182,34 @@ function Page() {
       <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
 
-        <p className="text-lg font-medium text-gray-500">
-          Loading WFH requests...
-        </p>
+        <p className="text-lg font-medium text-gray-500">Loading WFH requests...</p>
       </div>
     );
   }
 
   return (
     <>
-      {/* ========================================= */}
       {/* TOOLBAR */}
-      {/* ========================================= */}
 
       <div className="toolbar">
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-gray-900">WFH Applications</h2>
+
+          {pendingWFHCount > 0 && (
+            <span className="rounded-full bg-red-500 px-2.5 py-1 text-xs font-semibold text-white">
+              {pendingWFHCount} Pending
+            </span>
+          )}
+        </div>
+
         <span className="spacer" />
 
-        <button
-          className="btn btn-ghost"
-          onClick={exportXlsx}
-        >
+        <button className="btn btn-ghost" onClick={exportXlsx}>
           ⬇ Export Excel
         </button>
       </div>
 
-      {/* ========================================= */}
       {/* TABLE */}
-      {/* ========================================= */}
 
       <div className="table-wrap">
         <table className="table">
@@ -257,93 +227,57 @@ function Page() {
 
           <tbody>
             {requests.map((request) => {
-              const employee =
-                request.employee;
+              const employee = request.employee;
 
               return (
                 <tr key={request._id}>
-                  {/* ================================= */}
                   {/* EMPLOYEE */}
-                  {/* ================================= */}
 
                   <td>
-                    {employee &&
-                    typeof employee !== "string" ? (
+                    {employee && typeof employee !== "string" ? (
                       <div
                         className="relative inline-flex cursor-pointer items-center gap-3"
-                        onMouseEnter={(event) =>
-                          handleEmployeeMouseEnter(
-                            employee,
-                            event
-                          )
-                        }
-                        onMouseLeave={
-                          handleEmployeeMouseLeave
-                        }
+                        onMouseEnter={(event) => handleEmployeeMouseEnter(employee, event)}
+                        onMouseLeave={handleEmployeeMouseLeave}
                       >
                         {/* Profile Image */}
 
-                        {getEmployeeImageUrl(
-                          employee.profileImage
-                        ) ? (
+                        {getEmployeeImageUrl(employee.profileImage) ? (
                           <img
-                            src={getEmployeeImageUrl(
-                              employee.profileImage
-                            )!}
+                            src={getEmployeeImageUrl(employee.profileImage)!}
                             alt={employee.fullName}
                             className="h-9 w-9 rounded-full border border-gray-200 object-cover"
                           />
                         ) : (
                           <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gray-100 text-sm font-semibold text-gray-500">
-                            {employee.fullName
-                              .charAt(0)
-                              .toUpperCase()}
+                            {employee.fullName.charAt(0).toUpperCase()}
                           </div>
                         )}
 
                         {/* Name + Employee ID */}
 
                         <div className="min-w-0">
-                          <p className="font-medium text-gray-900">
-                            {employee.fullName}
-                          </p>
+                          <p className="font-medium text-gray-900">{employee.fullName}</p>
 
-                          <p className="text-xs text-gray-500">
-                            {employee.employeeId}
-                          </p>
+                          <p className="text-xs text-gray-500">{employee.employeeId}</p>
                         </div>
                       </div>
-                    ) : typeof employee ===
-                      "string" ? (
-                      <span className="text-gray-700">
-                        {employee}
-                      </span>
+                    ) : typeof employee === "string" ? (
+                      <span className="text-gray-700">{employee}</span>
                     ) : (
-                      <span className="text-gray-400">
-                        Unknown Employee
-                      </span>
+                      <span className="text-gray-400">Unknown Employee</span>
                     )}
                   </td>
 
-                  {/* ================================= */}
                   {/* FROM */}
-                  {/* ================================= */}
 
-                  <td>
-                    {request.fromDate.slice(0, 10)}
-                  </td>
+                  <td>{request.fromDate.slice(0, 10)}</td>
 
-                  {/* ================================= */}
                   {/* TO */}
-                  {/* ================================= */}
 
-                  <td>
-                    {request.toDate.slice(0, 10)}
-                  </td>
+                  <td>{request.toDate.slice(0, 10)}</td>
 
-                  {/* ================================= */}
                   {/* REASON */}
-                  {/* ================================= */}
 
                   <td
                     style={{
@@ -353,29 +287,21 @@ function Page() {
                     {request.reason}
                   </td>
 
-                  {/* ================================= */}
                   {/* APPLIED */}
-                  {/* ================================= */}
 
-                  <td>
-                    {request.appliedAt.slice(0, 10)}
-                  </td>
+                  <td>{request.appliedAt.slice(0, 10)}</td>
 
-                  {/* ================================= */}
                   {/* STATUS */}
-                  {/* ================================= */}
 
                   <td>
                     <span
                       className={
                         "badge " +
-                        (request.status ===
-                        "Approved"
+                        (request.status === "Approved"
                           ? "success"
-                          : request.status ===
-                            "Rejected"
-                          ? "danger"
-                          : "warn")
+                          : request.status === "Rejected"
+                            ? "danger"
+                            : "warn")
                       }
                     >
                       {request.status}
@@ -397,26 +323,16 @@ function Page() {
                     */}
 
                     <div className="flex items-center gap-2 whitespace-nowrap">
-                      {request.status ===
-                        "Pending" && (
+                      {request.status === "Pending" && (
                         <>
                           {/* APPROVE */}
 
                           <button
                             className="btn btn-sm btn-success"
-                            onClick={() =>
-                              handleStatusUpdate(
-                                request._id,
-                                "Approved"
-                              )
-                            }
-                            disabled={
-                              processingId ===
-                              request._id
-                            }
+                            onClick={() => handleStatusUpdate(request._id, "Approved")}
+                            disabled={processingId === request._id}
                           >
-                            {processingId ===
-                            request._id ? (
+                            {processingId === request._id ? (
                               <>
                                 <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                                 Processing...
@@ -430,19 +346,10 @@ function Page() {
 
                           <button
                             className="btn btn-sm btn-danger"
-                            onClick={() =>
-                              handleStatusUpdate(
-                                request._id,
-                                "Rejected"
-                              )
-                            }
-                            disabled={
-                              processingId ===
-                              request._id
-                            }
+                            onClick={() => handleStatusUpdate(request._id, "Rejected")}
+                            disabled={processingId === request._id}
                           >
-                            {processingId ===
-                            request._id ? (
+                            {processingId === request._id ? (
                               <>
                                 <Loader2 className="mr-1 h-4 w-4 animate-spin" />
                                 Processing...
@@ -463,10 +370,7 @@ function Page() {
 
             {requests.length === 0 && (
               <tr>
-                <td
-                  colSpan={7}
-                  className="empty"
-                >
+                <td colSpan={7} className="empty">
                   No WFH applications
                 </td>
               </tr>
@@ -475,91 +379,66 @@ function Page() {
         </table>
       </div>
 
-      {/* ========================================= */}
       {/* EMPLOYEE HOVER POPUP */}
-      {/* ========================================= */}
 
-      {hoveredEmployee &&
-        hoverPosition && (
-          <div
-            className="fixed z-[9999] w-[280px] rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
-            style={{
-              top: hoverPosition.top,
-              left: hoverPosition.left,
-              pointerEvents: "none",
-            }}
-          >
-            {/* Header */}
+      {hoveredEmployee && hoverPosition && (
+        <div
+          className="fixed z-[9999] w-[280px] rounded-xl border border-gray-200 bg-white p-4 shadow-xl"
+          style={{
+            top: hoverPosition.top,
+            left: hoverPosition.left,
+            pointerEvents: "none",
+          }}
+        >
+          {/* Header */}
 
-            <div className="mb-4 flex items-center gap-3">
-              {getEmployeeImageUrl(
-                hoveredEmployee.profileImage
-              ) ? (
-                <img
-                  src={getEmployeeImageUrl(
-                    hoveredEmployee.profileImage
-                  )!}
-                  alt={
-                    hoveredEmployee.fullName
-                  }
-                  className="h-12 w-12 shrink-0 rounded-full border border-gray-200 object-cover"
-                />
-              ) : (
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-500">
-                  {hoveredEmployee.fullName
-                    .charAt(0)
-                    .toUpperCase()}
-                </div>
-              )}
-
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-gray-900">
-                  {hoveredEmployee.fullName}
-                </p>
-
-                <p className="mt-0.5 text-xs text-gray-500">
-                  {hoveredEmployee.employeeId}
-                </p>
+          <div className="mb-4 flex items-center gap-3">
+            {getEmployeeImageUrl(hoveredEmployee.profileImage) ? (
+              <img
+                src={getEmployeeImageUrl(hoveredEmployee.profileImage)!}
+                alt={hoveredEmployee.fullName}
+                className="h-12 w-12 shrink-0 rounded-full border border-gray-200 object-cover"
+              />
+            ) : (
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gray-100 text-lg font-semibold text-gray-500">
+                {hoveredEmployee.fullName.charAt(0).toUpperCase()}
               </div>
-            </div>
+            )}
 
-            {/* Details */}
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold text-gray-900">
+                {hoveredEmployee.fullName}
+              </p>
 
-            <div className="space-y-2.5 text-sm">
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-gray-500">
-                  Employee ID
-                </span>
-
-                <span className="font-medium text-gray-900">
-                  {hoveredEmployee.employeeId}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-gray-500">
-                  Role
-                </span>
-
-                <span className="font-medium text-gray-900">
-                  {hoveredEmployee.role ||
-                    "N/A"}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-gray-500">
-                  Department
-                </span>
-
-                <span className="font-medium text-gray-900">
-                  {hoveredEmployee.department ||
-                    "N/A"}
-                </span>
-              </div>
+              <p className="mt-0.5 text-xs text-gray-500">{hoveredEmployee.employeeId}</p>
             </div>
           </div>
-        )}
+
+          {/* Details */}
+
+          <div className="space-y-2.5 text-sm">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-500">Employee ID</span>
+
+              <span className="font-medium text-gray-900">{hoveredEmployee.employeeId}</span>
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-500">Role</span>
+
+              <span className="font-medium text-gray-900">{hoveredEmployee.role || "N/A"}</span>
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-gray-500">Department</span>
+
+              <span className="font-medium text-gray-900">
+                {hoveredEmployee.department || "N/A"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
