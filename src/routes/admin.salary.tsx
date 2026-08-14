@@ -237,8 +237,8 @@ function BreakdownConfig({ onClose }: { onClose: () => void }) {
       },
     ]);
   }
-  function remove(id: string) {
-    setItems((xs) => xs.filter((x) => x.id !== id));
+  function remove(index: number) {
+    setItems((xs) => xs.filter((_, i) => i !== index));
   }
   async function save() {
     const invalidItem = items.find(
@@ -265,12 +265,39 @@ function BreakdownConfig({ onClose }: { onClose: () => void }) {
       toast.error("Failed to update salary configuration");
     }
   }
-  async function reset() {
-    try {
-      await loadConfig();
-    } catch (err) {
-      console.error(err);
-    }
+  function reset() {
+    setItems([
+      {
+        label: "Basic",
+        type: "Earning",
+        mode: "% of gross",
+        value: 50,
+      },
+      {
+        label: "HRA",
+        type: "Earning",
+        mode: "% of gross",
+        value: 20,
+      },
+      {
+        label: "Special Allowance",
+        type: "Earning",
+        mode: "% of gross",
+        value: 30,
+      },
+      {
+        label: "Provident Fund",
+        type: "Deduction",
+        mode: "% of gross",
+        value: 5,
+      },
+      {
+        label: "Professional Tax",
+        type: "Deduction",
+        mode: "Fixed",
+        value: 200,
+      },
+    ]);
   }
 
   const earnPct = items
@@ -356,6 +383,18 @@ function BreakdownConfig({ onClose }: { onClose: () => void }) {
                       }
                       style={{ width: 110 }}
                     />
+                  </td>
+
+                  <td>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost"
+                      onClick={() => remove(index)}
+                      title={`Remove ${it.label}`}
+                    >
+                      <X size={14} />
+                      Remove
+                    </button>
                   </td>
                 </tr>
               ))}
