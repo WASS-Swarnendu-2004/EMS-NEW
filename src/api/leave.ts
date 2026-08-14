@@ -14,7 +14,7 @@ export interface Leave {
 
   employee: LeaveEmployee | null;
 
-  leaveType: "Casual" | "Sick" | "Earned";
+  leaveType: "Casual" | "Sick" | "Normal";
   fromDate: string;
   toDate: string;
   reason: string;
@@ -30,7 +30,7 @@ export interface Leave {
 }
 
 export interface ApplyLeavePayload {
-  leaveType: "Casual" | "Sick" | "Earned";
+  leaveType: "Casual" | "Sick" | "Normal";
   fromDate: string;
   toDate: string;
   reason: string;

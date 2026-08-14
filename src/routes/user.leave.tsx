@@ -12,7 +12,7 @@ export const Route = createFileRoute("/user/leave")({ component: Page });
 function Page() {
   // const db = useDB();
   const [history, setHistory] = useState<Leave[]>([]);
-  const [type, setType] = useState<"casual" | "sick" | "earned">("casual");
+  const [type, setType] = useState<"casual" | "sick" | "normal">("casual");
   const [from, setFrom] = useState(today());
   const [to, setTo] = useState(today());
   const [reason, setReason] = useState("");
@@ -51,7 +51,7 @@ function Page() {
       setSubmitting(true);
 
       await applyLeave({
-        leaveType: type === "casual" ? "Casual" : type === "sick" ? "Sick" : "Earned",
+        leaveType: type === "casual" ? "Casual" : type === "sick" ? "Sick" : "Normal",
 
         fromDate: from,
         toDate: to,
@@ -116,11 +116,11 @@ function Page() {
               <select
                 className="select"
                 value={type}
-                onChange={(e) => setType(e.target.value as "casual" | "sick" | "earned")}
+                onChange={(e) => setType(e.target.value as "casual" | "sick" | "normal")}
               >
                 <option value="casual">Casual</option>
                 <option value="sick">Sick</option>
-                {/* <option value="earned">Earned</option> */}
+                <option value="normal">Normal</option>
               </select>
             </div>
             <div className="row-2">

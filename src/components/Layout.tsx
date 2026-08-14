@@ -118,14 +118,14 @@ export const adminNav: NavItem[] = [
   { to: "/admin/attendance", label: "Attendance", icon: Clock },
   { to: "/admin/work-status", label: "Daily Work Status", icon: ClipboardList },
   { to: "/admin/tasks", label: "Tasks", icon: ClipboardList },
-  { to: "/admin/advance-amount", label: "Advance Amount", icon: Wallet },
+  { to: "/admin/advance-amount", label: "Advance & Claim", icon: Wallet },
   { to: "/admin/salary", label: "Salary Slips", icon: Wallet },
   { to: "/admin/mail", label: "Mailing", icon: Mail },
 ];
 
 export const userNav: NavItem[] = [
   { to: "/user", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/user/projects", label: "My Projects", icon: FolderKanban },
+  { to: "/user/projects", label: "Projects & Tasks", icon: FolderKanban },
   { to: "/user/tasks", label: "Daily Task Plan", icon: ClipboardList },
   { to: "/user/leave", label: "Leave", icon: PlaneTakeoff },
   { to: "/user/wfh", label: "Work From Home", icon: Home },

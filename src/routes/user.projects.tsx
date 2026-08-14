@@ -27,7 +27,19 @@ function Page() {
 
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
 
-  const [progressValues, setProgressValues] = useState<Record<string, number>>({});
+  const [progressValues, setProgressValues] = useState<
+    Record<string, number>
+  >({});
+
+  // =========================================
+  // ACTIVE TAB
+  // =========================================
+
+  const [activeTab, setActiveTab] = useState<"projects" | "tasks">("projects");
+
+  // =========================================
+  // LOAD DATA
+  // =========================================
 
   useEffect(() => {
     loadProjects();
@@ -43,6 +55,7 @@ function Page() {
       setProjects(data);
     } catch (err) {
       console.error(err);
+
       toast.error("Failed to load projects");
     } finally {
       setLoadingProjects(false);
@@ -66,11 +79,16 @@ function Page() {
       setProgressValues(initialProgress);
     } catch (err) {
       console.error(err);
+
       toast.error("Failed to load tasks");
     } finally {
       setLoadingTasks(false);
     }
   }
+
+  // =========================================
+  // TASK PROGRESS
+  // =========================================
 
   function handleProgressChange(taskId: string, value: string) {
     const progress = Number(value);
@@ -119,6 +137,7 @@ function Page() {
       toast.success("Task progress updated successfully");
     } catch (err) {
       console.error(err);
+
       toast.error("Failed to update task progress");
     } finally {
       setUpdatingTaskId(null);
@@ -126,6 +145,10 @@ function Page() {
   }
 
   const loading = loadingProjects || loadingTasks;
+
+  // =========================================
+  // LOADING
+  // =========================================
 
   if (loading) {
     return (
@@ -139,137 +162,83 @@ function Page() {
         }}
       >
         <Loader2 size={20} className="animate-spin" />
+
         <span>Loading projects and tasks...</span>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-        gap: "1.5rem",
-        alignItems: "start",
-      }}
-    >
-      {/* ================================
-          ASSIGNED PROJECTS
-      ================================= */}
+    <>
+      {/* =========================================
+          TABS
+      ========================================= */}
 
-      <section>
-        <h2 style={{ marginBottom: "1rem" }}>Assigned Projects</h2>
+      <div className="mb-5 flex gap-2">
+        <button
+          type="button"
+          className={`btn ${
+            activeTab === "projects" ? "btn-primary" : "btn-ghost"
+          }`}
+          onClick={() => setActiveTab("projects")}
+        >
+          <span>Assigned Projects</span>
 
-        {projects.length === 0 ? (
-          <div className="muted">No projects assigned to you yet.</div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gap: "1rem",
-            }}
-          >
-            {projects.map((p) => (
-              <div
-                key={p._id}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: "10px",
-                  padding: "1rem",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                    gap: "1rem",
-                  }}
-                >
-                  <h3 style={{ margin: 0 }}>{p.projectName}</h3>
+          {projects.length > 0 && (
+            <span className="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700">
+              {projects.length}
+            </span>
+          )}
+        </button>
 
-                  {/* <span
-                    style={{
-                      fontSize: ".75rem",
-                      padding: "0.25rem 0.5rem",
-                      borderRadius: "6px",
-                      background: "#f1f1f1",
-                    }}
-                  >
-                    {p.status.replace("-", " ")}
-                  </span> */}
-                </div>
+        <button
+          type="button"
+          className={`btn ${
+            activeTab === "tasks" ? "btn-primary" : "btn-ghost"
+          }`}
+          onClick={() => setActiveTab("tasks")}
+        >
+          <span>My Assigned Tasks</span>
 
-                <p
-                  className="muted"
-                  style={{
-                    fontSize: ".82rem",
-                    marginTop: ".5rem",
-                  }}
-                >
-                  {p.consumerName}
-                </p>
+          {tasks.length > 0 && (
+            <span className="ml-2 rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-700">
+              {tasks.length}
+            </span>
+          )}
+        </button>
+      </div>
 
-                <p
-                  style={{
-                    fontSize: ".88rem",
-                  }}
-                >
-                  {p.description}
-                </p>
+      {/* =========================================
+          PROJECTS TAB
+      ========================================= */}
 
-                <div
-                  className="muted"
-                  style={{
-                    fontSize: ".8rem",
-                    lineHeight: 1.8,
-                  }}
-                >
-                  <div>
-                    {formatISTDate(p.startDate)} → {formatISTDate(p.endDate)}
-                  </div>
-
-                  <div>{p.duration} days</div>
-
-                  <div>{p.assignedEmployees.length} assigned</div>
-                </div>
-              </div>
-            ))}
+      {activeTab === "projects" && (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2>Assigned Projects</h2>
           </div>
-        )}
-      </section>
 
-      {/* ================================
-          ASSIGNED TASKS
-      ================================= */}
-
-      <section>
-        <h2 style={{ marginBottom: "1rem" }}>My Assigned Tasks</h2>
-
-        {tasks.length === 0 ? (
-          <div className="muted">No tasks assigned to you yet.</div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gap: "1rem",
-            }}
-          >
-            {tasks.map((task) => {
-              const currentProgress = progressValues[task._id] ?? task.progress;
-
-              const isUpdating = updatingTaskId === task._id;
-
-              return (
+          {projects.length === 0 ? (
+            <div className="muted">No projects assigned to you yet.</div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: "1rem",
+              }}
+            >
+              {projects.map((p) => (
                 <div
-                  key={task._id}
+                  key={p._id}
                   style={{
                     border: "1px solid #ddd",
                     borderRadius: "10px",
                     padding: "1rem",
                   }}
                 >
-                  {/* Task Header */}
+                  {/* Project Header */}
 
                   <div
                     style={{
@@ -279,53 +248,32 @@ function Page() {
                       gap: "1rem",
                     }}
                   >
-                    <div>
-                      <h3
-                        style={{
-                          margin: 0,
-                        }}
-                      >
-                        {task.title}
-                      </h3>
-
-                      {task.project && (
-                        <p
-                          className="muted"
-                          style={{
-                            margin: ".35rem 0 0",
-                            fontSize: ".82rem",
-                          }}
-                        >
-                          Project: {task.project.projectName}
-                        </p>
-                      )}
-                    </div>
-
-                    <span
-                      style={{
-                        fontSize: ".75rem",
-                        padding: "0.25rem 0.5rem",
-                        borderRadius: "6px",
-                        background: "#f1f1f1",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {task.status.replace("-", " ")}
-                    </span>
+                    <h3 style={{ margin: 0 }}>{p.projectName}</h3>
                   </div>
+
+                  {/* Consumer */}
+
+                  <p
+                    className="muted"
+                    style={{
+                      fontSize: ".82rem",
+                      marginTop: ".5rem",
+                    }}
+                  >
+                    {p.consumerName}
+                  </p>
 
                   {/* Description */}
 
                   <p
                     style={{
                       fontSize: ".88rem",
-                      marginTop: ".75rem",
                     }}
                   >
-                    {task.description}
+                    {p.description}
                   </p>
 
-                  {/* Task Information */}
+                  {/* Project Information */}
 
                   <div
                     className="muted"
@@ -334,101 +282,237 @@ function Page() {
                       lineHeight: 1.8,
                     }}
                   >
-                    <div>Assigned by: {task.assignedBy.fullName}</div>
+                    <div>
+                      {formatISTDate(p.startDate)} →{" "}
+                      {formatISTDate(p.endDate)}
+                    </div>
 
-                    <div>Employee ID: {task.assignedBy.employeeId}</div>
+                    <div>{p.duration} days</div>
 
-                    <div>Due date: {new Date(task.dueDate).toLocaleDateString()}</div>
+                    <div>{p.assignedEmployees.length} assigned</div>
                   </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
-                  {/* Progress */}
+      {/* =========================================
+          TASKS TAB
+      ========================================= */}
 
+      {activeTab === "tasks" && (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2>My Assigned Tasks</h2>
+          </div>
+
+          {tasks.length === 0 ? (
+            <div className="muted">No tasks assigned to you yet.</div>
+          ) : (
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(320px, 1fr))",
+                gap: "1rem",
+              }}
+            >
+              {tasks.map((task) => {
+                const currentProgress =
+                  progressValues[task._id] ?? task.progress;
+
+                const isUpdating = updatingTaskId === task._id;
+
+                return (
                   <div
+                    key={task._id}
                     style={{
-                      marginTop: "1rem",
+                      border: "1px solid #ddd",
+                      borderRadius: "10px",
+                      padding: "1rem",
                     }}
                   >
+                    {/* Task Header */}
+
                     <div
                       style={{
                         display: "flex",
                         justifyContent: "space-between",
-                        marginBottom: ".4rem",
-                        fontSize: ".82rem",
+                        alignItems: "flex-start",
+                        gap: "1rem",
                       }}
                     >
-                      <span>Progress</span>
-                      <strong>{currentProgress}%</strong>
+                      <div>
+                        <h3
+                          style={{
+                            margin: 0,
+                          }}
+                        >
+                          {task.title}
+                        </h3>
+
+                        {task.project && (
+                          <p
+                            className="muted"
+                            style={{
+                              margin: ".35rem 0 0",
+                              fontSize: ".82rem",
+                            }}
+                          >
+                            Project: {task.project.projectName}
+                          </p>
+                        )}
+                      </div>
+
+                      <span
+                        style={{
+                          fontSize: ".75rem",
+                          padding: "0.25rem 0.5rem",
+                          borderRadius: "6px",
+                          background: "#f1f1f1",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {task.status.replace("-", " ")}
+                      </span>
                     </div>
+
+                    {/* Description */}
+
+                    <p
+                      style={{
+                        fontSize: ".88rem",
+                        marginTop: ".75rem",
+                      }}
+                    >
+                      {task.description}
+                    </p>
+
+                    {/* Task Information */}
+
+                    <div
+                      className="muted"
+                      style={{
+                        fontSize: ".8rem",
+                        lineHeight: 1.8,
+                      }}
+                    >
+                      <div>
+                        Assigned by: {task.assignedBy.fullName}
+                      </div>
+
+                      <div>
+                        Employee ID: {task.assignedBy.employeeId}
+                      </div>
+
+                      <div>
+                        Due date:{" "}
+                        {new Date(task.dueDate).toLocaleDateString()}
+                      </div>
+                    </div>
+
+                    {/* Progress */}
 
                     <div
                       style={{
-                        width: "100%",
-                        height: "8px",
-                        background: "#e5e5e5",
-                        borderRadius: "999px",
-                        overflow: "hidden",
+                        marginTop: "1rem",
                       }}
                     >
                       <div
                         style={{
-                          width: `${currentProgress}%`,
-                          height: "100%",
-                          background: "#2563eb",
-                          transition: "width 0.2s ease",
+                          display: "flex",
+                          justifyContent: "space-between",
+                          marginBottom: ".4rem",
+                          fontSize: ".82rem",
+                        }}
+                      >
+                        <span>Progress</span>
+
+                        <strong>{currentProgress}%</strong>
+                      </div>
+
+                      <div
+                        style={{
+                          width: "100%",
+                          height: "8px",
+                          background: "#e5e5e5",
+                          borderRadius: "999px",
+                          overflow: "hidden",
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${currentProgress}%`,
+                            height: "100%",
+                            background: "#2563eb",
+                            transition: "width 0.2s ease",
+                          }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Progress Input + Update */}
+
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: ".75rem",
+                        alignItems: "center",
+                        marginTop: "1rem",
+                      }}
+                    >
+                      <input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={currentProgress}
+                        onChange={(e) =>
+                          handleProgressChange(
+                            task._id,
+                            e.target.value,
+                          )
+                        }
+                        disabled={isUpdating}
+                        style={{
+                          width: "90px",
+                          padding: ".5rem",
+                          border: "1px solid #ccc",
+                          borderRadius: "6px",
                         }}
                       />
+
+                      <span>%</span>
+
+                      <button
+                        type="button"
+                        className="btn"
+                        onClick={() =>
+                          handleUpdateProgress(task._id)
+                        }
+                        disabled={isUpdating}
+                      >
+                        {isUpdating ? (
+                          <>
+                            <Loader2
+                              size={15}
+                              className="animate-spin"
+                            />
+                            Updating...
+                          </>
+                        ) : (
+                          "Update Progress"
+                        )}
+                      </button>
                     </div>
                   </div>
-
-                  {/* Progress Input + Update */}
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: ".75rem",
-                      alignItems: "center",
-                      marginTop: "1rem",
-                    }}
-                  >
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      value={currentProgress}
-                      onChange={(e) => handleProgressChange(task._id, e.target.value)}
-                      disabled={isUpdating}
-                      style={{
-                        width: "90px",
-                        padding: ".5rem",
-                        border: "1px solid #ccc",
-                        borderRadius: "6px",
-                      }}
-                    />
-
-                    <span>%</span>
-
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => handleUpdateProgress(task._id)}
-                      disabled={isUpdating}
-                    >
-                      {isUpdating ? (
-                        <>
-                          <Loader2 size={15} className="animate-spin" />
-                          Updating...
-                        </>
-                      ) : (
-                        "Update Progress"
-                      )}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-    </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+    </>
   );
 }
