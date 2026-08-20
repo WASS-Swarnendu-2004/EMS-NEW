@@ -24,7 +24,7 @@ export function EmployeeTable({
             <th>Employee</th>
             <th>Email</th>
             <th>Phone</th>
-            <th>Role</th>
+            <th>Designation</th>
             <th>Department</th>
             <th>Salary</th>
             <th>Status</th>
@@ -79,7 +79,7 @@ export function EmployeeTable({
 
                 <td>{employee.phone}</td>
 
-                <td>{employee.role}</td>
+                <td>{employee.designation}</td>
 
                 <td>{employee.department}</td>
 

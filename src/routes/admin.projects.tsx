@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
-// import { store, useDB, type Project } from "@/lib/store";
 import { useDB } from "@/lib/store";
 import {
   getProjects,
@@ -42,7 +41,7 @@ const blank: {
   consumerDetails: string;
   startDate: string;
   endDate: string;
-  valuation: number | "";
+  valuation: number;
   description: string;
   assignedEmployees: string[];
 } = {
@@ -94,7 +93,7 @@ function Page() {
       const [projectData, employeeData] = await Promise.all([getProjects(), getEmployees()]);
 
       setProjects(projectData);
-      setEmployees(employeeData);
+      setEmployees(employeeData.employees);
     } catch (err) {
       console.error(err);
       toast.error("Failed to load data");
@@ -419,7 +418,7 @@ function Page() {
                   onChange={(e) =>
                     setForm({
                       ...form,
-                      valuation: e.target.value === "" ? "" : Number(e.target.value),
+                      valuation: Number(e.target.value) || 0,
                     })
                   }
                 />

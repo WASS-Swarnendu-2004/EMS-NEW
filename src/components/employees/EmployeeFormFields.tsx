@@ -7,7 +7,7 @@ type EmployeeFormFieldsProps = {
   form: CreateEmployeePayload;
   roles: Role[];
   onRemoveField: (id: string) => void;
-  onOpenRoleModal: () => void;
+  onOpenDesignationModal: () => void;
   onChange: (fieldName: string, value: string | number) => void;
 };
 
@@ -16,7 +16,7 @@ export function EmployeeFormFields({
   form,
   roles,
   onRemoveField,
-  onOpenRoleModal,
+  onOpenDesignationModal,
   onChange,
 }: EmployeeFormFieldsProps) {
   return (
@@ -27,7 +27,11 @@ export function EmployeeFormFields({
         return (
           <div
             key={field.id}
-            className={field.type === "textarea" ? "field lg:col-span-2" : "field"}
+            className={
+              field.type === "textarea"
+                ? "field lg:col-span-2"
+                : "field"
+            }
           >
             <div className="mb-2 flex items-center justify-between">
               <label>
@@ -36,13 +40,14 @@ export function EmployeeFormFields({
               </label>
 
               <div className="flex items-center gap-2">
-                {field.name === "role" && (
+                {/* Designation management */}
+                {field.name === "designation" && (
                   <button
                     type="button"
                     className="text-sm font-medium text-blue-600 hover:underline"
-                    onClick={onOpenRoleModal}
+                    onClick={onOpenDesignationModal}
                   >
-                    + Manage Roles
+                    + Manage Designations
                   </button>
                 )}
 
@@ -63,17 +68,24 @@ export function EmployeeFormFields({
                 rows={4}
                 className="textarea w-full"
                 value={String(value)}
-                onChange={(e) => onChange(field.name, e.target.value)}
+                onChange={(e) =>
+                  onChange(field.name, e.target.value)
+                }
               />
             ) : field.type === "select" ? (
               <select
                 className="select w-full"
                 value={String(value)}
-                onChange={(e) => onChange(field.name, e.target.value)}
+                onChange={(e) =>
+                  onChange(field.name, e.target.value)
+                }
               >
-                {field.name === "role"
+                {field.name === "designation"
                   ? roles.map((role) => (
-                      <option key={role._id} value={role.roleName}>
+                      <option
+                        key={role._id}
+                        value={role.roleName}
+                      >
                         {role.roleName}
                       </option>
                     ))
@@ -88,13 +100,18 @@ export function EmployeeFormFields({
                 className="input w-full"
                 type={field.type}
                 min={
-                  field.name === "joiningDate" ? new Date().toISOString().split("T")[0] : undefined
+                  field.name === "joiningDate"
+                    ? new Date()
+                        .toISOString()
+                        .split("T")[0]
+                    : undefined
                 }
                 value={String(value)}
                 onChange={(e) =>
                   onChange(
                     field.name,
-                    field.type === "number" && e.target.value !== ""
+                    field.type === "number" &&
+                    e.target.value !== ""
                       ? Number(e.target.value)
                       : e.target.value,
                   )

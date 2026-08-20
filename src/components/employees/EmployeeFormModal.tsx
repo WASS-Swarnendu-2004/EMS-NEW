@@ -1,7 +1,10 @@
 import { useState } from "react";
 import type { EmployeeField } from "@/config/employeeForm";
 import { EmployeePhotoUpload } from "./EmployeePhotoUpload";
-import type { Employee, CreateEmployeePayload } from "@/api/employee";
+import type {
+  Employee,
+  CreateEmployeePayload,
+} from "@/api/employee";
 import type { Role } from "@/api/role";
 
 import { Loader2 } from "lucide-react";
@@ -32,9 +35,14 @@ type EmployeeFormModalProps = {
   onSave: () => void;
   onAddField: () => void;
   onRemoveField: (id: string) => void;
-  onOpenRoleModal: () => void;
+
+  onOpenDesignationModal: () => void;
+
   onNewFieldChange: (value: NewField) => void;
-  onFieldChange: (fieldName: string, value: string | number) => void;
+  onFieldChange: (
+    fieldName: string,
+    value: string | number,
+  ) => void;
 };
 
 export function EmployeeFormModal({
@@ -54,7 +62,7 @@ export function EmployeeFormModal({
   onSave,
   onAddField,
   onRemoveField,
-  onOpenRoleModal,
+  onOpenDesignationModal,
   onNewFieldChange,
   onFieldChange,
 }: EmployeeFormModalProps) {
@@ -64,76 +72,102 @@ export function EmployeeFormModal({
     return null;
   }
 
-  // Handle input changes
   function handleChange(
-  fieldName: string,
-  value: string | number,
-) {
-  let newValue = value;
-
-  // Full name - alphabets and spaces only
-  if (fieldName === "fullName" && typeof value === "string") {
-    newValue = value.replace(/[^A-Za-z ]/g, "");
-  }
-
-  // Phone - numbers only and maximum 10 digits
-  if (fieldName === "phone" && typeof value === "string") {
-    newValue = value.replace(/\D/g, "").slice(0, 10);
-  }
-
-  // Emergency contact - numbers only and maximum 10 digits
-  if (
-    fieldName === "emergencyContact" &&
-    typeof value === "string"
+    fieldName: string,
+    value: string | number,
   ) {
-    newValue = value.replace(/\D/g, "").slice(0, 10);
-  }
+    let newValue = value;
 
-  // Bank account - numbers only
-  if (
-    fieldName === "bankAccount" &&
-    typeof value === "string"
-  ) {
-    newValue = value.replace(/\D/g, "").slice(0, 18);
-  }
+    // Full name - alphabets and spaces only
+    if (
+      fieldName === "fullName" &&
+      typeof value === "string"
+    ) {
+      newValue = value.replace(/[^A-Za-z ]/g, "");
+    }
 
-  // PAN - uppercase
-  if (fieldName === "pan" && typeof value === "string") {
-    newValue = value.toUpperCase().slice(0, 10);
-  }
+    // Phone - numbers only and maximum 10 digits
+    if (
+      fieldName === "phone" &&
+      typeof value === "string"
+    ) {
+      newValue = value.replace(/\D/g, "").slice(0, 10);
+    }
 
-  // Salary - allow empty value
-  if (fieldName === "salary") {
-    if (value === "") {
-      newValue = "";
-    } else {
-      newValue = value;
+    // Emergency contact - numbers only and maximum 10 digits
+    if (
+      fieldName === "emergencyContact" &&
+      typeof value === "string"
+    ) {
+      newValue = value.replace(/\D/g, "").slice(0, 10);
+    }
+
+    // Bank account - numbers only
+    if (
+      fieldName === "bankAccount" &&
+      typeof value === "string"
+    ) {
+      newValue = value.replace(/\D/g, "").slice(0, 18);
+    }
+
+    // PAN - uppercase
+    if (
+      fieldName === "pan" &&
+      typeof value === "string"
+    ) {
+      newValue = value.toUpperCase().slice(0, 10);
+    }
+
+    // Salary - allow empty value
+    if (fieldName === "salary") {
+      if (value === "") {
+        newValue = "";
+      } else {
+        newValue = value;
+      }
+    }
+
+    onFieldChange(fieldName, newValue);
+
+    if (error) {
+      setError("");
     }
   }
 
-  onFieldChange(fieldName, newValue);
-
-  if (error) {
-    setError("");
-  }
-}
-
   function validate(): boolean {
-    const fullName = String(form.fullName || "").trim();
-    const email = String(form.email || "").trim();
-    const phone = String(form.phone || "").trim();
-    const password = String(form.password || "").trim();
-    const role = String(form.role || "").trim();
-    const department = String(form.department || "").trim();
-    const salary = Number(form.salary);
-    const joiningDate = String(form.joiningDate || "").trim();
-    const idProof = String(form.idProof || "").trim();
-    const pan = String(form.pan || "").trim().toUpperCase();
-    const bankAccount = String(form.bankAccount || "").trim();
-    const emergencyContact = String(
-      form.emergencyContact || "",
+    const fullName = String(
+      form.fullName || "",
     ).trim();
-    const address = String(form.address || "").trim();
+
+    const email = String(
+      form.email || "",
+    ).trim();
+
+    const phone = String(
+      form.phone || "",
+    ).trim();
+
+    const password = String(
+      form.password || "",
+    ).trim();
+
+    const designation = String(
+      form.designation || "",
+    ).trim();
+
+    const department = String(
+      form.department || "",
+    ).trim();
+
+    const salary = Number(form.salary);
+
+    const joiningDate = String(
+      form.joiningDate || "",
+    ).trim();
+
+    const bankAccount = String(
+      form.bankAccount || "",
+    ).trim();
 
     // Full name
     if (!fullName) {
@@ -142,7 +176,9 @@ export function EmployeeFormModal({
     }
 
     if (!/^[A-Za-z ]+$/.test(fullName)) {
-      setError("Full name should contain alphabets only");
+      setError(
+        "Full name should contain alphabets only",
+      );
       return false;
     }
 
@@ -155,7 +191,9 @@ export function EmployeeFormModal({
     if (
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     ) {
-      setError("Please enter a valid email address");
+      setError(
+        "Please enter a valid email address",
+      );
       return false;
     }
 
@@ -174,13 +212,15 @@ export function EmployeeFormModal({
     }
 
     if (password && password.length < 6) {
-      setError("Password must contain at least 6 characters");
+      setError(
+        "Password must contain at least 6 characters",
+      );
       return false;
     }
 
-    // Role
-    if (!role) {
-      setError("Role is required");
+    // Designation
+    if (!designation) {
+      setError("Designation is required");
       return false;
     }
 
@@ -191,7 +231,9 @@ export function EmployeeFormModal({
     }
 
     if (!/^[A-Za-z ]+$/.test(department)) {
-      setError("Department should contain alphabets only");
+      setError(
+        "Department should contain alphabets only",
+      );
       return false;
     }
 
@@ -214,8 +256,6 @@ export function EmployeeFormModal({
       );
       return false;
     }
-
-
 
     setError("");
     return true;
@@ -241,7 +281,9 @@ export function EmployeeFormModal({
         {/* Header */}
         <div className="flex items-center justify-between border-b px-5 py-4">
           <h2 className="text-xl font-semibold text-gray-800">
-            {editing ? "Edit Employee" : "Add Employee"}
+            {editing
+              ? "Edit Employee"
+              : "Add Employee"}
           </h2>
 
           <button
@@ -280,7 +322,9 @@ export function EmployeeFormModal({
             form={form}
             roles={roles}
             onRemoveField={onRemoveField}
-            onOpenRoleModal={onOpenRoleModal}
+            onOpenDesignationModal={
+              onOpenDesignationModal
+            }
             onChange={handleChange}
           />
 
@@ -304,8 +348,9 @@ export function EmployeeFormModal({
               {saving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-
-                  {editing ? "Saving..." : "Creating..."}
+                  {editing
+                    ? "Saving..."
+                    : "Creating..."}
                 </>
               ) : editing ? (
                 "Save Changes"

@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-// import { store, useDB, type Employee, type EmployeeRole } from "@/lib/store";
 import { useEffect, useState } from "react";
-import { defaultEmployeeFields, type EmployeeField } from "@/config/employeeForm";
+
+import {
+  defaultEmployeeFields,
+  type EmployeeField,
+} from "@/config/employeeForm";
 
 import {
   getEmployees,
@@ -12,31 +15,35 @@ import {
   deleteEmployee,
   type Employee,
   type CreateEmployeePayload,
-  type UpdateEmployeePayload,
 } from "@/api/employee";
 
 import { exportToExcel } from "@/lib/excel";
 import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
-import { getRoles, createRole, deleteRole, type Role } from "@/api/role";
+
+import {
+  getRoles,
+  createRole,
+  deleteRole,
+  type Role,
+} from "@/api/role";
 
 import { EmployeeToolbar } from "@/components/employees/EmployeeToolbar";
 import { EmployeeTable } from "@/components/employees/EmployeeTable";
-import { CustomizeEmployeeForm } from "@/components/employees/CustomizeEmployeeForm";
-import { EmployeeFormFields } from "@/components/employees/EmployeeFormFields";
 import { EmployeeFormModal } from "@/components/employees/EmployeeFormModal";
 import { RoleManagementModal } from "@/components/employees/RoleManagementModal";
-import { EmployeePhotoUpload } from "@/components/employees/EmployeePhotoUpload";
 import { EmployeeDetailsModal } from "@/components/employees/EmployeeDetailsModal";
 
-export const Route = createFileRoute("/admin/employees")({ component: Page });
+export const Route = createFileRoute("/admin/employees")({
+  component: Page,
+});
 
 const blank: CreateEmployeePayload = {
   fullName: "",
   email: "",
   password: "user",
   phone: "",
-  role: "Developer",
+  designation: "",
   idProof: "",
   salary: 50000,
   address: "",
@@ -49,39 +56,76 @@ const blank: CreateEmployeePayload = {
 };
 
 function Page() {
-  const [editing, setEditing] = useState<Employee | null>(null);
+  const [editing, setEditing] =
+    useState<Employee | null>(null);
+
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<CreateEmployeePayload>(blank);
-  const [fields, setFields] = useState<EmployeeField[]>(defaultEmployeeFields);
+
+  const [form, setForm] =
+    useState<CreateEmployeePayload>(blank);
+
+  const [fields, setFields] =
+    useState<EmployeeField[]>(defaultEmployeeFields);
+
   const [q, setQ] = useState("");
-  const [selectedRole, setSelectedRole] = useState("");
-  const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
+
+  const [selectedDesignation, setSelectedDesignation] =
+    useState("");
+
+  const [employees, setEmployees] =
+    useState<Employee[]>([]);
+
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<Employee | null>(null);
+
   const [loading, setLoading] = useState(true);
+
   const [currentPage, setCurrentPage] = useState(1);
 
   const [totalPages, setTotalPages] = useState(1);
-  const [totalEmployees, setTotalEmployees] = useState(0);
+
+  const [totalEmployees, setTotalEmployees] =
+    useState(0);
+
   const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const [deletingId, setDeletingId] =
+    useState<string | null>(null);
+
   const [newField, setNewField] = useState({
     label: "",
     name: "",
     type: "text",
   });
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [roleModalOpen, setRoleModalOpen] = useState(false);
-  const [loadingRoles, setLoadingRoles] = useState(false);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
+  /*
+   * We keep "roles" internally because the existing
+   * designation API still returns roles.
+   */
+  const [roles, setRoles] = useState<Role[]>([]);
+
+  const [designationModalOpen, setDesignationModalOpen] =
+    useState(false);
+
+  const [photoFile, setPhotoFile] =
+    useState<File | null>(null);
+
+  const [photoPreview, setPhotoPreview] =
+    useState<string | null>(null);
+
+  /*
+   * Keep roleName because the existing API expects
+   * roleName.
+   */
   const [newRole, setNewRole] = useState({
     roleName: "",
     description: "",
     status: "Active",
   });
 
-  const fetchEmployees = async (page: number = currentPage) => {
+  const fetchEmployees = async (
+    page: number = currentPage,
+  ) => {
     try {
       setLoading(true);
 
@@ -94,7 +138,10 @@ function Page() {
     } catch (err: any) {
       console.error(err);
 
-      toast.error(err.response?.data?.message || "Failed to load employees");
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to load employees",
+      );
     } finally {
       setLoading(false);
     }
@@ -102,15 +149,14 @@ function Page() {
 
   const fetchRoles = async () => {
     try {
-      setLoadingRoles(true);
-
       const data = await getRoles();
 
       setRoles(data);
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to load roles");
-    } finally {
-      setLoadingRoles(false);
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to load designations",
+      );
     }
   };
 
@@ -121,7 +167,11 @@ function Page() {
 
   async function openNew() {
     setEditing(null);
-    setForm(blank);
+
+    setForm({
+      ...blank,
+      designation: "",
+    });
 
     setPhotoFile(null);
     setPhotoPreview(null);
@@ -133,10 +183,16 @@ function Page() {
 
   async function openEdit(e: Employee) {
     setEditing(e);
+
     setPhotoFile(null);
 
     if (e.profileImage) {
-      setPhotoPreview(`https://fresh-01.onrender.com/${e.profileImage.replace(/^src\//, "")}`);
+      setPhotoPreview(
+        `https://fresh-01.onrender.com/${e.profileImage.replace(
+          /^src\//,
+          "",
+        )}`,
+      );
     } else {
       setPhotoPreview(null);
     }
@@ -146,7 +202,7 @@ function Page() {
       email: e.email,
       password: "",
       phone: e.phone,
-      role: e.role,
+      designation: e.designation,
       department: e.department,
       salary: e.salary,
       joiningDate: e.joiningDate.slice(0, 10),
@@ -159,6 +215,7 @@ function Page() {
     });
 
     await fetchRoles();
+
     setOpen(true);
   }
 
@@ -166,23 +223,25 @@ function Page() {
     setPhotoFile(file);
 
     if (file) {
-      const previewUrl = URL.createObjectURL(file);
+      const previewUrl =
+        URL.createObjectURL(file);
+
       setPhotoPreview(previewUrl);
     } else {
       setPhotoPreview(null);
     }
   }
 
-  async function addRole() {
+  async function addDesignation() {
     if (!newRole.roleName.trim()) {
-      toast.warning("Role name required");
+      toast.warning("Designation name required");
       return;
     }
 
     try {
       await createRole(newRole);
 
-      toast.success("Role added");
+      toast.success("Designation added");
 
       setNewRole({
         roleName: "",
@@ -190,34 +249,49 @@ function Page() {
         status: "Active",
       });
 
-      fetchRoles();
+      await fetchRoles();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to create role");
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to create designation",
+      );
     }
   }
 
-  async function removeRole(id: string) {
-    if (!confirm("Delete role?")) return;
+  async function removeDesignation(id: string) {
+    if (!confirm("Delete this designation?")) {
+      return;
+    }
 
     try {
       await deleteRole(id);
 
-      toast.success("Role deleted");
+      toast.success("Designation deleted");
 
-      fetchRoles();
+      await fetchRoles();
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Failed to delete role");
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to delete designation",
+      );
     }
   }
 
-  function handleFieldChange(fieldName: string, value: string | number) {
+  function handleFieldChange(
+    fieldName: string,
+    value: string | number,
+  ) {
     setForm((prev) => ({
       ...prev,
       [fieldName]: value,
     }));
   }
 
-  function handleNewFieldChange(value: { label: string; name: string; type: string }) {
+  function handleNewFieldChange(value: {
+    label: string;
+    name: string;
+    type: string;
+  }) {
     setNewField(value);
   }
 
@@ -227,16 +301,21 @@ function Page() {
         !form.fullName.trim() ||
         !form.email.trim() ||
         !form.phone.trim() ||
-        !form.role.trim() ||
+        !form.designation.trim() ||
         !form.department.trim() ||
         !form.salary ||
         !form.joiningDate
       ) {
-        toast.warning("Please fill all required fields");
+        toast.warning(
+          "Please fill all required fields",
+        );
         return;
       }
 
-      if (!editing && !form.password?.trim()) {
+      if (
+        !editing &&
+        !form.password?.trim()
+      ) {
         toast.warning("Password is required");
         return;
       }
@@ -245,22 +324,34 @@ function Page() {
 
       if (editing) {
         if (photoFile) {
-          await updateEmployeeWithPhoto(editing._id, form, photoFile);
+          await updateEmployeeWithPhoto(
+            editing._id,
+            form,
+            photoFile,
+          );
         } else {
-          await updateEmployee(editing._id, form);
+          await updateEmployee(
+            editing._id,
+            form,
+          );
         }
 
-        toast.success("Employee updated successfully");
+        toast.success(
+          "Employee updated successfully",
+        );
       } else {
-        console.log("PHOTO FILE:", photoFile);
-        console.log("IS FILE:", photoFile instanceof File);
         if (photoFile) {
-          await createEmployeeWithPhoto(form, photoFile);
+          await createEmployeeWithPhoto(
+            form,
+            photoFile,
+          );
         } else {
           await createEmployee(form);
         }
 
-        toast.success("Employee created successfully");
+        toast.success(
+          "Employee created successfully",
+        );
       }
 
       await fetchEmployees();
@@ -273,7 +364,9 @@ function Page() {
 
       toast.error(
         err.response?.data?.message ||
-          (editing ? "Failed to update employee" : "Failed to create employee"),
+          (editing
+            ? "Failed to update employee"
+            : "Failed to create employee"),
       );
     } finally {
       setSaving(false);
@@ -281,27 +374,39 @@ function Page() {
   }
 
   async function remove(id: string) {
-    if (!confirm("Delete this employee?")) return;
+    if (!confirm("Delete this employee?")) {
+      return;
+    }
 
     try {
       setDeletingId(id);
 
       await deleteEmployee(id);
 
-      toast.success("Employee deleted successfully");
+      toast.success(
+        "Employee deleted successfully",
+      );
 
       await fetchEmployees();
     } catch (err: any) {
       console.error(err);
 
-      toast.error(err.response?.data?.message || "Failed to delete employee");
+      toast.error(
+        err.response?.data?.message ||
+          "Failed to delete employee",
+      );
     } finally {
       setDeletingId(null);
     }
   }
 
   function addField() {
-    if (!newField.label.trim() || !newField.name.trim()) return;
+    if (
+      !newField.label.trim() ||
+      !newField.name.trim()
+    ) {
+      return;
+    }
 
     setFields((prev) => [
       ...prev,
@@ -329,19 +434,28 @@ function Page() {
     });
   }
 
-  const openRoleModal = async () => {
+  const openDesignationModal = async () => {
     await fetchRoles();
-    setRoleModalOpen(true);
+
+    setDesignationModalOpen(true);
   };
 
   function removeField(id: string) {
-    const field = fields.find((f) => f.id === id);
+    const field = fields.find(
+      (f) => f.id === id,
+    );
 
-    if (!field || !field.removable) return;
+    if (!field || !field.removable) {
+      return;
+    }
 
-    setFields((prev) => prev.filter((f) => f.id !== id));
+    setFields((prev) =>
+      prev.filter((f) => f.id !== id),
+    );
 
-    const updated = { ...form } as any;
+    const updated = {
+      ...form,
+    } as any;
 
     delete updated[field.name];
 
@@ -349,18 +463,32 @@ function Page() {
   }
 
   const filtered = employees.filter((e) => {
-    const matchesSearch = [e.fullName, e.email, e.role, e.department].some((x) =>
-      x.toLowerCase().includes(q.toLowerCase()),
+    const searchText = q.toLowerCase();
+
+    const matchesSearch = [
+      e.fullName,
+      e.email,
+      e.designation,
+      e.department,
+    ].some((x) =>
+      x.toLowerCase().includes(searchText),
     );
 
-    const matchesRole = selectedRole === "" || e.role === selectedRole;
+    const matchesDesignation =
+      selectedDesignation === "" ||
+      e.designation === selectedDesignation;
 
-    return matchesSearch && matchesRole;
+    return (
+      matchesSearch &&
+      matchesDesignation
+    );
   });
 
   function exportXlsx() {
     if (filtered.length === 0) {
-      toast.warning("No employees to export");
+      toast.warning(
+        "No employees to export",
+      );
       return;
     }
 
@@ -370,10 +498,11 @@ function Page() {
         Name: e.fullName,
         Email: e.email,
         Phone: e.phone,
-        Role: e.role,
+        Designation: e.designation,
         Department: e.department,
         Salary: e.salary,
-        JoinDate: e.joiningDate.slice(0, 10),
+        JoinDate:
+          e.joiningDate.slice(0, 10),
         Address: e.address,
         IDProof: e.idProof,
         PAN: e.pan,
@@ -385,14 +514,19 @@ function Page() {
       "Employees",
     );
 
-    toast.success("Employees exported successfully");
+    toast.success(
+      "Employees exported successfully",
+    );
   }
 
   if (loading) {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
-        <p className="text-gray-500 text-lg font-medium">Loading employees...</p>
+
+        <p className="text-gray-500 text-lg font-medium">
+          Loading employees...
+        </p>
       </div>
     );
   }
@@ -402,59 +536,95 @@ function Page() {
       <EmployeeToolbar
         q={q}
         setQ={setQ}
-        selectedRole={selectedRole}
+        selectedRole={selectedDesignation}
         roles={roles}
-        onRoleChange={setSelectedRole}
+        onRoleChange={setSelectedDesignation}
         onExport={exportXlsx}
         onAdd={openNew}
       />
+
       <EmployeeTable
         employees={filtered}
         deletingId={deletingId}
         onEdit={openEdit}
         onDelete={remove}
-        onView={(employee) => setSelectedEmployee(employee)}
+        onView={(employee) =>
+          setSelectedEmployee(employee)
+        }
       />
 
       {totalPages > 1 && (
         <div className="mt-5 flex flex-col gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-gray-500">
-            Showing <span className="font-medium text-gray-700">{(currentPage - 1) * 10 + 1}</span>{" "}
+            Showing{" "}
+            <span className="font-medium text-gray-700">
+              {(currentPage - 1) * 10 + 1}
+            </span>{" "}
             to{" "}
             <span className="font-medium text-gray-700">
-              {Math.min(currentPage * 10, totalEmployees)}
+              {Math.min(
+                currentPage * 10,
+                totalEmployees,
+              )}
             </span>{" "}
-            of <span className="font-medium text-gray-700">{totalEmployees}</span> employees
+            of{" "}
+            <span className="font-medium text-gray-700">
+              {totalEmployees}
+            </span>{" "}
+            employees
           </div>
 
           <div className="flex items-center justify-center gap-2">
             <button
               className="btn btn-sm btn-ghost"
-              disabled={currentPage === 1 || loading}
-              onClick={() => fetchEmployees(currentPage - 1)}
+              disabled={
+                currentPage === 1 ||
+                loading
+              }
+              onClick={() =>
+                fetchEmployees(
+                  currentPage - 1,
+                )
+              }
             >
               Previous
             </button>
 
-            {Array.from({ length: totalPages }, (_, index) => {
-              const page = index + 1;
+            {Array.from(
+              { length: totalPages },
+              (_, index) => {
+                const page = index + 1;
 
-              return (
-                <button
-                  key={page}
-                  className={`btn btn-sm ${currentPage === page ? "" : "btn-ghost"}`}
-                  disabled={loading}
-                  onClick={() => fetchEmployees(page)}
-                >
-                  {page}
-                </button>
-              );
-            })}
+                return (
+                  <button
+                    key={page}
+                    className={`btn btn-sm ${
+                      currentPage === page
+                        ? ""
+                        : "btn-ghost"
+                    }`}
+                    disabled={loading}
+                    onClick={() =>
+                      fetchEmployees(page)
+                    }
+                  >
+                    {page}
+                  </button>
+                );
+              },
+            )}
 
             <button
               className="btn btn-sm btn-ghost"
-              disabled={currentPage === totalPages || loading}
-              onClick={() => fetchEmployees(currentPage + 1)}
+              disabled={
+                currentPage === totalPages ||
+                loading
+              }
+              onClick={() =>
+                fetchEmployees(
+                  currentPage + 1,
+                )
+              }
             >
               Next
             </button>
@@ -477,22 +647,37 @@ function Page() {
         onSave={save}
         onAddField={addField}
         onRemoveField={removeField}
-        onOpenRoleModal={openRoleModal}
-        onNewFieldChange={handleNewFieldChange}
-        onFieldChange={handleFieldChange}
+        onOpenDesignationModal={
+          openDesignationModal
+        }
+        onNewFieldChange={
+          handleNewFieldChange
+        }
+        onFieldChange={
+          handleFieldChange
+        }
       />
 
       <RoleManagementModal
-        open={roleModalOpen}
+        open={designationModalOpen}
         roles={roles}
         newRole={newRole}
-        onClose={() => setRoleModalOpen(false)}
-        onAddRole={addRole}
-        onDeleteRole={removeRole}
+        onClose={() =>
+          setDesignationModalOpen(false)
+        }
+        onAddRole={addDesignation}
+        onDeleteRole={
+          removeDesignation
+        }
         onNewRoleChange={setNewRole}
       />
 
-      <EmployeeDetailsModal employee={selectedEmployee} onClose={() => setSelectedEmployee(null)} />
+      <EmployeeDetailsModal
+        employee={selectedEmployee}
+        onClose={() =>
+          setSelectedEmployee(null)
+        }
+      />
     </>
   );
 }

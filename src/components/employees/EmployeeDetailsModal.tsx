@@ -14,7 +14,10 @@ export function EmployeeDetailsModal({
   }
 
   const imageUrl = employee.profileImage
-    ? `https://fresh-01.onrender.com/${employee.profileImage.replace(/^src\//, "")}`
+    ? `https://fresh-01.onrender.com/${employee.profileImage.replace(
+        /^src\//,
+        "",
+      )}`
     : null;
 
   return (
@@ -58,7 +61,9 @@ export function EmployeeDetailsModal({
               />
             ) : (
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-gray-200 text-2xl font-semibold text-gray-600">
-                {employee.fullName.charAt(0).toUpperCase()}
+                {employee.fullName
+                  .charAt(0)
+                  .toUpperCase()}
               </div>
             )}
 
@@ -68,7 +73,7 @@ export function EmployeeDetailsModal({
               </h3>
 
               <p className="text-gray-500">
-                {employee.role}
+                {employee.designation}
               </p>
 
               <span
@@ -106,8 +111,8 @@ export function EmployeeDetailsModal({
             />
 
             <DetailItem
-              label="Role"
-              value={employee.role}
+              label="Designation"
+              value={employee.designation}
             />
 
             <DetailItem
@@ -117,12 +122,16 @@ export function EmployeeDetailsModal({
 
             <DetailItem
               label="Monthly Salary"
-              value={`₹${employee.salary.toLocaleString("en-IN")}`}
+              value={`₹${employee.salary.toLocaleString(
+                "en-IN",
+              )}`}
             />
 
             <DetailItem
               label="Joining Date"
-              value={new Date(employee.joiningDate).toLocaleDateString()}
+              value={new Date(
+                employee.joiningDate,
+              ).toLocaleDateString()}
             />
 
             <DetailItem

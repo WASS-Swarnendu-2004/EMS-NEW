@@ -38,9 +38,10 @@ export function RoleManagementModal({
         className="w-full max-w-lg rounded-xl bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Header */}
         <div className="flex items-center justify-between border-b p-5">
           <h2 className="text-lg font-semibold">
-            Manage Roles
+            Manage Designations
           </h2>
 
           <button
@@ -51,10 +52,11 @@ export function RoleManagementModal({
           </button>
         </div>
 
+        {/* Add Designation */}
         <div className="space-y-3 p-5">
           <input
             className="input w-full"
-            placeholder="Role Name"
+            placeholder="Designation"
             value={newRole.roleName}
             onChange={(e) =>
               onNewRoleChange({
@@ -68,38 +70,53 @@ export function RoleManagementModal({
             className="btn w-full"
             onClick={onAddRole}
           >
-            + Add Role
+            + Add Designation
           </button>
         </div>
 
+        {/* Designation List */}
         <div className="max-h-72 space-y-2 overflow-y-auto px-5">
-          {roles.map((role) => (
-            <div
-              key={role._id}
-              className="flex items-center justify-between rounded-lg border p-3"
-            >
-              <div>
-                <div className="font-medium">
-                  {role.roleName}
-                </div>
-
-                <div className="text-sm text-gray-500">
-                  {role.description}
-                </div>
-              </div>
-
-              <button
-                className="btn btn-danger btn-sm"
-                onClick={() => onDeleteRole(role._id)}
-              >
-                Delete
-              </button>
+          {roles.length === 0 ? (
+            <div className="py-5 text-center text-sm text-gray-500">
+              No designations found
             </div>
-          ))}
+          ) : (
+            roles.map((role) => (
+              <div
+                key={role._id}
+                className="flex items-center justify-between rounded-lg border p-3"
+              >
+                <div>
+                  <div className="font-medium">
+                    {role.roleName}
+                  </div>
+
+                  {role.description && (
+                    <div className="text-sm text-gray-500">
+                      {role.description}
+                    </div>
+                  )}
+                </div>
+
+                <button
+                  className="btn btn-danger btn-sm"
+                  onClick={() =>
+                    onDeleteRole(role._id)
+                  }
+                >
+                  Delete
+                </button>
+              </div>
+            ))
+          )}
         </div>
 
+        {/* Footer */}
         <div className="border-t p-5 text-right">
-          <button className="btn" onClick={onClose}>
+          <button
+            className="btn"
+            onClick={onClose}
+          >
             Close
           </button>
         </div>

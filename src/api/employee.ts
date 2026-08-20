@@ -9,7 +9,7 @@ export interface Employee {
   email: string;
   password?: string;
   phone: string;
-  role: string;
+  designation: string;
   department: string;
   salary: number;
   joiningDate: string;

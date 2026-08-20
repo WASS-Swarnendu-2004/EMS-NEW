@@ -1,5 +1,3 @@
-// src/routes/admin/advance-amount.tsx
-
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2, X } from "lucide-react";
@@ -24,15 +22,15 @@ export const Route = createFileRoute("/admin/advance-amount")({
   component: Page,
 });
 
-// =========================
+
 // REJECT TYPE
-// =========================
+
 
 type RejectType = "advance" | "reimbursement";
 
-// =========================
+
 // PAGE
-// =========================
+
 
 function Page() {
   const [requests, setRequests] = useState<AdvanceRequest[]>([]);
@@ -51,9 +49,9 @@ function Page() {
     "advance" | "reimbursement"
   >("advance");
 
-  // =========================
+  
   // REJECT MODAL
-  // =========================
+  
 
   const [rejectingRequest, setRejectingRequest] = useState<
     AdvanceRequest | ReimbursementRequest | null
@@ -65,10 +63,9 @@ function Page() {
 
   const [rejectionRemark, setRejectionRemark] = useState("");
 
-  // =========================
+  
   // PENDING COUNTS
-  // =========================
-
+ 
   const pendingAdvanceCount = requests.filter(
     (item) => item.status === "Pending",
   ).length;
@@ -77,9 +74,9 @@ function Page() {
     (item) => item.status === "Pending",
   ).length;
 
-  // =========================
+ 
   // FETCH DATA
-  // =========================
+ 
 
   useEffect(() => {
     fetchRequests();
@@ -101,11 +98,6 @@ function Page() {
         reimbursementResponse.reimbursements,
       );
     } catch (error: any) {
-      console.error(
-        "Fetch Advance/Reimbursement Error:",
-        error,
-      );
-
       toast.error(
         error.response?.data?.message ||
           "Failed to load advance and reimbursement requests",
@@ -115,9 +107,9 @@ function Page() {
     }
   }
 
-  // =========================
+  
   // APPROVE ADVANCE
-  // =========================
+  
 
   async function handleApproveAdvance(id: string) {
     try {
@@ -132,8 +124,7 @@ function Page() {
 
       await fetchRequests();
     } catch (error: any) {
-      console.error("Approve Advance Error:", error);
-
+      
       toast.error(
         error.response?.data?.message ||
           "Failed to approve advance request",
@@ -143,9 +134,9 @@ function Page() {
     }
   }
 
-  // =========================
+  
   // APPROVE REIMBURSEMENT
-  // =========================
+  
 
   async function handleApproveReimbursement(id: string) {
     try {
@@ -160,10 +151,6 @@ function Page() {
 
       await fetchRequests();
     } catch (error: any) {
-      console.error(
-        "Approve Reimbursement Error:",
-        error,
-      );
 
       toast.error(
         error.response?.data?.message ||
@@ -174,9 +161,9 @@ function Page() {
     }
   }
 
-  // =========================
+  
   // OPEN REJECT MODAL
-  // =========================
+  
 
   const openRejectModal = (
     request: AdvanceRequest | ReimbursementRequest,
@@ -189,9 +176,9 @@ function Page() {
     setRejectionRemark("");
   };
 
-  // =========================
+  
   // CLOSE REJECT MODAL
-  // =========================
+ 
 
   const closeRejectModal = () => {
     if (processingId) return;
@@ -201,9 +188,9 @@ function Page() {
     setRejectionRemark("");
   };
 
-  // =========================
+  
   // REJECT REQUEST
-  // =========================
+  
 
   const handleReject = async () => {
     if (!rejectingRequest || !rejectType) {
@@ -250,8 +237,7 @@ function Page() {
       // Reload latest data from backend
       await fetchRequests();
     } catch (error: any) {
-      console.error("Reject Request Error:", error);
-
+      
       toast.error(
         error.response?.data?.message ||
           "Failed to reject request",
@@ -261,9 +247,9 @@ function Page() {
     }
   };
 
-  // =========================
+  
   // EXPORT ADVANCE
-  // =========================
+
 
   function exportAdvanceXlsx() {
     if (requests.length === 0) {
@@ -303,9 +289,9 @@ function Page() {
     );
   }
 
-  // =========================
+ 
   // EXPORT REIMBURSEMENT
-  // =========================
+  
 
   function exportReimbursementXlsx() {
     if (reimbursementRequests.length === 0) {
@@ -349,9 +335,9 @@ function Page() {
     );
   }
 
-  // =========================
+
   // LOADING
-  // =========================
+
 
   if (loading) {
     return (
@@ -365,15 +351,15 @@ function Page() {
     );
   }
 
-  // =========================
+  
   // PAGE
-  // =========================
+ 
 
   return (
     <>
-      {/* ========================================= */}
+      
       {/* TABS */}
-      {/* ========================================= */}
+      
 
       <div className="mb-4 flex gap-2">
         <button
@@ -413,9 +399,9 @@ function Page() {
         </button>
       </div>
 
-      {/* ========================================= */}
+     
       {/* ACTIVE TABLE CARD */}
-      {/* ========================================= */}
+     
 
       <div className="card">
         <div className="card-header">
@@ -439,9 +425,9 @@ function Page() {
           </div>
         </div>
 
-        {/* ========================================= */}
+        
         {/* ADVANCE TABLE */}
-        {/* ========================================= */}
+       
 
         {activeTab === "advance" && (
           <div className="history-table-wrap">
@@ -604,9 +590,9 @@ function Page() {
           </div>
         )}
 
-        {/* ========================================= */}
+        
         {/* REIMBURSEMENT TABLE */}
-        {/* ========================================= */}
+        
 
         {activeTab === "reimbursement" && (
           <div className="history-table-wrap">
@@ -775,10 +761,9 @@ function Page() {
         )}
       </div>
 
-      {/* ========================================= */}
+     
       {/* REJECT MODAL */}
-      {/* ========================================= */}
-
+      
       {rejectingRequest && rejectType && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
