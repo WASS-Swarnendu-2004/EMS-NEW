@@ -121,7 +121,7 @@ export function EmployeeDetailsModal({
             />
 
             <DetailItem
-              label="Monthly Salary"
+              label="Monthly Gross Salary"
               value={`₹${employee.salary.toLocaleString(
                 "en-IN",
               )}`}

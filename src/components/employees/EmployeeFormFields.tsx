@@ -10,14 +10,8 @@ type EmployeeFormFieldsProps = {
   roles: Role[];
   onRemoveField: (id: string) => void;
   onOpenDesignationModal: () => void;
-  onChange: (
-    fieldName: string,
-    value: string | number,
-  ) => void;
-  onReorder: (
-    draggedId: string,
-    targetId: string,
-  ) => void;
+  onChange: (fieldName: string, value: string | number) => void;
+  onReorder: (draggedId: string, targetId: string) => void;
 };
 
 export function EmployeeFormFields({
@@ -29,26 +23,18 @@ export function EmployeeFormFields({
   onChange,
   onReorder,
 }: EmployeeFormFieldsProps) {
-  const [draggedId, setDraggedId] =
-    useState<string | null>(null);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
 
-  const [dragOverId, setDragOverId] =
-    useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
 
-  function handleDragStart(
-    e: React.DragEvent<HTMLDivElement>,
-    id: string,
-  ) {
+  function handleDragStart(e: React.DragEvent<HTMLDivElement>, id: string) {
     setDraggedId(id);
 
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", id);
   }
 
-  function handleDragOver(
-    e: React.DragEvent<HTMLDivElement>,
-    id: string,
-  ) {
+  function handleDragOver(e: React.DragEvent<HTMLDivElement>, id: string) {
     e.preventDefault();
 
     if (id !== draggedId) {
@@ -58,14 +44,10 @@ export function EmployeeFormFields({
     e.dataTransfer.dropEffect = "move";
   }
 
-  function handleDrop(
-    e: React.DragEvent<HTMLDivElement>,
-    targetId: string,
-  ) {
+  function handleDrop(e: React.DragEvent<HTMLDivElement>, targetId: string) {
     e.preventDefault();
 
-    const sourceId =
-      e.dataTransfer.getData("text/plain");
+    const sourceId = e.dataTransfer.getData("text/plain");
 
     if (!sourceId || sourceId === targetId) {
       setDraggedId(null);
@@ -87,42 +69,21 @@ export function EmployeeFormFields({
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {fields.map((field) => {
-        const value =
-          (form as Record<string, unknown>)[
-            field.name
-          ] ?? "";
+        const value = (form as Record<string, unknown>)[field.name] ?? "";
 
         return (
           <div
             key={field.id}
             draggable
-            onDragStart={(e) =>
-              handleDragStart(e, field.id)
-            }
-            onDragOver={(e) =>
-              handleDragOver(e, field.id)
-            }
-            onDrop={(e) =>
-              handleDrop(e, field.id)
-            }
+            onDragStart={(e) => handleDragStart(e, field.id)}
+            onDragOver={(e) => handleDragOver(e, field.id)}
+            onDrop={(e) => handleDrop(e, field.id)}
             onDragEnd={handleDragEnd}
             className={`
-              ${
-                field.type === "textarea"
-                  ? "field lg:col-span-2"
-                  : "field"
-              }
+              ${field.type === "textarea" ? "field lg:col-span-2" : "field"}
               cursor-default rounded-lg transition-all
-              ${
-                draggedId === field.id
-                  ? "opacity-40"
-                  : ""
-              }
-              ${
-                dragOverId === field.id
-                  ? "ring-2 ring-blue-400"
-                  : ""
-              }
+              ${draggedId === field.id ? "opacity-40" : ""}
+              ${dragOverId === field.id ? "ring-2 ring-blue-400" : ""}
             `}
           >
             <div className="mb-2 flex items-center justify-between">
@@ -155,9 +116,7 @@ export function EmployeeFormFields({
                   <button
                     type="button"
                     className="text-sm text-red-500 hover:text-red-700"
-                    onClick={() =>
-                      onRemoveField(field.id)
-                    }
+                    onClick={() => onRemoveField(field.id)}
                   >
                     Remove
                   </button>
@@ -170,64 +129,40 @@ export function EmployeeFormFields({
                 rows={4}
                 className="textarea w-full"
                 value={String(value)}
-                onChange={(e) =>
-                  onChange(
-                    field.name,
-                    e.target.value,
-                  )
-                }
+                onChange={(e) => onChange(field.name, e.target.value)}
               />
             ) : field.type === "select" ? (
               <select
                 className="select w-full"
                 value={String(value)}
-                onChange={(e) =>
-                  onChange(
-                    field.name,
-                    e.target.value,
-                  )
-                }
+                onChange={(e) => onChange(field.name, e.target.value)}
               >
                 {field.name === "designation"
                   ? roles.map((role) => (
-                      <option
-                        key={role._id}
-                        value={role.roleName}
-                      >
+                      <option key={role._id} value={role.roleName}>
                         {role.roleName}
                       </option>
                     ))
-                  : field.options?.map(
-                      (option) => (
-                        <option
-                          key={option}
-                          value={option}
-                        >
-                          {option}
-                        </option>
-                      ),
-                    )}
+                  : field.options?.map((option) => (
+                      <option key={option} value={option}>
+                        {option}
+                      </option>
+                    ))}
               </select>
             ) : (
               <input
                 className="input w-full"
                 type={field.type}
-                min={
-                  field.name === "joiningDate"
-                    ? new Date()
-                        .toISOString()
-                        .split("T")[0]
-                    : undefined
+                min={field.name === "joiningDate" ? "2010-01-01" : undefined}
+                max={
+                  field.name === "joiningDate" ? new Date().toISOString().split("T")[0] : undefined
                 }
                 value={String(value)}
                 onChange={(e) =>
                   onChange(
                     field.name,
-                    field.type === "number" &&
-                    e.target.value !== ""
-                      ? Number(
-                          e.target.value,
-                        )
+                    field.type === "number" && e.target.value !== ""
+                      ? Number(e.target.value)
                       : e.target.value,
                   )
                 }

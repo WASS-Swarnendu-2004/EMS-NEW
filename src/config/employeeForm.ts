@@ -66,7 +66,7 @@ export const defaultEmployeeFields: EmployeeField[] = [
   },
   {
     id: crypto.randomUUID(),
-    label: "Monthly Salary (₹)",
+    label: "Monthly Gross Salary (₹)",
     name: "salary",
     type: "number",
     required: true,
