@@ -94,7 +94,6 @@ function Page() {
 
   const [newField, setNewField] = useState({
     label: "",
-    name: "",
     type: "text",
   });
 
@@ -287,13 +286,12 @@ function Page() {
     }));
   }
 
-  function handleNewFieldChange(value: {
-    label: string;
-    name: string;
-    type: string;
-  }) {
-    setNewField(value);
-  }
+function handleNewFieldChange(value: {
+  label: string;
+  type: string;
+}) {
+  setNewField(value);
+}
 
   async function save() {
     try {
@@ -401,38 +399,57 @@ function Page() {
   }
 
   function addField() {
-    if (
-      !newField.label.trim() ||
-      !newField.name.trim()
-    ) {
-      return;
-    }
-
-    setFields((prev) => [
-      ...prev,
-      {
-        id: crypto.randomUUID(),
-        label: newField.label,
-        name: newField.name,
-        type: newField.type as EmployeeField["type"],
-        removable: true,
-      },
-    ]);
-
-    setForm(
-      (prev) =>
-        ({
-          ...prev,
-          [newField.name]: "",
-        }) as CreateEmployeePayload,
-    );
-
-    setNewField({
-      label: "",
-      name: "",
-      type: "text",
-    });
+  if (!newField.label.trim()) {
+    toast.warning("Field label is required");
+    return;
   }
+
+  const fieldName = newField.label
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+
+  if (!fieldName) {
+    toast.warning("Please enter a valid field label");
+    return;
+  }
+
+  if (
+    fields.some(
+      (field) => field.name === fieldName,
+    )
+  ) {
+    toast.warning(
+      "A field with this label already exists",
+    );
+    return;
+  }
+
+  setFields((prev) => [
+    ...prev,
+    {
+      id: crypto.randomUUID(),
+      label: newField.label.trim(),
+      name: fieldName,
+      type: newField.type as EmployeeField["type"],
+      removable: true,
+    },
+  ]);
+
+  setForm(
+    (prev) =>
+      ({
+        ...prev,
+        [fieldName]: "",
+      }) as CreateEmployeePayload,
+  );
+
+  setNewField({
+    label: "",
+    type: "text",
+  });
+}
 
   const openDesignationModal = async () => {
     await fetchRoles();
@@ -461,6 +478,41 @@ function Page() {
 
     setForm(updated);
   }
+
+  function reorderFields(
+  draggedId: string,
+  targetId: string,
+) {
+  setFields((prev) => {
+    const draggedIndex = prev.findIndex(
+      (field) => field.id === draggedId,
+    );
+
+    const targetIndex = prev.findIndex(
+      (field) => field.id === targetId,
+    );
+
+    if (
+      draggedIndex === -1 ||
+      targetIndex === -1
+    ) {
+      return prev;
+    }
+
+    const updated = [...prev];
+
+    const [draggedField] =
+      updated.splice(draggedIndex, 1);
+
+    updated.splice(
+      targetIndex,
+      0,
+      draggedField,
+    );
+
+    return updated;
+  });
+}
 
   const filtered = employees.filter((e) => {
     const searchText = q.toLowerCase();
@@ -633,30 +685,31 @@ function Page() {
       )}
 
       <EmployeeFormModal
-        open={open}
-        editing={editing}
-        form={form}
-        fields={fields}
-        roles={roles}
-        newField={newField}
-        saving={saving}
-        photoFile={photoFile}
-        photoPreview={photoPreview}
-        onPhotoChange={handlePhotoChange}
-        onClose={() => setOpen(false)}
-        onSave={save}
-        onAddField={addField}
-        onRemoveField={removeField}
-        onOpenDesignationModal={
-          openDesignationModal
-        }
-        onNewFieldChange={
-          handleNewFieldChange
-        }
-        onFieldChange={
-          handleFieldChange
-        }
-      />
+  open={open}
+  editing={editing}
+  form={form}
+  fields={fields}
+  roles={roles}
+  newField={newField}
+  saving={saving}
+  photoFile={photoFile}
+  photoPreview={photoPreview}
+  onPhotoChange={handlePhotoChange}
+  onClose={() => setOpen(false)}
+  onSave={save}
+  onAddField={addField}
+  onRemoveField={removeField}
+  onOpenDesignationModal={
+    openDesignationModal
+  }
+  onNewFieldChange={
+    handleNewFieldChange
+  }
+  onFieldChange={
+    handleFieldChange
+  }
+  onReorder={reorderFields}
+/>
 
       <RoleManagementModal
         open={designationModalOpen}

@@ -31,15 +31,15 @@ function Page() {
     Record<string, number>
   >({});
 
-  // =========================================
+  
   // ACTIVE TAB
-  // =========================================
+  
 
   const [activeTab, setActiveTab] = useState<"projects" | "tasks">("projects");
 
-  // =========================================
+  
   // LOAD DATA
-  // =========================================
+  
 
   useEffect(() => {
     loadProjects();
@@ -86,9 +86,9 @@ function Page() {
     }
   }
 
-  // =========================================
+  
   // TASK PROGRESS
-  // =========================================
+  
 
   function handleProgressChange(taskId: string, value: string) {
     const progress = Number(value);
@@ -146,9 +146,9 @@ function Page() {
 
   const loading = loadingProjects || loadingTasks;
 
-  // =========================================
+  
   // LOADING
-  // =========================================
+ 
 
   if (loading) {
     return (
@@ -170,9 +170,7 @@ function Page() {
 
   return (
     <>
-      {/* =========================================
-          TABS
-      ========================================= */}
+      {/* TABS */}
 
       <div className="mb-5 flex gap-2">
         <button
@@ -208,9 +206,7 @@ function Page() {
         </button>
       </div>
 
-      {/* =========================================
-          PROJECTS TAB
-      ========================================= */}
+      {/*  PROJECTS TAB */}
 
       {activeTab === "projects" && (
         <section>
@@ -298,9 +294,7 @@ function Page() {
         </section>
       )}
 
-      {/* =========================================
-          TASKS TAB
-      ========================================= */}
+      {/* TASKS TAB */}
 
       {activeTab === "tasks" && (
         <section>

@@ -140,12 +140,12 @@ function Page() {
     }
 
     if (!form.consumerName.trim()) {
-      toast.warning("Consumer name is required");
+      toast.warning("Company name is required");
       return;
     }
 
     if (!/^[A-Za-z ]+$/.test(form.consumerName.trim())) {
-      toast.warning("Consumer name should contain alphabets only");
+      toast.warning("Company name should contain alphabets only");
       return;
     }
     try {
@@ -262,7 +262,7 @@ function Page() {
           <thead>
             <tr>
               <th>Project</th>
-              <th>Consumer</th>
+              <th>Company</th>
               <th>Duration</th>
               <th>Valuation</th>
               <th>Status</th>
@@ -372,7 +372,7 @@ function Page() {
                 />
               </div>
               <div className="field">
-                <label>Consumer name *</label>
+                <label>Company name *</label>
                 <input
                   className="input"
                   value={form.consumerName}
@@ -425,7 +425,7 @@ function Page() {
               </div>
             </div>
             <div className="field">
-              <label>Consumer details</label>
+              <label>Company details</label>
               <textarea
                 className="textarea"
                 value={form.consumerDetails}
@@ -463,7 +463,7 @@ function Page() {
             </div>
             <div className="row-2">
               <div>
-                <strong>Consumer:</strong> {view.consumerName}
+                <strong>Company:</strong> {view.consumerName}
               </div>
               <div>
                 <strong>Status:</strong>{" "}
@@ -532,7 +532,7 @@ function Page() {
                 />
                 <span>{emp.fullName}</span>
                 <span className="muted" style={{ marginLeft: "auto", fontSize: ".8rem" }}>
-                  {emp.role}
+                  {emp.designation}
                 </span>
               </label>
             ))}

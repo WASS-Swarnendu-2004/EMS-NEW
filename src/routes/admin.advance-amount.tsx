@@ -22,61 +22,43 @@ export const Route = createFileRoute("/admin/advance-amount")({
   component: Page,
 });
 
-
 // REJECT TYPE
-
 
 type RejectType = "advance" | "reimbursement";
 
-
 // PAGE
-
 
 function Page() {
   const [requests, setRequests] = useState<AdvanceRequest[]>([]);
 
-  const [reimbursementRequests, setReimbursementRequests] =
-    useState<ReimbursementRequest[]>([]);
+  const [reimbursementRequests, setReimbursementRequests] = useState<ReimbursementRequest[]>([]);
 
   const [loading, setLoading] = useState(true);
 
-  const [processingId, setProcessingId] = useState<string | null>(
-    null,
-  );
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Active tab
-  const [activeTab, setActiveTab] = useState<
-    "advance" | "reimbursement"
-  >("advance");
+  const [activeTab, setActiveTab] = useState<"advance" | "reimbursement">("advance");
 
-  
   // REJECT MODAL
-  
 
   const [rejectingRequest, setRejectingRequest] = useState<
     AdvanceRequest | ReimbursementRequest | null
   >(null);
 
-  const [rejectType, setRejectType] = useState<RejectType | null>(
-    null,
-  );
+  const [rejectType, setRejectType] = useState<RejectType | null>(null);
 
   const [rejectionRemark, setRejectionRemark] = useState("");
 
-  
   // PENDING COUNTS
- 
-  const pendingAdvanceCount = requests.filter(
-    (item) => item.status === "Pending",
-  ).length;
+
+  const pendingAdvanceCount = requests.filter((item) => item.status === "Pending").length;
 
   const pendingReimbursementCount = reimbursementRequests.filter(
     (item) => item.status === "Pending",
   ).length;
 
- 
   // FETCH DATA
- 
 
   useEffect(() => {
     fetchRequests();
@@ -86,30 +68,24 @@ function Page() {
     try {
       setLoading(true);
 
-      const [advanceResponse, reimbursementResponse] =
-        await Promise.all([
-          getAdminAdvanceRequests(),
-          getAdminReimbursementRequests(),
-        ]);
+      const [advanceResponse, reimbursementResponse] = await Promise.all([
+        getAdminAdvanceRequests(),
+        getAdminReimbursementRequests(),
+      ]);
 
       setRequests(advanceResponse.advances);
 
-      setReimbursementRequests(
-        reimbursementResponse.reimbursements,
-      );
+      setReimbursementRequests(reimbursementResponse.reimbursements);
     } catch (error: any) {
       toast.error(
-        error.response?.data?.message ||
-          "Failed to load advance and reimbursement requests",
+        error.response?.data?.message || "Failed to load advance and reimbursement requests",
       );
     } finally {
       setLoading(false);
     }
   }
 
-  
   // APPROVE ADVANCE
-  
 
   async function handleApproveAdvance(id: string) {
     try {
@@ -117,26 +93,17 @@ function Page() {
 
       const response = await approveAdvance(id);
 
-      toast.success(
-        response.message ||
-          "Advance request approved successfully",
-      );
+      toast.success(response.message || "Advance request approved successfully");
 
       await fetchRequests();
     } catch (error: any) {
-      
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to approve advance request",
-      );
+      toast.error(error.response?.data?.message || "Failed to approve advance request");
     } finally {
       setProcessingId(null);
     }
   }
 
-  
   // APPROVE REIMBURSEMENT
-  
 
   async function handleApproveReimbursement(id: string) {
     try {
@@ -144,31 +111,19 @@ function Page() {
 
       const response = await approveReimbursement(id);
 
-      toast.success(
-        response.message ||
-          "Reimbursement request approved successfully",
-      );
+      toast.success(response.message || "Reimbursement request approved successfully");
 
       await fetchRequests();
     } catch (error: any) {
-
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to approve reimbursement request",
-      );
+      toast.error(error.response?.data?.message || "Failed to approve reimbursement request");
     } finally {
       setProcessingId(null);
     }
   }
 
-  
   // OPEN REJECT MODAL
-  
 
-  const openRejectModal = (
-    request: AdvanceRequest | ReimbursementRequest,
-    type: RejectType,
-  ) => {
+  const openRejectModal = (request: AdvanceRequest | ReimbursementRequest, type: RejectType) => {
     setRejectingRequest(request);
     setRejectType(type);
 
@@ -176,9 +131,7 @@ function Page() {
     setRejectionRemark("");
   };
 
-  
   // CLOSE REJECT MODAL
- 
 
   const closeRejectModal = () => {
     if (processingId) return;
@@ -188,9 +141,7 @@ function Page() {
     setRejectionRemark("");
   };
 
-  
   // REJECT REQUEST
-  
 
   const handleReject = async () => {
     if (!rejectingRequest || !rejectType) {
@@ -208,25 +159,13 @@ function Page() {
       setProcessingId(rejectingRequest._id);
 
       if (rejectType === "advance") {
-        const response = await rejectAdvance(
-          rejectingRequest._id,
-          remark,
-        );
+        const response = await rejectAdvance(rejectingRequest._id, remark);
 
-        toast.success(
-          response.message ||
-            "Advance request rejected successfully",
-        );
+        toast.success(response.message || "Advance request rejected successfully");
       } else {
-        const response = await rejectReimbursement(
-          rejectingRequest._id,
-          remark,
-        );
+        const response = await rejectReimbursement(rejectingRequest._id, remark);
 
-        toast.success(
-          response.message ||
-            "Reimbursement request rejected successfully",
-        );
+        toast.success(response.message || "Reimbursement request rejected successfully");
       }
 
       // Close modal
@@ -237,19 +176,13 @@ function Page() {
       // Reload latest data from backend
       await fetchRequests();
     } catch (error: any) {
-      
-      toast.error(
-        error.response?.data?.message ||
-          "Failed to reject request",
-      );
+      toast.error(error.response?.data?.message || "Failed to reject request");
     } finally {
       setProcessingId(null);
     }
   };
 
-  
   // EXPORT ADVANCE
-
 
   function exportAdvanceXlsx() {
     if (requests.length === 0) {
@@ -259,24 +192,15 @@ function Page() {
 
     exportToExcel(
       requests.map((r) => ({
-        EmployeeID:
-          typeof r.employee === "object"
-            ? r.employee.employeeId
-            : "-",
+        EmployeeID: typeof r.employee === "object" ? r.employee.employeeId : "-",
 
-        EmployeeName:
-          typeof r.employee === "object"
-            ? r.employee.fullName
-            : "-",
+        EmployeeName: typeof r.employee === "object" ? r.employee.fullName : "-",
 
         Amount: r.amount,
 
         Status: r.status,
 
-        RejectionRemark:
-          r.status === "Rejected"
-            ? r.adminRemark || ""
-            : "",
+        RejectionRemark: r.status === "Rejected" ? r.adminRemark || "" : "",
 
         Applied: r.createdAt,
       })),
@@ -284,34 +208,22 @@ function Page() {
       "Advance Amount",
     );
 
-    toast.success(
-      "Advance requests exported successfully",
-    );
+    toast.success("Advance requests exported successfully");
   }
 
- 
   // EXPORT REIMBURSEMENT
-  
 
   function exportReimbursementXlsx() {
     if (reimbursementRequests.length === 0) {
-      toast.warning(
-        "No reimbursement requests to export",
-      );
+      toast.warning("No reimbursement requests to export");
       return;
     }
 
     exportToExcel(
       reimbursementRequests.map((r) => ({
-        EmployeeID:
-          typeof r.employee === "object"
-            ? r.employee.employeeId
-            : "-",
+        EmployeeID: typeof r.employee === "object" ? r.employee.employeeId : "-",
 
-        EmployeeName:
-          typeof r.employee === "object"
-            ? r.employee.fullName
-            : "-",
+        EmployeeName: typeof r.employee === "object" ? r.employee.fullName : "-",
 
         Amount: r.amount,
 
@@ -319,10 +231,7 @@ function Page() {
 
         Status: r.status,
 
-        RejectionRemark:
-          r.status === "Rejected"
-            ? r.adminRemark || ""
-            : "",
+        RejectionRemark: r.status === "Rejected" ? r.adminRemark || "" : "",
 
         Applied: r.createdAt,
       })),
@@ -330,14 +239,10 @@ function Page() {
       "Reimbursement",
     );
 
-    toast.success(
-      "Reimbursement requests exported successfully",
-    );
+    toast.success("Reimbursement requests exported successfully");
   }
 
-
   // LOADING
-
 
   if (loading) {
     return (
@@ -351,23 +256,15 @@ function Page() {
     );
   }
 
-  
   // PAGE
- 
 
   return (
     <>
-      
       {/* TABS */}
-      
 
       <div className="mb-4 flex gap-2">
         <button
-          className={`btn ${
-            activeTab === "advance"
-              ? "btn-primary"
-              : "btn-ghost"
-          }`}
+          className={`btn ${activeTab === "advance" ? "btn-primary" : "btn-ghost"}`}
           onClick={() => setActiveTab("advance")}
         >
           <span>Advance Amount</span>
@@ -380,14 +277,8 @@ function Page() {
         </button>
 
         <button
-          className={`btn ${
-            activeTab === "reimbursement"
-              ? "btn-primary"
-              : "btn-ghost"
-          }`}
-          onClick={() =>
-            setActiveTab("reimbursement")
-          }
+          className={`btn ${activeTab === "reimbursement" ? "btn-primary" : "btn-ghost"}`}
+          onClick={() => setActiveTab("reimbursement")}
         >
           <span>Reimbursement</span>
 
@@ -399,35 +290,23 @@ function Page() {
         </button>
       </div>
 
-     
       {/* ACTIVE TABLE CARD */}
-     
 
       <div className="card">
         <div className="card-header">
           <div className="flex items-center justify-between gap-4">
-            <h2>
-              {activeTab === "advance"
-                ? "Advance Amount History"
-                : "Reimbursement History"}
-            </h2>
+            <h2>{activeTab === "advance" ? "Advance Amount History" : "Reimbursement History"}</h2>
 
             <button
               className="btn btn-ghost"
-              onClick={
-                activeTab === "advance"
-                  ? exportAdvanceXlsx
-                  : exportReimbursementXlsx
-              }
+              onClick={activeTab === "advance" ? exportAdvanceXlsx : exportReimbursementXlsx}
             >
               ⬇ Export Excel
             </button>
           </div>
         </div>
 
-        
         {/* ADVANCE TABLE */}
-       
 
         {activeTab === "advance" && (
           <div className="history-table-wrap">
@@ -453,41 +332,27 @@ function Page() {
 
               <tbody>
                 {requests.map((item) => {
-                  const employee =
-                    typeof item.employee === "object"
-                      ? item.employee
-                      : null;
+                  const employee = typeof item.employee === "object" ? item.employee : null;
 
-                  const isProcessing =
-                    processingId === item._id;
+                  const isProcessing = processingId === item._id;
 
                   return (
                     <tr key={item._id}>
                       {/* Employee ID */}
 
-                      <td>
-                        {employee?.employeeId || "-"}
-                      </td>
+                      <td>{employee?.employeeId || "-"}</td>
 
                       {/* Employee Name */}
 
-                      <td>
-                        {employee?.fullName || "-"}
-                      </td>
+                      <td>{employee?.fullName || "-"}</td>
 
                       {/* Amount */}
 
-                      <td>
-                        ₹ {item.amount.toLocaleString()}
-                      </td>
+                      <td>₹ {item.amount.toLocaleString()}</td>
 
                       {/* Applied On */}
 
-                      <td>
-                        {new Date(
-                          item.createdAt,
-                        ).toLocaleDateString()}
-                      </td>
+                      <td>{new Date(item.createdAt).toLocaleDateString()}</td>
 
                       {/* Status */}
 
@@ -497,8 +362,7 @@ function Page() {
                             "badge " +
                             (item.status === "Approved"
                               ? "success"
-                              : item.status ===
-                                  "Rejected"
+                              : item.status === "Rejected"
                                 ? "danger"
                                 : "warn")
                           }
@@ -508,12 +372,11 @@ function Page() {
 
                         {/* Rejection Remark */}
 
-                        {item.status === "Rejected" &&
-                          item.adminRemark && (
-                            <p className="mt-1 max-w-[240px] text-xs text-gray-500">
-                              {item.adminRemark}
-                            </p>
-                          )}
+                        {item.status === "Rejected" && item.adminRemark && (
+                          <p className="mt-1 max-w-[240px] text-xs text-gray-500">
+                            {item.adminRemark}
+                          </p>
+                        )}
                       </td>
 
                       {/* Actions */}
@@ -535,14 +398,8 @@ function Page() {
                           >
                             <button
                               className="btn btn-sm btn-success"
-                              onClick={() =>
-                                handleApproveAdvance(
-                                  item._id,
-                                )
-                              }
-                              disabled={
-                                processingId !== null
-                              }
+                              onClick={() => handleApproveAdvance(item._id)}
+                              disabled={processingId !== null}
                             >
                               {isProcessing ? (
                                 <>
@@ -556,15 +413,8 @@ function Page() {
 
                             <button
                               className="btn btn-sm btn-danger"
-                              onClick={() =>
-                                openRejectModal(
-                                  item,
-                                  "advance",
-                                )
-                              }
-                              disabled={
-                                processingId !== null
-                              }
+                              onClick={() => openRejectModal(item, "advance")}
+                              disabled={processingId !== null}
                             >
                               Reject
                             </button>
@@ -577,10 +427,7 @@ function Page() {
 
                 {requests.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="empty"
-                    >
+                    <td colSpan={6} className="empty">
                       No advance amount requests
                     </td>
                   </tr>
@@ -590,9 +437,7 @@ function Page() {
           </div>
         )}
 
-        
         {/* REIMBURSEMENT TABLE */}
-        
 
         {activeTab === "reimbursement" && (
           <div className="history-table-wrap">
@@ -619,33 +464,23 @@ function Page() {
 
               <tbody>
                 {reimbursementRequests.map((item) => {
-                  const employee =
-                    typeof item.employee === "object"
-                      ? item.employee
-                      : null;
+                  const employee = typeof item.employee === "object" ? item.employee : null;
 
-                  const isProcessing =
-                    processingId === item._id;
+                  const isProcessing = processingId === item._id;
 
                   return (
                     <tr key={item._id}>
                       {/* Employee ID */}
 
-                      <td>
-                        {employee?.employeeId || "-"}
-                      </td>
+                      <td>{employee?.employeeId || "-"}</td>
 
                       {/* Employee Name */}
 
-                      <td>
-                        {employee?.fullName || "-"}
-                      </td>
+                      <td>{employee?.fullName || "-"}</td>
 
                       {/* Amount */}
 
-                      <td>
-                        ₹ {item.amount.toLocaleString()}
-                      </td>
+                      <td>₹ {item.amount.toLocaleString()}</td>
 
                       {/* Reason */}
 
@@ -653,11 +488,7 @@ function Page() {
 
                       {/* Applied On */}
 
-                      <td>
-                        {new Date(
-                          item.createdAt,
-                        ).toLocaleDateString()}
-                      </td>
+                      <td>{new Date(item.createdAt).toLocaleDateString()}</td>
 
                       {/* Status */}
 
@@ -667,8 +498,7 @@ function Page() {
                             "badge " +
                             (item.status === "Approved"
                               ? "success"
-                              : item.status ===
-                                  "Rejected"
+                              : item.status === "Rejected"
                                 ? "danger"
                                 : "warn")
                           }
@@ -678,12 +508,11 @@ function Page() {
 
                         {/* Rejection Remark */}
 
-                        {item.status === "Rejected" &&
-                          item.adminRemark && (
-                            <p className="mt-1 max-w-[240px] text-xs text-gray-500">
-                              {item.adminRemark}
-                            </p>
-                          )}
+                        {item.status === "Rejected" && item.adminRemark && (
+                          <p className="mt-1 max-w-[240px] text-xs text-gray-500">
+                            {item.adminRemark}
+                          </p>
+                        )}
                       </td>
 
                       {/* Actions */}
@@ -705,14 +534,8 @@ function Page() {
                           >
                             <button
                               className="btn btn-sm btn-success"
-                              onClick={() =>
-                                handleApproveReimbursement(
-                                  item._id,
-                                )
-                              }
-                              disabled={
-                                processingId !== null
-                              }
+                              onClick={() => handleApproveReimbursement(item._id)}
+                              disabled={processingId !== null}
                             >
                               {isProcessing ? (
                                 <>
@@ -726,15 +549,8 @@ function Page() {
 
                             <button
                               className="btn btn-sm btn-danger"
-                              onClick={() =>
-                                openRejectModal(
-                                  item,
-                                  "reimbursement",
-                                )
-                              }
-                              disabled={
-                                processingId !== null
-                              }
+                              onClick={() => openRejectModal(item, "reimbursement")}
+                              disabled={processingId !== null}
                             >
                               Reject
                             </button>
@@ -747,10 +563,7 @@ function Page() {
 
                 {reimbursementRequests.length === 0 && (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="empty"
-                    >
+                    <td colSpan={7} className="empty">
                       No reimbursement requests
                     </td>
                   </tr>
@@ -761,9 +574,8 @@ function Page() {
         )}
       </div>
 
-     
       {/* REJECT MODAL */}
-      
+
       {rejectingRequest && rejectType && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-4">
           <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl">
@@ -778,8 +590,7 @@ function Page() {
                 </h2>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  {typeof rejectingRequest.employee ===
-                  "object"
+                  {typeof rejectingRequest.employee === "object"
                     ? rejectingRequest.employee.fullName
                     : "Employee"}
                 </p>
@@ -799,26 +610,20 @@ function Page() {
 
             <div className="mb-5 rounded-lg bg-gray-50 p-3 text-sm">
               <div className="flex justify-between">
-                <span className="text-gray-500">
-                  Employee ID
-                </span>
+                <span className="text-gray-500">Employee ID</span>
 
                 <span className="font-medium text-gray-900">
-                  {typeof rejectingRequest.employee ===
-                  "object"
+                  {typeof rejectingRequest.employee === "object"
                     ? rejectingRequest.employee.employeeId
                     : "-"}
                 </span>
               </div>
 
               <div className="mt-2 flex justify-between">
-                <span className="text-gray-500">
-                  Amount
-                </span>
+                <span className="text-gray-500">Amount</span>
 
                 <span className="font-medium text-gray-900">
-                  ₹{" "}
-                  {rejectingRequest.amount.toLocaleString()}
+                  ₹ {rejectingRequest.amount.toLocaleString()}
                 </span>
               </div>
 
@@ -826,16 +631,10 @@ function Page() {
 
               {rejectType === "reimbursement" && (
                 <div className="mt-2 flex items-start justify-between gap-4">
-                  <span className="text-gray-500">
-                    Reason
-                  </span>
+                  <span className="text-gray-500">Reason</span>
 
                   <span className="text-right font-medium text-gray-900">
-                    {
-                      (
-                        rejectingRequest as ReimbursementRequest
-                      ).reason
-                    }
+                    {(rejectingRequest as ReimbursementRequest).reason}
                   </span>
                 </div>
               )}
@@ -854,9 +653,7 @@ function Page() {
               <textarea
                 id="rejectionRemark"
                 value={rejectionRemark}
-                onChange={(e) =>
-                  setRejectionRemark(e.target.value)
-                }
+                onChange={(e) => setRejectionRemark(e.target.value)}
                 rows={4}
                 placeholder={
                   rejectType === "advance"
@@ -883,10 +680,7 @@ function Page() {
               <button
                 type="button"
                 onClick={handleReject}
-                disabled={
-                  processingId !== null ||
-                  !rejectionRemark.trim()
-                }
+                disabled={processingId !== null || !rejectionRemark.trim()}
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {processingId !== null ? (

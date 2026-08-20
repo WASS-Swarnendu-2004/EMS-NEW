@@ -1,6 +1,5 @@
 type NewField = {
   label: string;
-  name: string;
   type: string;
 };
 
@@ -21,7 +20,7 @@ export function CustomizeEmployeeForm({
         Customize Employee Form
       </h3>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <input
           className="input"
           placeholder="Field Label"
@@ -30,18 +29,6 @@ export function CustomizeEmployeeForm({
             setNewField({
               ...newField,
               label: e.target.value,
-            })
-          }
-        />
-
-        <input
-          className="input"
-          placeholder="Field Name"
-          value={newField.name}
-          onChange={(e) =>
-            setNewField({
-              ...newField,
-              name: e.target.value,
             })
           }
         />

@@ -14,7 +14,6 @@ import { EmployeeFormFields } from "./EmployeeFormFields";
 
 type NewField = {
   label: string;
-  name: string;
   type: string;
 };
 
@@ -39,9 +38,15 @@ type EmployeeFormModalProps = {
   onOpenDesignationModal: () => void;
 
   onNewFieldChange: (value: NewField) => void;
+
   onFieldChange: (
     fieldName: string,
     value: string | number,
+  ) => void;
+
+  onReorder: (
+    draggedId: string,
+    targetId: string,
   ) => void;
 };
 
@@ -65,6 +70,7 @@ export function EmployeeFormModal({
   onOpenDesignationModal,
   onNewFieldChange,
   onFieldChange,
+  onReorder
 }: EmployeeFormModalProps) {
   const [error, setError] = useState("");
 
@@ -326,6 +332,7 @@ export function EmployeeFormModal({
               onOpenDesignationModal
             }
             onChange={handleChange}
+            onReorder={onReorder}
           />
 
           {/* Footer */}
