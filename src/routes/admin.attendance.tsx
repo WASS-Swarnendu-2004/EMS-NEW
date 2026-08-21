@@ -1,37 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { getAttendance, type Attendance } from "@/api/attendance";
 import { exportToExcel } from "@/lib/excel";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 import { getEmployees, type Employee } from "@/api/employee";
 
-export const Route = createFileRoute("/admin/attendance")({ component: Page });
+export const Route = createFileRoute("/admin/attendance")({
+  component: Page,
+});
 
 function Page() {
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const [period, setPeriod] = useState<"today" | "week" | "month" | "custom">("today");
+  const [period, setPeriod] = useState<
+    "today" | "week" | "month" | "custom"
+  >("today");
 
   const [empId, setEmpId] = useState<string>("all");
+
+  // Department filter
+  const [department, setDepartment] = useState<string>("all");
 
   const fetchAttendance = async () => {
     setLoading(true);
 
     try {
       const data = await getAttendance();
-
       setAttendance(data);
-
-      // Optional
-      // toast.success("Attendance loaded successfully");
     } catch (error) {
       console.error("Attendance fetch error:", error);
-
       toast.error("Failed to load attendance.");
     } finally {
       setLoading(false);
@@ -50,7 +53,6 @@ function Page() {
       // Fetch remaining pages
       for (let page = 2; page <= firstPage.totalPages; page++) {
         const data = await getEmployees(page);
-
         allEmployees = [...allEmployees, ...data.employees];
       }
 
@@ -60,13 +62,26 @@ function Page() {
     } catch (err: any) {
       console.error(err);
 
-      toast.error(err.response?.data?.message || "Failed to load employees");
+      toast.error(
+        err.response?.data?.message || "Failed to load employees"
+      );
     }
   }
 
   useEffect(() => {
     Promise.all([fetchAttendance(), fetchEmployees()]);
   }, []);
+
+  // Get unique departments from employees
+  const departments = useMemo(() => {
+    return Array.from(
+      new Set(
+        employees
+          .map((employee) => employee.department)
+          .filter(Boolean)
+      )
+    ).sort();
+  }, [employees]);
 
   const today = new Date();
 
@@ -79,10 +94,20 @@ function Page() {
       const attendanceDate = new Date(a.date);
       attendanceDate.setHours(0, 0, 0, 0);
 
-      const employeeMatch = empId === "all" || a.employee._id === empId;
+      // Employee filter
+      const employeeMatch =
+        empId === "all" || a.employee._id === empId;
 
       if (!employeeMatch) return false;
 
+      // Department filter
+      const departmentMatch =
+        department === "all" ||
+        a.employee.department === department;
+
+      if (!departmentMatch) return false;
+
+      // Date filter
       switch (period) {
         case "today":
           return attendanceDate.getTime() === today.getTime();
@@ -94,19 +119,19 @@ function Page() {
           return attendanceDate >= weekStart;
         }
 
-        case "month": {
+        case "month":
           return (
             attendanceDate.getMonth() === today.getMonth() &&
             attendanceDate.getFullYear() === today.getFullYear()
           );
-        }
 
         case "custom": {
           if (!fromDate || !toDate) return true;
 
           const from = new Date(fromDate);
-          const to = new Date(toDate);
+          from.setHours(0, 0, 0, 0);
 
+          const to = new Date(toDate);
           to.setHours(23, 59, 59, 999);
 
           return attendanceDate >= from && attendanceDate <= to;
@@ -116,7 +141,11 @@ function Page() {
           return true;
       }
     })
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    .sort(
+      (a, b) =>
+        new Date(b.date).getTime() -
+        new Date(a.date).getTime()
+    );
 
   function exportXlsx() {
     exportToExcel(
@@ -131,15 +160,19 @@ function Page() {
 
         Status: a.status,
 
-        CheckIn: a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : "—",
+        CheckIn: a.checkIn
+          ? new Date(a.checkIn).toLocaleTimeString()
+          : "—",
 
-        CheckOut: a.checkOut ? new Date(a.checkOut).toLocaleTimeString() : "—",
+        CheckOut: a.checkOut
+          ? new Date(a.checkOut).toLocaleTimeString()
+          : "—",
 
         WorkingHours: a.workingHours,
       })),
 
       `attendance-${period}.xlsx`,
-      "Attendance",
+      "Attendance"
     );
   }
 
@@ -147,7 +180,10 @@ function Page() {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
-        <p className="text-gray-500 text-lg font-medium">Loading attendance...</p>
+
+        <p className="text-gray-500 text-lg font-medium">
+          Loading attendance...
+        </p>
       </div>
     );
   }
@@ -155,21 +191,28 @@ function Page() {
   return (
     <>
       <div className="toolbar">
+        {/* Period Filter */}
         <select
           className="select"
           value={period}
-          onChange={(e) => setPeriod(e.target.value as "today" | "week" | "month" | "custom")}
+          onChange={(e) =>
+            setPeriod(
+              e.target.value as
+                | "today"
+                | "week"
+                | "month"
+                | "custom"
+            )
+          }
           style={{ width: 160 }}
         >
           <option value="today">Today</option>
-
           <option value="week">This Week</option>
-
           <option value="month">This month</option>
-
           <option value="custom">Custom Date Range</option>
         </select>
 
+        {/* Custom Date Range */}
         {period === "custom" && (
           <>
             <input
@@ -187,6 +230,8 @@ function Page() {
             />
           </>
         )}
+
+        {/* Employee Filter */}
         <select
           className="select"
           value={empId}
@@ -202,11 +247,32 @@ function Page() {
           ))}
         </select>
 
+        {/* Department Filter */}
+        <select
+          className="select"
+          value={department}
+          onChange={(e) => setDepartment(e.target.value)}
+          style={{ width: 200 }}
+        >
+          <option value="all">All Departments</option>
+
+          {departments.map((dept) => (
+            <option key={dept} value={dept}>
+              {dept}
+            </option>
+          ))}
+        </select>
+
         <span className="spacer" />
 
-        <span className="muted">{filtered.length} records</span>
+        <span className="muted">
+          {filtered.length} records
+        </span>
 
-        <button className="btn btn-ghost" onClick={exportXlsx}>
+        <button
+          className="btn btn-ghost"
+          onClick={exportXlsx}
+        >
           ⬇ Export Excel
         </button>
       </div>
@@ -216,71 +282,91 @@ function Page() {
           <thead>
             <tr>
               <th>Date</th>
-
               <th>Employee</th>
-
+              <th>Department</th>
               <th>Status</th>
-
               <th>Check-in</th>
-
               <th>Check-out</th>
-
               <th>Working Hours</th>
             </tr>
           </thead>
 
           <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={6} className="empty">
-                  Loading attendance...
+            {filtered.map((a) => (
+              <tr
+                key={a._id}
+                className={
+                  a.status?.trim().toLowerCase() === "leave"
+                    ? "leave-row"
+                    : ""
+                }
+              >
+                {/* Date */}
+                <td>
+                  {new Date(a.date).toLocaleDateString()}
+                </td>
+
+                {/* Employee */}
+                <td>
+                  {a.employee ? (
+                    <>
+                      {a.employee.fullName}
+
+                      <br />
+
+                      <small>{a.employee.employeeId}</small>
+                    </>
+                  ) : (
+                    <span className="muted">
+                      Deleted Employee
+                    </span>
+                  )}
+                </td>
+
+                {/* Department */}
+                <td>
+                  {a.employee?.department || (
+                    <span className="muted">—</span>
+                  )}
+                </td>
+
+                {/* Status */}
+                <td>
+                  <span className="badge purple">
+                    {a.status}
+                  </span>
+                </td>
+
+                {/* Check-in */}
+                <td>
+                  {a.checkIn
+                    ? new Date(
+                        a.checkIn
+                      ).toLocaleTimeString()
+                    : "—"}
+                </td>
+
+                {/* Check-out */}
+                <td>
+                  {a.checkOut ? (
+                    new Date(
+                      a.checkOut
+                    ).toLocaleTimeString()
+                  ) : (
+                    <span className="muted">—</span>
+                  )}
+                </td>
+
+                {/* Working Hours */}
+                <td>
+                  {a.workingHours.toFixed(2)} hrs
                 </td>
               </tr>
-            )}
+            ))}
 
-            {!loading &&
-              filtered.map((a) => (
-                <tr
-                  key={a._id}
-                  className={a.status?.trim().toLowerCase() === "leave" ? "leave-row" : ""}
-                >
-                  <td>{new Date(a.date).toLocaleDateString()}</td>
-
-                  <td>
-                    {a.employee ? (
-                      <>
-                        {a.employee.fullName}
-
-                        <br />
-
-                        <small>{a.employee.employeeId}</small>
-                      </>
-                    ) : (
-                      <span className="muted">Deleted Employee</span>
-                    )}
-                  </td>
-
-                  <td>
-                    <span className="badge purple">{a.status}</span>
-                  </td>
-
-                  <td>{a.checkIn ? new Date(a.checkIn).toLocaleTimeString() : "—"}</td>
-
-                  <td>
-                    {a.checkOut ? (
-                      new Date(a.checkOut).toLocaleTimeString()
-                    ) : (
-                      <span className="muted">—</span>
-                    )}
-                  </td>
-
-                  <td>{a.workingHours.toFixed(2)} hrs</td>
-                </tr>
-              ))}
-
-            {!loading && filtered.length === 0 && (
+            {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="empty">
+                <td colSpan={7} className="empty">
                   No attendance for this period
                 </td>
               </tr>

@@ -1,5 +1,11 @@
 import api from "./axios";
 
+
+export interface CustomField {
+  label: string;
+  value: string;
+}
+
 export interface Employee {
   _id: string;
   employeeId?: string;
@@ -21,6 +27,8 @@ export interface Employee {
   status: "Active" | "Inactive";
 
   profileImage?: string;
+
+  customFields?: CustomField[];
 }
 
 export interface CreateEmployeePayload

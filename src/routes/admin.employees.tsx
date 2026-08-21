@@ -181,42 +181,115 @@ function Page() {
   }
 
   async function openEdit(e: Employee) {
-    setEditing(e);
+  setEditing(e);
 
-    setPhotoFile(null);
+  setPhotoFile(null);
 
-    if (e.profileImage) {
-      setPhotoPreview(
-        `https://fresh-01.onrender.com/${e.profileImage.replace(
-          /^src\//,
-          "",
-        )}`,
-      );
-    } else {
-      setPhotoPreview(null);
-    }
-
-    setForm({
-      fullName: e.fullName,
-      email: e.email,
-      password: "",
-      phone: e.phone,
-      designation: e.designation,
-      department: e.department,
-      salary: e.salary,
-      joiningDate: e.joiningDate.slice(0, 10),
-      idProof: e.idProof,
-      pan: e.pan,
-      bankAccount: e.bankAccount,
-      emergencyContact: e.emergencyContact,
-      address: e.address,
-      status: e.status,
-    });
-
-    await fetchRoles();
-
-    setOpen(true);
+  if (e.profileImage) {
+    setPhotoPreview(
+      `https://fresh-01.onrender.com/${e.profileImage.replace(
+        /^src\//,
+        "",
+      )}`,
+    );
+  } else {
+    setPhotoPreview(null);
   }
+
+  // -----------------------------------------
+  // Standard employee fields
+  // -----------------------------------------
+  const standardForm = {
+    fullName: e.fullName,
+    email: e.email,
+    password: "",
+    phone: e.phone,
+    designation: e.designation,
+    department: e.department,
+    salary: e.salary,
+    joiningDate: e.joiningDate.slice(0, 10),
+    idProof: e.idProof,
+    pan: e.pan,
+    bankAccount: e.bankAccount,
+    emergencyContact: e.emergencyContact,
+    address: e.address,
+    status: e.status,
+  };
+
+  // -----------------------------------------
+  // Load saved custom fields
+  // -----------------------------------------
+  let customValues: Record<string, string> = {};
+
+  if (e.customFields?.length) {
+    e.customFields.forEach((field) => {
+      const fieldName = field.label
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "_")
+        .replace(/[^a-z0-9_]/g, "");
+
+      if (fieldName) {
+        customValues[fieldName] = field.value;
+      }
+    });
+  }
+
+  // -----------------------------------------
+  // Create EmployeeField objects for
+  // saved custom fields
+  // -----------------------------------------
+  const customEmployeeFields: EmployeeField[] =
+    (e.customFields ?? [])
+      .map((field) => {
+        const fieldName = field.label
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, "_")
+          .replace(/[^a-z0-9_]/g, "");
+
+        if (!fieldName) {
+          return null;
+        }
+
+        return {
+          id: `saved-${fieldName}`,
+          label: field.label,
+          name: fieldName,
+          type: "text",
+          removable: true,
+        };
+      })
+      .filter(Boolean) as EmployeeField[];
+
+  // -----------------------------------------
+  // Add saved custom fields to existing fields
+  // without duplicating them
+  // -----------------------------------------
+  setFields((prev) => {
+    const existingNames = new Set(
+      prev.map((field) => field.name),
+    );
+
+    const newFields = customEmployeeFields.filter(
+      (field) => !existingNames.has(field.name),
+    );
+
+    return [...prev, ...newFields];
+  });
+
+  // -----------------------------------------
+  // Put custom values into form
+  // -----------------------------------------
+  setForm({
+    ...standardForm,
+    ...customValues,
+  } as CreateEmployeePayload);
+
+  await fetchRoles();
+
+  setOpen(true);
+}
 
   function handlePhotoChange(file: File | null) {
     setPhotoFile(file);
@@ -320,17 +393,32 @@ function handleNewFieldChange(value: {
 
       setSaving(true);
 
-      if (editing) {
+const customFields = fields
+  .filter((field) => field.removable)
+  .map((field) => ({
+    label: field.label,
+    value: String(
+      (form as Record<string, unknown>)[field.name] ?? "",
+    ),
+  }))
+  .filter((field) => field.value.trim() !== "");
+
+const payload = {
+  ...form,
+  customFields,
+};
+
+if (editing) {
         if (photoFile) {
           await updateEmployeeWithPhoto(
             editing._id,
-            form,
+            payload,
             photoFile,
           );
         } else {
           await updateEmployee(
             editing._id,
-            form,
+            payload,
           );
         }
 
@@ -340,11 +428,11 @@ function handleNewFieldChange(value: {
       } else {
         if (photoFile) {
           await createEmployeeWithPhoto(
-            form,
+            payload,
             photoFile,
           );
         } else {
-          await createEmployee(form);
+          await createEmployee(payload);
         }
 
         toast.success(
