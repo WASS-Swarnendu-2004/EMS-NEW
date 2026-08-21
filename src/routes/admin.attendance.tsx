@@ -24,8 +24,11 @@ function Page() {
 
   const [empId, setEmpId] = useState<string>("all");
 
-  // Department filter
   const [department, setDepartment] = useState<string>("all");
+
+  // --------------------------------------------------
+  // FETCH ATTENDANCE
+  // --------------------------------------------------
 
   const fetchAttendance = async () => {
     setLoading(true);
@@ -41,38 +44,47 @@ function Page() {
     }
   };
 
+  // --------------------------------------------------
+  // FETCH EMPLOYEES
+  // --------------------------------------------------
+
   async function fetchEmployees() {
     try {
       const firstPage = await getEmployees(1);
 
-      console.log("TOTAL EMPLOYEES:", firstPage.totalEmployees);
-      console.log("TOTAL PAGES:", firstPage.totalPages);
-
       let allEmployees = [...firstPage.employees];
 
-      // Fetch remaining pages
-      for (let page = 2; page <= firstPage.totalPages; page++) {
+      for (
+        let page = 2;
+        page <= firstPage.totalPages;
+        page++
+      ) {
         const data = await getEmployees(page);
         allEmployees = [...allEmployees, ...data.employees];
       }
-
-      console.log("ALL EMPLOYEES:", allEmployees.length);
 
       setEmployees(allEmployees);
     } catch (err: any) {
       console.error(err);
 
       toast.error(
-        err.response?.data?.message || "Failed to load employees"
+        err.response?.data?.message ||
+          "Failed to load employees"
       );
     }
   }
 
   useEffect(() => {
-    Promise.all([fetchAttendance(), fetchEmployees()]);
+    Promise.all([
+      fetchAttendance(),
+      fetchEmployees(),
+    ]);
   }, []);
 
-  // Get unique departments from employees
+  // --------------------------------------------------
+  // DEPARTMENTS
+  // --------------------------------------------------
+
   const departments = useMemo(() => {
     return Array.from(
       new Set(
@@ -82,6 +94,10 @@ function Page() {
       )
     ).sort();
   }, [employees]);
+
+  // --------------------------------------------------
+  // DATE FILTER
+  // --------------------------------------------------
 
   const today = new Date();
 
@@ -96,7 +112,8 @@ function Page() {
 
       // Employee filter
       const employeeMatch =
-        empId === "all" || a.employee._id === empId;
+        empId === "all" ||
+        a.employee._id === empId;
 
       if (!employeeMatch) return false;
 
@@ -110,19 +127,27 @@ function Page() {
       // Date filter
       switch (period) {
         case "today":
-          return attendanceDate.getTime() === today.getTime();
+          return (
+            attendanceDate.getTime() ===
+            today.getTime()
+          );
 
         case "week": {
           const weekStart = new Date(today);
-          weekStart.setDate(today.getDate() - today.getDay());
+
+          weekStart.setDate(
+            today.getDate() - today.getDay()
+          );
 
           return attendanceDate >= weekStart;
         }
 
         case "month":
           return (
-            attendanceDate.getMonth() === today.getMonth() &&
-            attendanceDate.getFullYear() === today.getFullYear()
+            attendanceDate.getMonth() ===
+              today.getMonth() &&
+            attendanceDate.getFullYear() ===
+              today.getFullYear()
           );
 
         case "custom": {
@@ -134,7 +159,10 @@ function Page() {
           const to = new Date(toDate);
           to.setHours(23, 59, 59, 999);
 
-          return attendanceDate >= from && attendanceDate <= to;
+          return (
+            attendanceDate >= from &&
+            attendanceDate <= to
+          );
         }
 
         default:
@@ -147,34 +175,96 @@ function Page() {
         new Date(a.date).getTime()
     );
 
+  // --------------------------------------------------
+  // FORMAT TIME
+  // --------------------------------------------------
+
+  function formatTime(date: string | null) {
+    if (!date) return "—";
+
+    return new Date(date).toLocaleTimeString(
+      "en-IN",
+      {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      }
+    );
+  }
+
+  // --------------------------------------------------
+  // EXPORT
+  // --------------------------------------------------
+
   function exportXlsx() {
+    if (filtered.length === 0) {
+      toast.warning(
+        "No attendance records to export"
+      );
+      return;
+    }
+
     exportToExcel(
       filtered.map((a) => ({
-        Date: new Date(a.date).toLocaleDateString(),
+        Date: new Date(
+          a.date
+        ).toLocaleDateString(),
 
-        Employee: a.employee?.fullName ?? "Deleted Employee",
+        Employee:
+          a.employee?.fullName ??
+          "Deleted Employee",
 
-        EmployeeId: a.employee?.employeeId ?? "-",
+        EmployeeId:
+          a.employee?.employeeId ?? "-",
 
-        Department: a.employee?.department ?? "-",
+        Department:
+          a.employee?.department ?? "-",
+
+        Designation:
+          (a.employee as any)?.designation ?? "-",
 
         Status: a.status,
 
+        Mode: a.mode,
+
         CheckIn: a.checkIn
-          ? new Date(a.checkIn).toLocaleTimeString()
+          ? formatTime(a.checkIn)
           : "—",
+
+        CheckInRemark:
+          a.isLateCheckIn
+            ? a.checkInRemark || "—"
+            : "—",
 
         CheckOut: a.checkOut
-          ? new Date(a.checkOut).toLocaleTimeString()
+          ? formatTime(a.checkOut)
           : "—",
 
-        WorkingHours: a.workingHours,
+        CheckOutRemark:
+          a.isEarlyCheckOut
+            ? a.checkOutRemark || "—"
+            : "—",
+
+        WorkingMinutes:
+          a.workingMinutes ?? 0,
+
+        PaidMinutes:
+          a.paidMinutes ?? 0,
       })),
 
       `attendance-${period}.xlsx`,
       "Attendance"
     );
+
+    toast.success(
+      "Attendance exported successfully"
+    );
   }
+
+  // --------------------------------------------------
+  // LOADING
+  // --------------------------------------------------
 
   if (loading) {
     return (
@@ -188,10 +278,19 @@ function Page() {
     );
   }
 
+  // --------------------------------------------------
+  // UI
+  // --------------------------------------------------
+
   return (
     <>
+      {/* ------------------------------------------- */}
+      {/* FILTER TOOLBAR */}
+      {/* ------------------------------------------- */}
+
       <div className="toolbar">
-        {/* Period Filter */}
+
+        {/* Period */}
         <select
           className="select"
           value={period}
@@ -206,58 +305,87 @@ function Page() {
           }
           style={{ width: 160 }}
         >
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This month</option>
-          <option value="custom">Custom Date Range</option>
+          <option value="today">
+            Today
+          </option>
+
+          <option value="week">
+            This Week
+          </option>
+
+          <option value="month">
+            This Month
+          </option>
+
+          <option value="custom">
+            Custom Date Range
+          </option>
         </select>
 
-        {/* Custom Date Range */}
+        {/* Custom dates */}
         {period === "custom" && (
           <>
             <input
               type="date"
               className="input"
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
+              onChange={(e) =>
+                setFromDate(e.target.value)
+              }
             />
 
             <input
               type="date"
               className="input"
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
+              onChange={(e) =>
+                setToDate(e.target.value)
+              }
             />
           </>
         )}
 
-        {/* Employee Filter */}
+        {/* Employee */}
         <select
           className="select"
           value={empId}
-          onChange={(e) => setEmpId(e.target.value)}
+          onChange={(e) =>
+            setEmpId(e.target.value)
+          }
           style={{ width: 220 }}
         >
-          <option value="all">All Employees</option>
+          <option value="all">
+            All Employees
+          </option>
 
           {employees.map((employee) => (
-            <option key={employee._id} value={employee._id}>
+            <option
+              key={employee._id}
+              value={employee._id}
+            >
               {employee.fullName}
             </option>
           ))}
         </select>
 
-        {/* Department Filter */}
+        {/* Department */}
         <select
           className="select"
           value={department}
-          onChange={(e) => setDepartment(e.target.value)}
+          onChange={(e) =>
+            setDepartment(e.target.value)
+          }
           style={{ width: 200 }}
         >
-          <option value="all">All Departments</option>
+          <option value="all">
+            All Departments
+          </option>
 
           {departments.map((dept) => (
-            <option key={dept} value={dept}>
+            <option
+              key={dept}
+              value={dept}
+            >
               {dept}
             </option>
           ))}
@@ -277,17 +405,30 @@ function Page() {
         </button>
       </div>
 
+      {/* ------------------------------------------- */}
+      {/* TABLE */}
+      {/* ------------------------------------------- */}
+
       <div className="table-wrap">
         <table className="table">
+
           <thead>
             <tr>
               <th>Date</th>
+
               <th>Employee</th>
+
               <th>Department</th>
+
               <th>Status</th>
+
               <th>Check-in</th>
+
               <th>Check-out</th>
-              <th>Working Hours</th>
+
+              <th>Working Minutes</th>
+
+              <th>Paid Minutes</th>
             </tr>
           </thead>
 
@@ -296,25 +437,35 @@ function Page() {
               <tr
                 key={a._id}
                 className={
-                  a.status?.trim().toLowerCase() === "leave"
+                  a.status
+                    ?.trim()
+                    .toLowerCase() ===
+                  "leave"
                     ? "leave-row"
                     : ""
                 }
               >
+
                 {/* Date */}
                 <td>
-                  {new Date(a.date).toLocaleDateString()}
+                  {new Date(
+                    a.date
+                  ).toLocaleDateString()}
                 </td>
 
                 {/* Employee */}
                 <td>
                   {a.employee ? (
                     <>
-                      {a.employee.fullName}
+                      <strong>
+                        {a.employee.fullName}
+                      </strong>
 
                       <br />
 
-                      <small>{a.employee.employeeId}</small>
+                      <small>
+                        {a.employee.employeeId}
+                      </small>
                     </>
                   ) : (
                     <span className="muted">
@@ -326,7 +477,9 @@ function Page() {
                 {/* Department */}
                 <td>
                   {a.employee?.department || (
-                    <span className="muted">—</span>
+                    <span className="muted">
+                      —
+                    </span>
                   )}
                 </td>
 
@@ -337,41 +490,90 @@ function Page() {
                   </span>
                 </td>
 
-                {/* Check-in */}
+                {/* Check In */}
                 <td>
-                  {a.checkIn
-                    ? new Date(
-                        a.checkIn
-                      ).toLocaleTimeString()
-                    : "—"}
-                </td>
+                  {a.checkIn ? (
+                    <div>
+                      <div>
+                        {formatTime(
+                          a.checkIn
+                        )}
+                      </div>
 
-                {/* Check-out */}
-                <td>
-                  {a.checkOut ? (
-                    new Date(
-                      a.checkOut
-                    ).toLocaleTimeString()
+                      {a.isLateCheckIn &&
+                        a.checkInRemark && (
+                          <small
+                            style={{
+                              display: "block",
+                              marginTop: "4px",
+                              color: "#dc2626",
+                            }}
+                          >
+                            Late:{" "}
+                            {a.checkInRemark}
+                          </small>
+                        )}
+                    </div>
                   ) : (
-                    <span className="muted">—</span>
+                    "—"
                   )}
                 </td>
 
-                {/* Working Hours */}
+                {/* Check Out */}
                 <td>
-                  {a.workingHours.toFixed(2)} hrs
+                  {a.checkOut ? (
+                    <div>
+                      <div>
+                        {formatTime(
+                          a.checkOut
+                        )}
+                      </div>
+
+                      {a.isEarlyCheckOut &&
+                        a.checkOutRemark && (
+                          <small
+                            style={{
+                              display: "block",
+                              marginTop: "4px",
+                              color: "#dc2626",
+                            }}
+                          >
+                            Early:{" "}
+                            {a.checkOutRemark}
+                          </small>
+                        )}
+                    </div>
+                  ) : (
+                    <span className="muted">
+                      —
+                    </span>
+                  )}
+                </td>
+
+                {/* Working Minutes */}
+                <td>
+                  {a.workingMinutes ?? 0} min
+                </td>
+
+                {/* Paid Minutes */}
+                <td>
+                  {a.paidMinutes ?? 0} min
                 </td>
               </tr>
             ))}
 
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="empty">
+                <td
+                  colSpan={8}
+                  className="empty"
+                >
                   No attendance for this period
                 </td>
               </tr>
             )}
           </tbody>
+
         </table>
       </div>
     </>

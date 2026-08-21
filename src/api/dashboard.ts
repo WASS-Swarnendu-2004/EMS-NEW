@@ -14,7 +14,17 @@ export interface DashboardResponse {
     checkedIn: boolean;
     checkIn?: string;
     checkOut?: string;
-    mode?: "office" | "wfh";
+    workingMinutes?: number;
+    paidMinutes?: number;
+    workingHours?: number;
+    status?: string;
+    mode?: "Office" | "WFH";
+
+    isLateCheckIn?: boolean;
+    checkInRemark?: string;
+
+    isEarlyCheckOut?: boolean;
+    checkOutRemark?: string;
   } | null;
 
   todayPlan: {
@@ -30,19 +40,29 @@ export interface DashboardResponse {
     fromDate: string;
     toDate: string;
   };
-}
+};
 
+// Get Dashboard
 export const getDashboard = async (): Promise<DashboardResponse> => {
   const { data } = await api.get<DashboardResponse>("/dashboard");
+
   return data;
 };
 
 // Check In
-export const checkIn = async (mode: "office" | "wfh", remark?: string) => {
+export const checkIn = async (
+  mode: "office" | "wfh",
+  checkInRemark?: string
+) => {
   try {
     const response = await api.post("/attendance/check-in", {
       mode: mode === "office" ? "Office" : "WFH",
-      ...(remark ? { remark } : {}),
+
+      ...(checkInRemark
+        ? {
+            checkInRemark,
+          }
+        : {}),
     });
 
     return response.data;
@@ -53,10 +73,14 @@ export const checkIn = async (mode: "office" | "wfh", remark?: string) => {
 };
 
 // Check Out
-export const checkOut = async (remark?: string) => {
+export const checkOut = async (checkOutRemark?: string) => {
   try {
     const response = await api.post("/attendance/check-out", {
-      ...(remark ? { remark } : {}),
+      ...(checkOutRemark
+        ? {
+            checkOutRemark,
+          }
+        : {}),
     });
 
     return response.data;

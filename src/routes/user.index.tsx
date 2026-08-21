@@ -13,15 +13,24 @@ import { toast } from "react-toastify";
 import { getMyProjects, type Project } from "@/api/project";
 import { saveWorkStatus } from "@/api/workStatus";
 
-export const Route = createFileRoute("/user/")({ component: Page });
+export const Route = createFileRoute("/user/")({
+  component: Page,
+});
 
-type RemarkType = "late-checkin" | "early-checkout" | null;
+type RemarkType =
+  | "late-checkin"
+  | "early-checkout"
+  | null;
+
+const MAX_REMARK_LENGTH = 40;
 
 function Page() {
   const { session } = useAuth();
+
   const empId = session!.id;
 
-  const [mode, setMode] = useState<"office" | "wfh">("office");
+  const [mode, setMode] =
+    useState<"office" | "wfh">("office");
 
   const [plan, setPlan] = useState("");
   const [status, setStatus] = useState("");
@@ -29,17 +38,36 @@ function Page() {
 
   const t = today();
 
-  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [dashboard, setDashboard] =
+    useState<DashboardResponse | null>(null);
 
-  const [loading, setLoading] = useState(true);
-  const [checkingIn, setCheckingIn] = useState(false);
-  const [checkingOut, setCheckingOut] = useState(false);
-  const [savingWork, setSavingWork] = useState(false);
+  const [projects, setProjects] =
+    useState<Project[]>([]);
 
-  // Remark modal state
-  const [remarkType, setRemarkType] = useState<RemarkType>(null);
+  const [loading, setLoading] =
+    useState(true);
+
+  const [checkingIn, setCheckingIn] =
+    useState(false);
+
+  const [checkingOut, setCheckingOut] =
+    useState(false);
+
+  const [savingWork, setSavingWork] =
+    useState(false);
+
+  // --------------------------------------------------
+  // REMARK STATE
+  // --------------------------------------------------
+
+  const [remarkType, setRemarkType] =
+    useState<RemarkType>(null);
+
   const [remark, setRemark] = useState("");
+
+  // --------------------------------------------------
+  // LOAD DATA
+  // --------------------------------------------------
 
   useEffect(() => {
     loadData();
@@ -49,7 +77,10 @@ function Page() {
     try {
       setLoading(true);
 
-      const [dashboardData, projectData] = await Promise.all([
+      const [
+        dashboardData,
+        projectData,
+      ] = await Promise.all([
         getDashboard(),
         getMyProjects(),
       ]);
@@ -57,16 +88,30 @@ function Page() {
       setDashboard(dashboardData);
       setProjects(projectData);
 
-      setPlan(dashboardData.todayPlan?.plan ?? "");
-      setStatus(dashboardData.todayPlan?.status ?? "");
-      setProjectId(dashboardData.todayPlan?.projectId ?? "");
+      setPlan(
+        dashboardData.todayPlan?.plan ?? ""
+      );
+
+      setStatus(
+        dashboardData.todayPlan?.status ?? ""
+      );
+
+      setProjectId(
+        dashboardData.todayPlan?.projectId ?? ""
+      );
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load dashboard");
+      toast.error(
+        "Failed to load dashboard"
+      );
     } finally {
       setLoading(false);
     }
   }
+
+  // --------------------------------------------------
+  // REFRESH DASHBOARD
+  // --------------------------------------------------
 
   const fetchDashboard = async () => {
     try {
@@ -76,79 +121,113 @@ function Page() {
 
       setDashboard(res);
 
-      setPlan(res.todayPlan?.plan ?? "");
-      setStatus(res.todayPlan?.status ?? "");
-      setProjectId(res.todayPlan?.projectId ?? "");
+      setPlan(
+        res.todayPlan?.plan ?? ""
+      );
+
+      setStatus(
+        res.todayPlan?.status ?? ""
+      );
+
+      setProjectId(
+        res.todayPlan?.projectId ?? ""
+      );
     } catch (err) {
       console.error(err);
-      toast.error("Failed to load dashboard");
+
+      toast.error(
+        "Failed to load dashboard"
+      );
     } finally {
       setLoading(false);
     }
   };
+
+  // --------------------------------------------------
+  // SAVE WORK STATUS
+  // --------------------------------------------------
 
   async function handleSaveWorkStatus() {
     try {
       setSavingWork(true);
 
       await saveWorkStatus({
-  project: projectId,
-  workDate: t,
-  plan,
-  endOfDayStatus: status,
-});
+        plan,
+        endOfDayStatus: status,
+        project: projectId,
+        workDate: t,
+      });
 
-      toast.success("Work status saved");
+      toast.success(
+        "Work status saved"
+      );
 
       await fetchDashboard();
     } catch (err) {
       console.error(err);
-      toast.error("Unable to save work status");
+
+      toast.error(
+        "Unable to save work status"
+      );
     } finally {
       setSavingWork(false);
     }
   }
 
   // --------------------------------------------------
-  // IST TIME HELPERS
+  // IST TIME
   // --------------------------------------------------
 
   function getCurrentISTMinutes() {
     const now = new Date();
 
-    const istTime = new Intl.DateTimeFormat("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    }).formatToParts(now);
+    const istTime =
+      new Intl.DateTimeFormat(
+        "en-IN",
+        {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        }
+      ).formatToParts(now);
 
     const hour = Number(
-      istTime.find((part) => part.type === "hour")?.value ?? 0
+      istTime.find(
+        (part) => part.type === "hour"
+      )?.value ?? 0
     );
 
     const minute = Number(
-      istTime.find((part) => part.type === "minute")?.value ?? 0
+      istTime.find(
+        (part) => part.type === "minute"
+      )?.value ?? 0
     );
 
     return hour * 60 + minute;
   }
 
-  const LATE_CHECKIN_TIME = 10 * 60 + 15; // 10:15 AM
-  const EARLY_CHECKOUT_TIME = 18 * 60 + 45; // 6:45 PM
+  const LATE_CHECKIN_TIME =
+    10 * 60 + 15; // 10:15 AM
+
+  const EARLY_CHECKOUT_TIME =
+    18 * 60 + 45; // 6:45 PM
 
   // --------------------------------------------------
   // CHECK IN
   // --------------------------------------------------
 
   const handleCheckIn = async () => {
-    const currentISTMinutes = getCurrentISTMinutes();
+    const currentISTMinutes =
+      getCurrentISTMinutes();
 
-    // If after or equal to 10:15 AM,
-    // ask for a remark first.
-    if (currentISTMinutes >= LATE_CHECKIN_TIME) {
+    if (
+      currentISTMinutes >=
+      LATE_CHECKIN_TIME
+    ) {
       setRemark("");
       setRemarkType("late-checkin");
+
       return;
     }
 
@@ -164,14 +243,18 @@ function Page() {
         remark.trim() || undefined
       );
 
-      toast.success(res.message || "Checked in successfully");
+      toast.success(
+        res.message ||
+          "Checked in successfully"
+      );
 
       closeRemarkModal();
 
       await fetchDashboard();
     } catch (err: any) {
       toast.error(
-        err.response?.data?.message || "Check in failed"
+        err.response?.data?.message ||
+          "Check in failed"
       );
     } finally {
       setCheckingIn(false);
@@ -183,13 +266,16 @@ function Page() {
   // --------------------------------------------------
 
   const handleCheckOut = async () => {
-    const currentISTMinutes = getCurrentISTMinutes();
+    const currentISTMinutes =
+      getCurrentISTMinutes();
 
-    // If before 6:45 PM,
-    // ask for a remark first.
-    if (currentISTMinutes < EARLY_CHECKOUT_TIME) {
+    if (
+      currentISTMinutes <
+      EARLY_CHECKOUT_TIME
+    ) {
       setRemark("");
       setRemarkType("early-checkout");
+
       return;
     }
 
@@ -204,14 +290,18 @@ function Page() {
         remark.trim() || undefined
       );
 
-      toast.success(res.message || "Checked out successfully");
+      toast.success(
+        res.message ||
+          "Checked out successfully"
+      );
 
       closeRemarkModal();
 
       await fetchDashboard();
     } catch (err: any) {
       toast.error(
-        err.response?.data?.message || "Failed to check out"
+        err.response?.data?.message ||
+          "Failed to check out"
       );
     } finally {
       setCheckingOut(false);
@@ -227,30 +317,75 @@ function Page() {
     setRemark("");
   };
 
+  const handleRemarkChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>
+  ) => {
+    const value = e.target.value;
+
+    // Extra protection in addition to maxLength
+    setRemark(
+      value.slice(0, MAX_REMARK_LENGTH)
+    );
+  };
+
   const handleRemarkSubmit = async () => {
-    if (!remark.trim()) {
-      toast.error("Please provide a reason");
+    const trimmedRemark =
+      remark.trim();
+
+    if (!trimmedRemark) {
+      toast.error(
+        "Please provide a reason"
+      );
+
       return;
     }
 
-    if (remarkType === "late-checkin") {
+    if (
+      trimmedRemark.length >
+      MAX_REMARK_LENGTH
+    ) {
+      toast.error(
+        `Reason cannot exceed ${MAX_REMARK_LENGTH} characters`
+      );
+
+      return;
+    }
+
+    if (
+      remarkType === "late-checkin"
+    ) {
       await performCheckIn();
     }
 
-    if (remarkType === "early-checkout") {
+    if (
+      remarkType === "early-checkout"
+    ) {
       await performCheckOut();
     }
   };
 
+  // --------------------------------------------------
+  // FORMAT IST TIME
+  // --------------------------------------------------
+
   function formatISTTime(date: string) {
-    return new Date(date).toLocaleTimeString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
+    return new Date(
+      date
+    ).toLocaleTimeString(
+      "en-IN",
+      {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      }
+    );
   }
+
+  // --------------------------------------------------
+  // LOADING
+  // --------------------------------------------------
 
   if (loading) {
     return (
@@ -264,7 +399,10 @@ function Page() {
           gap: "12px",
         }}
       >
-        <Loader2 className="animate-spin" size={40} />
+        <Loader2
+          className="animate-spin"
+          size={40}
+        />
 
         <p
           style={{
@@ -281,68 +419,98 @@ function Page() {
 
   return (
     <>
-      {/* ----------------------------------------------- */}
-      {/* KPI CARDS */}
-      {/* ----------------------------------------------- */}
+      {/* ==================================================
+          KPI CARDS
+      ================================================== */}
 
       <div className="kpis">
         <div className="kpi">
-          <div className="kpi-label">My projects</div>
+          <div className="kpi-label">
+            My projects
+          </div>
+
           <div className="kpi-value">
-            {dashboard?.cards.myProjects ?? 0}
+            {dashboard?.cards.myProjects ??
+              0}
           </div>
         </div>
 
         <div className="kpi">
-          <div className="kpi-label">Pending leaves</div>
+          <div className="kpi-label">
+            Pending leaves
+          </div>
+
           <div className="kpi-value">
-            {dashboard?.cards.pendingLeaves ?? 0}
+            {dashboard?.cards
+              .pendingLeaves ?? 0}
           </div>
         </div>
 
         <div className="kpi">
-          <div className="kpi-label">Pending WFH</div>
+          <div className="kpi-label">
+            Pending WFH
+          </div>
+
           <div className="kpi-value">
-            {dashboard?.cards.pendingWFH ?? 0}
+            {dashboard?.cards
+              .pendingWFH ?? 0}
           </div>
         </div>
 
         <div className="kpi gold">
-          <div className="kpi-label">Salary slips</div>
+          <div className="kpi-label">
+            Salary slips
+          </div>
+
           <div className="kpi-value">
-            {dashboard?.cards.salarySlips ?? 0}
+            {dashboard?.cards
+              .salarySlips ?? 0}
           </div>
         </div>
       </div>
 
-      {/* ----------------------------------------------- */}
-      {/* MAIN ROW */}
-      {/* ----------------------------------------------- */}
+      {/* ==================================================
+          MAIN ROW
+      ================================================== */}
 
       <div className="row-2">
 
-        {/* ATTENDANCE CARD */}
+        {/* ==================================================
+            ATTENDANCE
+        ================================================== */}
 
         <div className="card">
           <div className="card-header">
-            <h2>Attendance — {t}</h2>
+            <h2>
+              Attendance — {t}
+            </h2>
           </div>
 
-          {dashboard?.onLeave ? (
+          {dashboard?.attendance
+            ?.status === "Leave" ? (
             <p className="badge">
-              You are on approved leave today.
+              You are on approved
+              leave today.
             </p>
           ) : !dashboard?.attendance ? (
             <div>
+
+              {/* MODE */}
+
               <div className="field">
-                <label>Mode</label>
+                <label>
+                  Mode
+                </label>
 
                 <select
                   className="select"
                   value={mode}
                   onChange={(e) =>
                     setMode(
-                      e.target.value as "office" | "wfh"
+                      e.target
+                        .value as
+                        | "office"
+                        | "wfh"
                     )
                   }
                 >
@@ -356,10 +524,16 @@ function Page() {
                 </select>
               </div>
 
+              {/* CHECK IN */}
+
               <button
                 className="btn btn-gold"
-                onClick={handleCheckIn}
-                disabled={checkingIn}
+                onClick={
+                  handleCheckIn
+                }
+                disabled={
+                  checkingIn
+                }
               >
                 {checkingIn ? (
                   <>
@@ -368,7 +542,8 @@ function Page() {
                       size={18}
                     />
 
-                    &nbsp;Checking In...
+                    &nbsp;
+                    Checking In...
                   </>
                 ) : (
                   "🕒 Check In"
@@ -377,21 +552,39 @@ function Page() {
             </div>
           ) : (
             <div>
+
+              {/* CHECKED IN */}
+
               <p>
                 Checked in at{" "}
                 <strong>
                   {formatISTTime(
-                    dashboard.attendance.checkIn!
+                    dashboard
+                      .attendance
+                      .checkIn!
                   )}
                 </strong>{" "}
-                ({dashboard.attendance.mode})
+                (
+                {
+                  dashboard
+                    .attendance
+                    .mode
+                }
+                )
               </p>
 
-              {!dashboard.attendance.checkOut && (
+              {/* CHECK OUT BUTTON */}
+
+              {!dashboard.attendance
+                .checkOut && (
                 <button
                   className="btn"
-                  onClick={handleCheckOut}
-                  disabled={checkingOut}
+                  onClick={
+                    handleCheckOut
+                  }
+                  disabled={
+                    checkingOut
+                  }
                 >
                   {checkingOut ? (
                     <>
@@ -400,7 +593,8 @@ function Page() {
                         size={18}
                       />
 
-                      &nbsp;Checking Out...
+                      &nbsp;
+                      Checking Out...
                     </>
                   ) : (
                     `Check out (${nowTime()})`
@@ -408,15 +602,22 @@ function Page() {
                 </button>
               )}
 
-              {dashboard.attendance.checkOut && (
+              {/* DAY COMPLETE */}
+
+              {dashboard.attendance
+                .checkOut && (
                 <p className="badge success">
                   Day complete —{" "}
                   {formatISTTime(
-                    dashboard.attendance.checkIn!
+                    dashboard
+                      .attendance
+                      .checkIn!
                   )}{" "}
                   →{" "}
                   {formatISTTime(
-                    dashboard.attendance.checkOut
+                    dashboard
+                      .attendance
+                      .checkOut
                   )}
                 </p>
               )}
@@ -424,66 +625,94 @@ function Page() {
           )}
         </div>
 
-        {/* WORK PLAN CARD */}
+        {/* ==================================================
+            WORK PLAN
+        ================================================== */}
 
         <div className="card">
           <div className="card-header">
-            <h2>Today's work plan</h2>
+            <h2>
+              Today's work plan
+            </h2>
           </div>
 
           <div className="field">
-            <label>Project</label>
+            <label>
+              Project
+            </label>
 
             <select
               className="select"
               value={projectId}
               onChange={(e) =>
-                setProjectId(e.target.value)
+                setProjectId(
+                  e.target.value
+                )
               }
             >
               <option value="">
                 — No project —
               </option>
 
-              {projects.map((project) => (
-                <option
-                  key={project._id}
-                  value={project._id}
-                >
-                  {project.projectName}
-                </option>
-              ))}
+              {projects.map(
+                (project) => (
+                  <option
+                    key={
+                      project._id
+                    }
+                    value={
+                      project._id
+                    }
+                  >
+                    {
+                      project.projectName
+                    }
+                  </option>
+                )
+              )}
             </select>
           </div>
 
           <div className="field">
-            <label>Morning plan</label>
+            <label>
+              Morning plan
+            </label>
 
             <textarea
               className="textarea"
               value={plan}
               onChange={(e) =>
-                setPlan(e.target.value)
+                setPlan(
+                  e.target.value
+                )
               }
             />
           </div>
 
           <div className="field">
-            <label>End-of-day status</label>
+            <label>
+              End-of-day status
+            </label>
 
             <textarea
               className="textarea"
               value={status}
               onChange={(e) =>
-                setStatus(e.target.value)
+                setStatus(
+                  e.target.value
+                )
               }
             />
           </div>
 
           <button
             className="btn"
-            onClick={handleSaveWorkStatus}
-            disabled={savingWork}
+            onClick={
+              handleSaveWorkStatus
+            }
+            disabled={
+              savingWork
+            }
           >
             {savingWork ? (
               <>
@@ -501,19 +730,21 @@ function Page() {
         </div>
       </div>
 
-      {/* ----------------------------------------------- */}
-      {/* REMARK MODAL */}
-      {/* ----------------------------------------------- */}
+      {/* ==================================================
+          REMARK MODAL
+      ================================================== */}
 
       {remarkType && (
         <div
           style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0, 0, 0, 0.45)",
+            background:
+              "rgba(0, 0, 0, 0.45)",
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent:
+              "center",
             zIndex: 1000,
             padding: "20px",
           }}
@@ -529,14 +760,18 @@ function Page() {
                 "0 10px 30px rgba(0,0,0,0.2)",
             }}
           >
-            {/* Modal Header */}
+
+            {/* HEADER */}
 
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "20px",
+                alignItems:
+                  "center",
+                justifyContent:
+                  "space-between",
+                marginBottom:
+                  "20px",
               }}
             >
               <h2
@@ -546,20 +781,25 @@ function Page() {
                   fontWeight: 600,
                 }}
               >
-                {remarkType === "late-checkin"
+                {remarkType ===
+                "late-checkin"
                   ? "Late Check-In"
                   : "Early Check-Out"}
               </h2>
 
               <button
                 type="button"
-                onClick={closeRemarkModal}
+                onClick={
+                  closeRemarkModal
+                }
                 disabled={
-                  checkingIn || checkingOut
+                  checkingIn ||
+                  checkingOut
                 }
                 style={{
                   border: "none",
-                  background: "transparent",
+                  background:
+                    "transparent",
                   cursor: "pointer",
                   padding: "4px",
                 }}
@@ -568,55 +808,93 @@ function Page() {
               </button>
             </div>
 
-            {/* Message */}
+            {/* MESSAGE */}
 
             <p
               style={{
-                marginBottom: "16px",
+                marginBottom:
+                  "16px",
                 color: "#555",
                 lineHeight: 1.5,
               }}
             >
-              {remarkType === "late-checkin"
+              {remarkType ===
+              "late-checkin"
                 ? "You are checking in at or after 10:15 AM. Please provide a reason for your late check-in."
                 : "You are checking out before 6:45 PM. Please provide a reason for your early check-out."}
             </p>
 
-            {/* Remark */}
+            {/* REMARK */}
 
             <div className="field">
               <label>
-                Reason <span style={{ color: "red" }}>*</span>
+                Reason{" "}
+                <span
+                  style={{
+                    color: "red",
+                  }}
+                >
+                  *
+                </span>
               </label>
 
               <textarea
                 className="textarea"
                 value={remark}
-                onChange={(e) =>
-                  setRemark(e.target.value)
+                onChange={
+                  handleRemarkChange
                 }
                 placeholder="Enter your reason..."
                 rows={4}
+                maxLength={
+                  MAX_REMARK_LENGTH
+                }
                 autoFocus
               />
+
+              {/* CHARACTER COUNTER */}
+
+              <div
+                style={{
+                  textAlign:
+                    "right",
+                  fontSize:
+                    "12px",
+                  color:
+                    remark.length >=
+                    MAX_REMARK_LENGTH
+                      ? "#dc2626"
+                      : "#666",
+                  marginTop:
+                    "4px",
+                }}
+              >
+                {remark.length}/
+                {MAX_REMARK_LENGTH}
+              </div>
             </div>
 
-            {/* Buttons */}
+            {/* BUTTONS */}
 
             <div
               style={{
                 display: "flex",
-                justifyContent: "flex-end",
+                justifyContent:
+                  "flex-end",
                 gap: "10px",
-                marginTop: "20px",
+                marginTop:
+                  "20px",
               }}
             >
               <button
                 type="button"
                 className="btn"
-                onClick={closeRemarkModal}
+                onClick={
+                  closeRemarkModal
+                }
                 disabled={
-                  checkingIn || checkingOut
+                  checkingIn ||
+                  checkingOut
                 }
               >
                 Cancel
@@ -625,19 +903,24 @@ function Page() {
               <button
                 type="button"
                 className="btn btn-gold"
-                onClick={handleRemarkSubmit}
+                onClick={
+                  handleRemarkSubmit
+                }
                 disabled={
-                  checkingIn || checkingOut
+                  checkingIn ||
+                  checkingOut
                 }
               >
-                {checkingIn || checkingOut ? (
+                {checkingIn ||
+                checkingOut ? (
                   <>
                     <Loader2
                       className="animate-spin"
                       size={18}
                     />
 
-                    &nbsp;Submitting...
+                    &nbsp;
+                    Submitting...
                   </>
                 ) : remarkType ===
                   "late-checkin" ? (

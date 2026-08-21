@@ -4,55 +4,84 @@ export interface EmployeeInfo {
   _id: string;
   employeeId: string;
   fullName: string;
-  role: string;
+  email?: string;
   department: string;
+  designation: string;
 }
 
 export interface Attendance {
   _id: string;
+
   employee: EmployeeInfo | null;
+
   date: string;
-  checkIn: string;
+
+  checkIn: string | null;
   checkOut: string | null;
+
+  workingMinutes: number;
+  paidMinutes: number;
   workingHours: number;
+
   status: string;
-  mode: string;
+  mode: "Office" | "WFH" | string;
+
+  isLateCheckIn: boolean;
+  checkInRemark: string;
+
+  isEarlyCheckOut: boolean;
+  checkOutRemark: string;
+
+  adminReviewed?: boolean;
+  adminRemark?: string;
+
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface GetAttendanceResponse {
-    success: boolean;
-    total: number;
-    attendance: Attendance[];
+  success: boolean;
+  total: number;
+  attendance: Attendance[];
 }
 
+// ADMIN
 export const getAttendance = async (): Promise<Attendance[]> => {
   try {
-
     const response =
-    await api.get<GetAttendanceResponse>(
+      await api.get<GetAttendanceResponse>(
         "/admin/attendance"
-    );
+      );
 
     return response.data.attendance;
-
   } catch (error) {
+    console.error(
+      "Get Attendance Error:",
+      error
+    );
 
-    console.error("Get Attendance Error:", error);
     throw error;
-
   }
 };
-
 
 // USER
-export const getMyAttendance = async (): Promise<Attendance[]> => {
-  try {
-    const response = await api.get("/attendance/history");
+export const getMyAttendance =
+  async (): Promise<Attendance[]> => {
+    try {
+      const response =
+        await api.get<{
+          success: boolean;
+          total: number;
+          history: Attendance[];
+        }>("/attendance/history");
 
-    return response.data.history;
+      return response.data.history;
+    } catch (error) {
+      console.error(
+        "Get My Attendance Error:",
+        error
+      );
 
-  } catch (error) {
-    console.error("Get My Attendance Error:", error);
-    throw error;
-  }
-};
+      throw error;
+    }
+  };
