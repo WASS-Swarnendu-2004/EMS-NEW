@@ -23,8 +23,6 @@ export interface DashboardResponse {
     status: string;
   } | null;
 
-
-  // ADD THIS
   onLeave: boolean;
 
   leaveDetails?: {
@@ -40,10 +38,11 @@ export const getDashboard = async (): Promise<DashboardResponse> => {
 };
 
 // Check In
-export const checkIn = async (mode: "office" | "wfh") => {
+export const checkIn = async (mode: "office" | "wfh", remark?: string) => {
   try {
     const response = await api.post("/attendance/check-in", {
       mode: mode === "office" ? "Office" : "WFH",
+      ...(remark ? { remark } : {}),
     });
 
     return response.data;
@@ -54,9 +53,11 @@ export const checkIn = async (mode: "office" | "wfh") => {
 };
 
 // Check Out
-export const checkOut = async () => {
+export const checkOut = async (remark?: string) => {
   try {
-    const response = await api.post("/attendance/check-out");
+    const response = await api.post("/attendance/check-out", {
+      ...(remark ? { remark } : {}),
+    });
 
     return response.data;
   } catch (error) {
