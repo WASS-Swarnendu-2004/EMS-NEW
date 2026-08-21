@@ -1,12 +1,10 @@
-import type { Role } from "@/api/role";
-
 type EmployeeToolbarProps = {
   q: string;
   setQ: (value: string) => void;
 
-  selectedRole: string;
-  roles: Role[];
-  onRoleChange: (role: string) => void;
+  selectedDepartment: string;
+  departments: string[];
+  onDepartmentChange: (department: string) => void;
 
   onExport: () => void;
   onAdd: () => void;
@@ -15,16 +13,16 @@ type EmployeeToolbarProps = {
 export function EmployeeToolbar({
   q,
   setQ,
-  selectedRole,
-  roles,
-  onRoleChange,
+  selectedDepartment,
+  departments,
+  onDepartmentChange,
   onExport,
   onAdd,
 }: EmployeeToolbarProps) {
   return (
     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       
-      {/* Search + Role Filter */}
+      {/* Search + Department Filter */}
       <div className="flex flex-col gap-3 sm:flex-row">
         <input
           className="input w-full lg:max-w-sm"
@@ -35,14 +33,19 @@ export function EmployeeToolbar({
 
         <select
           className="select w-full sm:w-56"
-          value={selectedRole}
-          onChange={(e) => onRoleChange(e.target.value)}
+          value={selectedDepartment}
+          onChange={(e) =>
+            onDepartmentChange(e.target.value)
+          }
         >
-          <option value="">All Roles</option>
+          <option value="">All Departments</option>
 
-          {roles.map((role) => (
-            <option key={role._id} value={role.roleName}>
-              {role.roleName}
+          {departments.map((department) => (
+            <option
+              key={department}
+              value={department}
+            >
+              {department}
             </option>
           ))}
         </select>

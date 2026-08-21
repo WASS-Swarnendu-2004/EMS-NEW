@@ -35,7 +35,6 @@ export interface SalaryListItem {
   employeeIdMongo: string;
   fullName: string;
   department: string;
-  role: string;
   grossSalary: number;
   generated: boolean;
   salarySlipId?: string;

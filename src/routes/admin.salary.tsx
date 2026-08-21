@@ -78,7 +78,6 @@ function Page() {
       employees.map((e) => ({
         Employee: e.fullName,
         Department: e.department,
-        Role: e.role,
         Gross: e.grossSalary,
         Net: e.netSalary ?? "",
         Generated: e.generated ? "Yes" : "No",
@@ -127,7 +126,7 @@ function Page() {
           <thead>
             <tr>
               <th>Employee</th>
-              <th>Role</th>
+              <th>Department</th>
               <th>Gross</th>
               <th>Generated for {month}</th>
               <th></th>
@@ -139,7 +138,7 @@ function Page() {
                 <tr key={e.employeeIdMongo}>
                   <td>{e.fullName}</td>
                   <td>
-                    <span className="badge purple">{e.role}</span>
+                    <span className="badge purple">{e.department}</span>
                   </td>
                   <td>₹{e.grossSalary.toLocaleString()}</td>
                   <td>
@@ -197,7 +196,9 @@ function Page() {
             <SalarySlipView
               slip={view}
               empName={employees.find((e) => e.employeeIdMongo === view.employeeId)?.fullName ?? ""}
-              role={employees.find((e) => e.employeeIdMongo === view.employeeId)?.role ?? ""}
+              department={
+                employees.find((e) => e.employeeIdMongo === view.employeeId)?.department ?? ""
+              }
             />
           </div>
         </div>

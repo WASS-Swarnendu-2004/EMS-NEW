@@ -2,7 +2,7 @@ import type { SalarySlip } from "@/api/salary";
 import logo from "@/assets/logo.jpeg.asset.json";
 import logo1 from"@/assets/logo1.jpg"
 
-export function SalarySlipView({ slip, empName, role }: { slip: SalarySlip; empName: string; role: string }) {
+export function SalarySlipView({ slip, empName, department }: { slip: SalarySlip; empName: string; department: string }) {
   const earnings = slip.items.filter((i) => i.type === "earning");
   const deductions = slip.items.filter((i) => i.type === "deduction");
 
@@ -14,7 +14,7 @@ export function SalarySlipView({ slip, empName, role }: { slip: SalarySlip; empN
       </div>
       <div className="slip-grid">
         <div><span>Employee:</span> <strong>{empName}</strong></div>
-        <div><span>Role:</span> <strong>{role}</strong></div>
+        <div><span>Department:</span> <strong>{department}</strong></div>
         <div><span>Slip ID:</span> {slip.id}</div>
         <div><span>Pay period:</span> {slip.month}</div>
       </div>

@@ -274,6 +274,11 @@ export const adminNav: NavItem[] = [
     icon: Wallet,
   },
   {
+    to: "/admin/salary-details",
+    label: "Salary Details",
+    icon: Wallet,
+  },
+  {
     to: "/admin/mail",
     label: "Mailing",
     icon: Mail,

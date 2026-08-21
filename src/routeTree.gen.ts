@@ -26,6 +26,7 @@ import { Route as UserAdvanceAmountRouteImport } from './routes/user.advance-amo
 import { Route as AdminWorkStatusRouteImport } from './routes/admin.work-status'
 import { Route as AdminWfhRouteImport } from './routes/admin.wfh'
 import { Route as AdminTasksRouteImport } from './routes/admin.tasks'
+import { Route as AdminSalaryDetailsRouteImport } from './routes/admin.salary-details'
 import { Route as AdminSalaryRouteImport } from './routes/admin.salary'
 import { Route as AdminProjectsRouteImport } from './routes/admin.projects'
 import { Route as AdminMailRouteImport } from './routes/admin.mail'
@@ -119,6 +120,11 @@ const AdminTasksRoute = AdminTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminSalaryDetailsRoute = AdminSalaryDetailsRouteImport.update({
+  id: '/salary-details',
+  path: '/salary-details',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminSalaryRoute = AdminSalaryRouteImport.update({
   id: '/salary',
   path: '/salary',
@@ -167,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/admin/mail': typeof AdminMailRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/salary': typeof AdminSalaryRoute
+  '/admin/salary-details': typeof AdminSalaryDetailsRoute
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/admin/mail': typeof AdminMailRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/salary': typeof AdminSalaryRoute
+  '/admin/salary-details': typeof AdminSalaryDetailsRoute
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/admin/mail': typeof AdminMailRoute
   '/admin/projects': typeof AdminProjectsRoute
   '/admin/salary': typeof AdminSalaryRoute
+  '/admin/salary-details': typeof AdminSalaryDetailsRoute
   '/admin/tasks': typeof AdminTasksRoute
   '/admin/wfh': typeof AdminWfhRoute
   '/admin/work-status': typeof AdminWorkStatusRoute
@@ -246,6 +255,7 @@ export interface FileRouteTypes {
     | '/admin/mail'
     | '/admin/projects'
     | '/admin/salary'
+    | '/admin/salary-details'
     | '/admin/tasks'
     | '/admin/wfh'
     | '/admin/work-status'
@@ -270,6 +280,7 @@ export interface FileRouteTypes {
     | '/admin/mail'
     | '/admin/projects'
     | '/admin/salary'
+    | '/admin/salary-details'
     | '/admin/tasks'
     | '/admin/wfh'
     | '/admin/work-status'
@@ -296,6 +307,7 @@ export interface FileRouteTypes {
     | '/admin/mail'
     | '/admin/projects'
     | '/admin/salary'
+    | '/admin/salary-details'
     | '/admin/tasks'
     | '/admin/wfh'
     | '/admin/work-status'
@@ -439,6 +451,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTasksRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/salary-details': {
+      id: '/admin/salary-details'
+      path: '/salary-details'
+      fullPath: '/admin/salary-details'
+      preLoaderRoute: typeof AdminSalaryDetailsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/salary': {
       id: '/admin/salary'
       path: '/salary'
@@ -499,6 +518,7 @@ interface AdminRouteChildren {
   AdminMailRoute: typeof AdminMailRoute
   AdminProjectsRoute: typeof AdminProjectsRoute
   AdminSalaryRoute: typeof AdminSalaryRoute
+  AdminSalaryDetailsRoute: typeof AdminSalaryDetailsRoute
   AdminTasksRoute: typeof AdminTasksRoute
   AdminWfhRoute: typeof AdminWfhRoute
   AdminWorkStatusRoute: typeof AdminWorkStatusRoute
@@ -513,6 +533,7 @@ const AdminRouteChildren: AdminRouteChildren = {
   AdminMailRoute: AdminMailRoute,
   AdminProjectsRoute: AdminProjectsRoute,
   AdminSalaryRoute: AdminSalaryRoute,
+  AdminSalaryDetailsRoute: AdminSalaryDetailsRoute,
   AdminTasksRoute: AdminTasksRoute,
   AdminWfhRoute: AdminWfhRoute,
   AdminWorkStatusRoute: AdminWorkStatusRoute,

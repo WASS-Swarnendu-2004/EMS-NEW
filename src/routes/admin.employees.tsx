@@ -69,8 +69,8 @@ function Page() {
 
   const [q, setQ] = useState("");
 
-  const [selectedDesignation, setSelectedDesignation] =
-    useState("");
+  const [selectedDepartment, setSelectedDepartment] =
+  useState("");
 
   const [employees, setEmployees] =
     useState<Employee[]>([]);
@@ -512,7 +512,15 @@ function handleNewFieldChange(value: {
 
     return updated;
   });
-}
+  }
+  
+  const departments = Array.from(
+  new Set(
+    employees
+      .map((employee) => employee.department)
+      .filter(Boolean),
+  ),
+).sort();
 
   const filtered = employees.filter((e) => {
     const searchText = q.toLowerCase();
@@ -526,14 +534,14 @@ function handleNewFieldChange(value: {
       x.toLowerCase().includes(searchText),
     );
 
-    const matchesDesignation =
-      selectedDesignation === "" ||
-      e.designation === selectedDesignation;
+   const matchesDepartment =
+  selectedDepartment === "" ||
+  e.department === selectedDepartment;
 
-    return (
-      matchesSearch &&
-      matchesDesignation
-    );
+return (
+  matchesSearch &&
+  matchesDepartment
+);
   });
 
   function exportXlsx() {
@@ -586,14 +594,14 @@ function handleNewFieldChange(value: {
   return (
     <>
       <EmployeeToolbar
-        q={q}
-        setQ={setQ}
-        selectedRole={selectedDesignation}
-        roles={roles}
-        onRoleChange={setSelectedDesignation}
-        onExport={exportXlsx}
-        onAdd={openNew}
-      />
+  q={q}
+  setQ={setQ}
+  selectedDepartment={selectedDepartment}
+  departments={departments}
+  onDepartmentChange={setSelectedDepartment}
+  onExport={exportXlsx}
+  onAdd={openNew}
+/>
 
       <EmployeeTable
         employees={filtered}
