@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { getAttendance, type Attendance } from "@/api/attendance";
+import {
+  getAttendance,
+  overrideAttendance,
+  type Attendance,
+} from "@/api/attendance";
 import { exportToExcel } from "@/lib/excel";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
@@ -27,6 +31,20 @@ function Page() {
   const [department, setDepartment] = useState<string>("all");
 
   // --------------------------------------------------
+  // ADMIN OVERRIDE STATE
+  // --------------------------------------------------
+
+  const [
+    overrideAttendanceRecord,
+    setOverrideAttendanceRecord,
+  ] = useState<Attendance | null>(null);
+
+  const [adminRemark, setAdminRemark] = useState("");
+
+  const [overrideLoading, setOverrideLoading] =
+    useState(false);
+
+  // --------------------------------------------------
   // FETCH ATTENDANCE
   // --------------------------------------------------
 
@@ -35,9 +53,14 @@ function Page() {
 
     try {
       const data = await getAttendance();
+
       setAttendance(data);
     } catch (error) {
-      console.error("Attendance fetch error:", error);
+      console.error(
+        "Attendance fetch error:",
+        error
+      );
+
       toast.error("Failed to load attendance.");
     } finally {
       setLoading(false);
@@ -60,7 +83,11 @@ function Page() {
         page++
       ) {
         const data = await getEmployees(page);
-        allEmployees = [...allEmployees, ...data.employees];
+
+        allEmployees = [
+          ...allEmployees,
+          ...data.employees,
+        ];
       }
 
       setEmployees(allEmployees);
@@ -73,6 +100,10 @@ function Page() {
       );
     }
   }
+
+  // --------------------------------------------------
+  // INITIAL LOAD
+  // --------------------------------------------------
 
   useEffect(() => {
     Promise.all([
@@ -108,23 +139,33 @@ function Page() {
       if (!a.employee) return false;
 
       const attendanceDate = new Date(a.date);
+
       attendanceDate.setHours(0, 0, 0, 0);
 
+      // --------------------------------------------
       // Employee filter
+      // --------------------------------------------
+
       const employeeMatch =
         empId === "all" ||
         a.employee._id === empId;
 
       if (!employeeMatch) return false;
 
+      // --------------------------------------------
       // Department filter
+      // --------------------------------------------
+
       const departmentMatch =
         department === "all" ||
         a.employee.department === department;
 
       if (!departmentMatch) return false;
 
+      // --------------------------------------------
       // Date filter
+      // --------------------------------------------
+
       switch (period) {
         case "today":
           return (
@@ -151,12 +192,16 @@ function Page() {
           );
 
         case "custom": {
-          if (!fromDate || !toDate) return true;
+          if (!fromDate || !toDate) {
+            return true;
+          }
 
           const from = new Date(fromDate);
+
           from.setHours(0, 0, 0, 0);
 
           const to = new Date(toDate);
+
           to.setHours(23, 59, 59, 999);
 
           return (
@@ -194,6 +239,86 @@ function Page() {
   }
 
   // --------------------------------------------------
+  // APPROVE FULL DAY
+  // --------------------------------------------------
+
+  const handleOverrideAttendance = async () => {
+    if (!overrideAttendanceRecord) {
+      return;
+    }
+
+    if (!adminRemark.trim()) {
+      toast.warning(
+        "Please enter an admin remark."
+      );
+
+      return;
+    }
+
+    setOverrideLoading(true);
+
+    try {
+      await overrideAttendance(
+        overrideAttendanceRecord._id,
+        {
+          // 540 minutes = 9 hours
+          adminApprovedMinutes: 540,
+
+          adminRemark: adminRemark.trim(),
+        }
+      );
+
+      toast.success(
+        "Full day attendance approved successfully."
+      );
+
+      // Close modal
+      setOverrideAttendanceRecord(null);
+
+      setAdminRemark("");
+
+      // Refresh attendance
+      await fetchAttendance();
+    } catch (error: any) {
+      console.error(
+        "Attendance override error:",
+        error
+      );
+
+      toast.error(
+        error?.response?.data?.message ||
+          "Failed to approve full day attendance."
+      );
+    } finally {
+      setOverrideLoading(false);
+    }
+  };
+
+  // --------------------------------------------------
+  // OPEN OVERRIDE MODAL
+  // --------------------------------------------------
+
+  const openOverrideModal = (
+    record: Attendance
+  ) => {
+    setOverrideAttendanceRecord(record);
+
+    setAdminRemark("");
+  };
+
+  // --------------------------------------------------
+  // CLOSE OVERRIDE MODAL
+  // --------------------------------------------------
+
+  const closeOverrideModal = () => {
+    if (overrideLoading) return;
+
+    setOverrideAttendanceRecord(null);
+
+    setAdminRemark("");
+  };
+
+  // --------------------------------------------------
   // EXPORT
   // --------------------------------------------------
 
@@ -202,6 +327,7 @@ function Page() {
       toast.warning(
         "No attendance records to export"
       );
+
       return;
     }
 
@@ -222,7 +348,7 @@ function Page() {
           a.employee?.department ?? "-",
 
         Designation:
-          (a.employee as any)?.designation ?? "-",
+          a.employee?.designation ?? "-",
 
         Status: a.status,
 
@@ -251,6 +377,17 @@ function Page() {
 
         PaidMinutes:
           a.paidMinutes ?? 0,
+
+        AdminApproved:
+          a.adminApproved
+            ? "Yes"
+            : "No",
+
+        AdminApprovedMinutes:
+          a.adminApprovedMinutes ?? 0,
+
+        AdminRemark:
+          a.adminRemark ?? "—",
       })),
 
       `attendance-${period}.xlsx`,
@@ -289,7 +426,6 @@ function Page() {
       {/* ------------------------------------------- */}
 
       <div className="toolbar">
-
         {/* Period */}
         <select
           className="select"
@@ -411,7 +547,6 @@ function Page() {
 
       <div className="table-wrap">
         <table className="table">
-
           <thead>
             <tr>
               <th>Date</th>
@@ -428,7 +563,7 @@ function Page() {
 
               <th>Working Minutes</th>
 
-              <th>Paid Minutes</th>
+              <th>Admin Approval</th>
             </tr>
           </thead>
 
@@ -445,15 +580,20 @@ function Page() {
                     : ""
                 }
               >
-
+                {/* -------------------------------- */}
                 {/* Date */}
+                {/* -------------------------------- */}
+
                 <td>
                   {new Date(
                     a.date
                   ).toLocaleDateString()}
                 </td>
 
+                {/* -------------------------------- */}
                 {/* Employee */}
+                {/* -------------------------------- */}
+
                 <td>
                   {a.employee ? (
                     <>
@@ -474,7 +614,10 @@ function Page() {
                   )}
                 </td>
 
+                {/* -------------------------------- */}
                 {/* Department */}
+                {/* -------------------------------- */}
+
                 <td>
                   {a.employee?.department || (
                     <span className="muted">
@@ -483,14 +626,20 @@ function Page() {
                   )}
                 </td>
 
+                {/* -------------------------------- */}
                 {/* Status */}
+                {/* -------------------------------- */}
+
                 <td>
                   <span className="badge purple">
                     {a.status}
                   </span>
                 </td>
 
+                {/* -------------------------------- */}
                 {/* Check In */}
+                {/* -------------------------------- */}
+
                 <td>
                   {a.checkIn ? (
                     <div>
@@ -519,7 +668,10 @@ function Page() {
                   )}
                 </td>
 
+                {/* -------------------------------- */}
                 {/* Check Out */}
+                {/* -------------------------------- */}
+
                 <td>
                   {a.checkOut ? (
                     <div>
@@ -550,14 +702,50 @@ function Page() {
                   )}
                 </td>
 
+                {/* -------------------------------- */}
                 {/* Working Minutes */}
+                {/* -------------------------------- */}
+
                 <td>
                   {a.workingMinutes ?? 0} min
                 </td>
 
-                {/* Paid Minutes */}
+                {/* -------------------------------- */}
+                {/* Admin Approval */}
+                {/* -------------------------------- */}
+
                 <td>
-                  {a.paidMinutes ?? 0} min
+                  {a.adminApproved ? (
+                    <div>
+                      <span className="badge green">
+                        Full Day Approved
+                      </span>
+
+                      {a.adminApprovedMinutes && (
+                        <small
+                          style={{
+                            display: "block",
+                            marginTop: "4px",
+                          }}
+                        >
+                          {a.adminApprovedMinutes} min
+                        </small>
+                      )}
+                    </div>
+                  ) : a.workingMinutes < 540 ? (
+                    <button
+                      className="btn btn-ghost"
+                      onClick={() =>
+                        openOverrideModal(a)
+                      }
+                    >
+                      Approve Full Day
+                    </button>
+                  ) : (
+                    <span className="muted">
+                      —
+                    </span>
+                  )}
                 </td>
               </tr>
             ))}
@@ -573,9 +761,145 @@ function Page() {
               </tr>
             )}
           </tbody>
-
         </table>
       </div>
+
+      {/* ------------------------------------------- */}
+      {/* FULL DAY APPROVAL MODAL */}
+      {/* ------------------------------------------- */}
+
+      {overrideAttendanceRecord && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={closeOverrideModal}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            {/* Modal Header */}
+
+            <div className="mb-5">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Approve Full Day Attendance
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Approve 9 hours of paid
+                attendance for this employee
+                as an emergency exception.
+              </p>
+            </div>
+
+            {/* Employee Information */}
+
+            <div className="mb-4 rounded-lg bg-gray-50 p-4">
+              <p className="text-sm text-gray-500">
+                Employee
+              </p>
+
+              <p className="font-semibold text-gray-900">
+                {overrideAttendanceRecord.employee
+                  ?.fullName ||
+                  "Deleted Employee"}
+              </p>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Employee ID
+              </p>
+
+              <p className="font-medium text-gray-900">
+                {overrideAttendanceRecord.employee
+                  ?.employeeId || "—"}
+              </p>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Date
+              </p>
+
+              <p className="font-medium text-gray-900">
+                {new Date(
+                  overrideAttendanceRecord.date
+                ).toLocaleDateString()}
+              </p>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Actual Working Time
+              </p>
+
+              <p className="font-medium text-gray-900">
+                {overrideAttendanceRecord.workingMinutes}{" "}
+                minutes
+              </p>
+
+              <p className="mt-2 text-sm text-gray-500">
+                Approved Paid Time
+              </p>
+
+              <p className="font-semibold text-green-600">
+                540 minutes (9 hours)
+              </p>
+            </div>
+
+            {/* Admin Remark */}
+
+            <div className="mb-5">
+              <label className="mb-2 block text-sm font-medium text-gray-700">
+                Admin Remark
+              </label>
+
+              <textarea
+                value={adminRemark}
+                onChange={(e) =>
+                  setAdminRemark(
+                    e.target.value
+                  )
+                }
+                placeholder="Enter reason for approving full day attendance..."
+                rows={4}
+                disabled={overrideLoading}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+              />
+            </div>
+
+            {/* Buttons */}
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={overrideLoading}
+                onClick={closeOverrideModal}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="btn"
+                disabled={
+                  overrideLoading ||
+                  !adminRemark.trim()
+                }
+                onClick={
+                  handleOverrideAttendance
+                }
+              >
+                {overrideLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Approving...
+                  </>
+                ) : (
+                  "Approve Full Day"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

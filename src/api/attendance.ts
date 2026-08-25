@@ -32,8 +32,12 @@ export interface Attendance {
   isEarlyCheckOut: boolean;
   checkOutRemark: string;
 
-  adminReviewed?: boolean;
+  // Admin override
+  adminApproved?: boolean;
+  adminApprovedMinutes?: number;
   adminRemark?: string;
+  adminApprovedAt?: string;
+  adminApprovedBy?: string;
 
   createdAt?: string;
   updatedAt?: string;
@@ -45,7 +49,10 @@ interface GetAttendanceResponse {
   attendance: Attendance[];
 }
 
-// ADMIN
+// --------------------------------------------------
+// ADMIN - GET ATTENDANCE
+// --------------------------------------------------
+
 export const getAttendance = async (): Promise<Attendance[]> => {
   try {
     const response =
@@ -64,7 +71,43 @@ export const getAttendance = async (): Promise<Attendance[]> => {
   }
 };
 
-// USER
+// --------------------------------------------------
+// ADMIN - OVERRIDE / APPROVE FULL DAY ATTENDANCE
+// --------------------------------------------------
+
+export const overrideAttendance = async (
+  attendanceId: string,
+  data: {
+    adminApprovedMinutes: number;
+    adminRemark: string;
+  }
+): Promise<Attendance> => {
+  try {
+    const response =
+      await api.put<{
+        success: boolean;
+        message: string;
+        attendance: Attendance;
+      }>(
+        `/admin/attendance/${attendanceId}/override`,
+        data
+      );
+
+    return response.data.attendance;
+  } catch (error) {
+    console.error(
+      "Attendance Override Error:",
+      error
+    );
+
+    throw error;
+  }
+};
+
+// --------------------------------------------------
+// USER - MY ATTENDANCE
+// --------------------------------------------------
+
 export const getMyAttendance =
   async (): Promise<Attendance[]> => {
     try {
