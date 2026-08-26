@@ -151,9 +151,7 @@ export function SalarySlipView({
           </div>
         </div>
 
-        {/* ===================================================
-            EMPLOYEE INFORMATION
-            =================================================== */}
+        {/* EMPLOYEE INFORMATION*/}
         <div
           className="
             mt-5
@@ -255,9 +253,7 @@ export function SalarySlipView({
           </div>
         </div>
 
-        {/* ===================================================
-            SALARY SUMMARY
-            =================================================== */}
+        {/*SALARY SUMMARY*/}
         <div
           className="
             mb-5
@@ -285,6 +281,16 @@ export function SalarySlipView({
               </span>{" "}
               <strong>
                 {slip.workingDays}
+              </strong>
+            </div>
+          )}
+          {slip.absentDays !== undefined && (
+            <div className="min-w-0">
+              <span className="muted">
+                Absent Days:
+              </span>{" "}
+              <strong>
+                {slip.absentDays}
               </strong>
             </div>
           )}
@@ -319,9 +325,7 @@ export function SalarySlipView({
             )}
         </div>
 
-        {/* ===================================================
-            EARNINGS
-            =================================================== */}
+        {/*EARNINGS*/}
         <div className="w-full overflow-x-auto">
           <table
             className="
@@ -387,9 +391,7 @@ export function SalarySlipView({
           </table>
         </div>
 
-        {/* ===================================================
-            DEDUCTIONS
-            =================================================== */}
+        {/* DEDUCTIONS*/}
         <div
           className="
             mt-3
@@ -475,9 +477,7 @@ export function SalarySlipView({
               </tr>
             </tbody>
 
-            {/* =================================================
-                NET PAY
-                ================================================= */}
+            {/*  NET PAY */}
             <tfoot>
               <tr>
                 <td>
@@ -501,9 +501,7 @@ export function SalarySlipView({
           </table>
         </div>
 
-        {/* ===================================================
-            PF INFORMATION
-            =================================================== */}
+        {/* PF INFORMATION */}
         {slip.pfApplicable && (
           <div
             className="
@@ -539,9 +537,7 @@ export function SalarySlipView({
           </div>
         )}
 
-        {/* ===================================================
-            FOOTER
-            =================================================== */}
+        {/* FOOTER */}
         <p
           className="
             muted

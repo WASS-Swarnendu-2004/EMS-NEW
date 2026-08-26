@@ -42,6 +42,7 @@ export interface SalarySlip {
 
   // Attendance / salary calculation information
   workingDays?: number;
+  absentDays?: number;
   totalAvailableMinutes?: number;
   paidCasualLeaveDays?: number;
   paidSickLeaveDays?: number;
@@ -107,6 +108,7 @@ export const getMySalarySlips = async (): Promise<SalarySlip[]> => {
     totalDeductions: s.totalDeductions,
 
     workingDays: s.workingDays,
+    absentDays: s.absentDays,
     totalAvailableMinutes: s.totalAvailableMinutes,
     paidCasualLeaveDays: s.paidCasualLeaveDays,
     paidSickLeaveDays: s.paidSickLeaveDays,
@@ -258,6 +260,7 @@ export const getSalarySlip = async (
     totalDeductions: s.totalDeductions,
 
     workingDays: s.workingDays,
+    absentDays: s.absentDays,
     totalAvailableMinutes: s.totalAvailableMinutes,
     paidCasualLeaveDays: s.paidCasualLeaveDays,
     paidSickLeaveDays: s.paidSickLeaveDays,
