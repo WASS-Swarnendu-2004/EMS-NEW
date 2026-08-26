@@ -1,16 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect, useMemo } from "react";
-import {
-  Zap,
-  Download,
-  Printer,
-  X,
-  Plus,
-  RotateCcw,
-  Settings2,
-  Loader2,
-  Search,
-} from "lucide-react";
+import { Zap, Download, Printer, X, Plus, RotateCcw, Settings2, Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 
 import { exportToExcel } from "@/lib/excel";
@@ -46,8 +36,7 @@ function Page() {
   const [generating, setGenerating] = useState(false);
   const [viewLoading, setViewLoading] = useState(false);
 
-  // Filters
-  const [search, setSearch] = useState("");
+  // Department filter
   const [department, setDepartment] = useState("All");
 
   async function loadSalarySlips() {
@@ -74,45 +63,20 @@ function Page() {
    */
   const departments = useMemo(() => {
     const uniqueDepartments = Array.from(
-      new Set(
-        employees
-          .map((employee) => employee.department)
-          .filter(Boolean),
-      ),
+      new Set(employees.map((employee) => employee.department).filter(Boolean)),
     );
 
-    return uniqueDepartments.sort((a, b) =>
-      a.localeCompare(b),
-    );
+    return uniqueDepartments.sort((a, b) => a.localeCompare(b));
   }, [employees]);
 
   /**
-   * Filter employees by:
-   * 1. Employee name
-   * 2. Department
+   * Filter employees by department
    */
   const filteredEmployees = useMemo(() => {
-    const searchValue = search
-      .trim()
-      .toLowerCase();
-
     return employees.filter((employee) => {
-      const matchesName =
-        !searchValue ||
-        employee.fullName
-          .toLowerCase()
-          .includes(searchValue);
-
-      const matchesDepartment =
-        department === "All" ||
-        employee.department === department;
-
-      return (
-        matchesName &&
-        matchesDepartment
-      );
+      return department === "All" || employee.department === department;
     });
-  }, [employees, search, department]);
+  }, [employees, department]);
 
   async function genAll() {
     try {
@@ -120,65 +84,47 @@ function Page() {
 
       await generateSalary(month);
 
-      toast.success(
-        "Salary generated successfully",
-      );
+      toast.success("Salary generated successfully");
 
       await loadSalarySlips();
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Failed to generate salary",
-      );
+      toast.error("Failed to generate salary");
     } finally {
       setGenerating(false);
     }
   }
 
-  async function handleViewSlip(
-    salarySlipId: string,
-  ) {
+  async function handleViewSlip(salarySlipId: string) {
     try {
       setViewLoading(true);
 
-      const slip =
-        await getSalarySlip(salarySlipId);
+      const slip = await getSalarySlip(salarySlipId);
 
       setView(slip);
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Failed to load salary slip",
-      );
+      toast.error("Failed to load salary slip");
     } finally {
       setViewLoading(false);
     }
   }
 
-  async function handleGenerateEmployee(
-    employeeId: string,
-  ) {
+  async function handleGenerateEmployee(employeeId: string) {
     try {
       setGenerating(true);
 
-      await generateSalaryForEmployee(
-        employeeId,
-        month,
-      );
+      await generateSalaryForEmployee(employeeId, month);
 
-      toast.success(
-        "Salary generated successfully",
-      );
+      toast.success("Salary generated successfully");
 
       await loadSalarySlips();
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Failed to generate salary",
-      );
+      toast.error("Failed to generate salary");
     } finally {
       setGenerating(false);
     }
@@ -191,9 +137,7 @@ function Page() {
         Department: e.department,
         Gross: e.grossSalary,
         Net: e.netSalary ?? "",
-        Generated: e.generated
-          ? "Yes"
-          : "No",
+        Generated: e.generated ? "Yes" : "No",
       })),
       "salary-slips.xlsx",
       "Salaries",
@@ -201,7 +145,6 @@ function Page() {
   }
 
   function clearFilters() {
-    setSearch("");
     setDepartment("All");
   }
 
@@ -210,9 +153,7 @@ function Page() {
       <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
 
-        <p className="text-gray-500 text-lg font-medium">
-          Loading...
-        </p>
+        <p className="text-lg font-medium text-gray-500">Loading...</p>
       </div>
     );
   }
@@ -220,131 +161,80 @@ function Page() {
   return (
     <>
       {/* =========================
-          TOOLBAR
-      ========================== */}
-      <div
-        className="
-          mb-4
-          flex flex-col gap-3
-          rounded-lg
-          sm:flex-row sm:flex-wrap
-          sm:items-center
-        "
-      >
-        {/* Month */}
-        <label className="flex w-full items-center gap-2 sm:w-auto">
-          <span className="muted whitespace-nowrap">
-            Month:
-          </span>
-
-          <input
-            className="input w-full sm:w-[180px]"
-            type="month"
-            value={month}
-            onChange={(e) =>
-              setMonth(e.target.value)
-            }
-          />
-        </label>
-
-        {/* Search */}
-        <div className="relative w-full sm:w-[220px]">
-          <input
-            className="input w-full pl-9"
-            type="text"
-            placeholder="Search employee..."
-            value={search}
-            onChange={(e) =>
-              setSearch(e.target.value)
-            }
-          />
-        </div>
-
-        {/* Department */}
-        <select
-          className="input w-full sm:w-[190px]"
-          value={department}
-          onChange={(e) =>
-            setDepartment(e.target.value)
-          }
+    COMPACT TOOLBAR
+========================== */}
+      <div className="mb-5 w-full">
+        <div
+          className="
+      w-full
+      rounded-lg
+      border border-gray-200
+      bg-white
+      p-3
+      shadow-sm
+    "
         >
-          <option value="All">
-            All Departments
-          </option>
+          {/* First Row */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Month */}
+            <label className="flex shrink-0 items-center gap-1.5">
+              <span className="whitespace-nowrap text-xs font-medium text-gray-500">Month</span>
 
-          {departments.map((dept) => (
-            <option
-              key={dept}
-              value={dept}
+              <input
+                className="input w-[125px]"
+                type="month"
+                value={month}
+                onChange={(e) => setMonth(e.target.value)}
+              />
+            </label>
+
+            {/* Generate All */}
+            <button className="btn btn-gold btn-sm shrink-0" onClick={genAll} disabled={generating}>
+              {generating ? <Loader2 size={14} className="animate-spin" /> : <Zap size={14} />}
+
+              {generating ? "Generating..." : "Generate All"}
+            </button>
+
+            {/* Configure */}
+            <button className="btn btn-ghost btn-sm shrink-0" onClick={() => setShowCfg(true)}>
+              <Settings2 size={14} />
+              Configure
+            </button>
+
+            {/* Export */}
+            <button className="btn btn-ghost btn-sm shrink-0" onClick={exportXlsx}>
+              <Download size={14} />
+              Export
+            </button>
+          </div>
+
+          {/* Second Row - Department */}
+          <div className="mt-2 flex items-center gap-2">
+            <span className="whitespace-nowrap text-xs font-medium text-gray-500">Department</span>
+
+            <select
+              className="input w-[120px]"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
             >
-              {dept}
-            </option>
-          ))}
-        </select>
+              <option value="All">All</option>
 
-        {/* Clear Filters */}
-        {(search ||
-          department !== "All") && (
-          <button
-            className="btn btn-ghost w-full sm:w-auto"
-            onClick={clearFilters}
-          >
-            <X size={16} />
-            Clear
-          </button>
-        )}
+              {departments.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </select>
 
-        {/* Generate All */}
-        <button
-          className="
-            btn btn-gold
-            w-full sm:w-auto
-          "
-          onClick={genAll}
-          disabled={generating}
-        >
-          {generating ? (
-            <Loader2
-              size={16}
-              className="animate-spin"
-            />
-          ) : (
-            <Zap size={16} />
-          )}
-
-          {generating
-            ? "Generating..."
-            : "Generate salary for all"}
-        </button>
-
-        {/* Configure */}
-        <button
-          className="
-            btn btn-ghost
-            w-full sm:w-auto
-          "
-          onClick={() =>
-            setShowCfg(true)
-          }
-        >
-          <Settings2 size={16} />
-
-          Configure breakdown
-        </button>
-
-        {/* Export */}
-        <button
-          className="
-            btn btn-ghost
-            w-full sm:w-auto
-            sm:ml-auto
-          "
-          onClick={exportXlsx}
-        >
-          <Download size={16} />
-
-          Export Excel
-        </button>
+            {/* Clear */}
+            {department !== "All" && (
+              <button className="btn btn-ghost btn-sm" onClick={clearFilters}>
+                <X size={14} />
+                Clear
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* =========================
@@ -352,23 +242,11 @@ function Page() {
       ========================== */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="muted text-sm">
-          Showing{" "}
-          <strong>
-            {filteredEmployees.length}
-          </strong>{" "}
-          of{" "}
-          <strong>
-            {employees.length}
-          </strong>{" "}
+          Showing <strong>{filteredEmployees.length}</strong> of <strong>{employees.length}</strong>{" "}
           employees
         </p>
 
-        {(search ||
-          department !== "All") && (
-          <p className="muted text-sm">
-            Filtered results
-          </p>
-        )}
+        {department !== "All" && <p className="muted text-sm">Filtered results</p>}
       </div>
 
       {/* =========================
@@ -384,148 +262,83 @@ function Page() {
 
               <th>Gross</th>
 
-              <th>
-                Generated for {month}
-              </th>
+              <th>Generated for {month}</th>
 
               <th></th>
             </tr>
           </thead>
 
           <tbody>
-            {filteredEmployees.length ===
-            0 ? (
+            {filteredEmployees.length === 0 ? (
               <tr>
-                <td
-                  colSpan={5}
-                  className="py-10 text-center"
-                >
+                <td colSpan={5} className="py-10 text-center">
                   <div className="flex flex-col items-center gap-2">
-                    <Search
-                      size={28}
-                      className="text-gray-400"
-                    />
+                    <p className="font-medium text-gray-600">No employees found</p>
 
-                    <p className="font-medium text-gray-600">
-                      No employees found
-                    </p>
+                    <p className="muted text-sm">Try changing the department filter.</p>
 
-                    <p className="muted text-sm">
-                      Try changing the search
-                      or department filter.
-                    </p>
-
-                    {(search ||
-                      department !==
-                        "All") && (
-                      <button
-                        className="btn btn-sm btn-ghost mt-2"
-                        onClick={
-                          clearFilters
-                        }
-                      >
+                    {department !== "All" && (
+                      <button className="btn btn-sm btn-ghost mt-2" onClick={clearFilters}>
                         <X size={14} />
-                        Clear filters
+                        Clear filter
                       </button>
                     )}
                   </div>
                 </td>
               </tr>
             ) : (
-              filteredEmployees.map(
-                (e) => (
-                  <tr
-                    key={
-                      e.employeeIdMongo
-                    }
-                  >
-                    {/* Employee */}
-                    <td>
-                      <div className="font-medium">
-                        {e.fullName}
-                      </div>
-                    </td>
+              filteredEmployees.map((e) => (
+                <tr key={e.employeeIdMongo}>
+                  {/* Employee */}
+                  <td>
+                    <div className="font-medium">{e.fullName}</div>
+                  </td>
 
-                    {/* Department */}
-                    <td>
-                      <span className="badge purple">
-                        {e.department}
+                  {/* Department */}
+                  <td>
+                    <span className="badge purple">{e.department}</span>
+                  </td>
+
+                  {/* Gross */}
+                  <td className="whitespace-nowrap">₹{e.grossSalary.toLocaleString()}</td>
+
+                  {/* Generated */}
+                  <td>
+                    {e.generated ? (
+                      <span className="badge success whitespace-nowrap">
+                        Net ₹{e.netSalary?.toLocaleString()}
                       </span>
-                    </td>
+                    ) : (
+                      <span className="badge warn whitespace-nowrap">Not generated</span>
+                    )}
+                  </td>
 
-                    {/* Gross */}
-                    <td className="whitespace-nowrap">
-                      ₹
-                      {e.grossSalary.toLocaleString()}
-                    </td>
+                  {/* Action */}
+                  <td className="actions">
+                    {e.generated ? (
+                      <button
+                        className="btn btn-sm btn-ghost whitespace-nowrap"
+                        onClick={() => handleViewSlip(e.salarySlipId!)}
+                        disabled={viewLoading}
+                      >
+                        {viewLoading ? <Loader2 size={14} className="animate-spin" /> : null}
 
-                    {/* Generated */}
-                    <td>
-                      {e.generated ? (
-                        <span className="badge success whitespace-nowrap">
-                          Net ₹
-                          {e.netSalary?.toLocaleString()}
-                        </span>
-                      ) : (
-                        <span className="badge warn whitespace-nowrap">
-                          Not generated
-                        </span>
-                      )}
-                    </td>
+                        {viewLoading ? "Loading..." : "View Slip"}
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-sm whitespace-nowrap"
+                        onClick={() => handleGenerateEmployee(e.employeeIdMongo)}
+                        disabled={generating}
+                      >
+                        {generating ? <Loader2 size={14} className="animate-spin" /> : null}
 
-                    {/* Action */}
-                    <td className="actions">
-                      {e.generated ? (
-                        <button
-                          className="btn btn-sm btn-ghost whitespace-nowrap"
-                          onClick={() =>
-                            handleViewSlip(
-                              e.salarySlipId!,
-                            )
-                          }
-                          disabled={
-                            viewLoading
-                          }
-                        >
-                          {viewLoading ? (
-                            <Loader2
-                              size={14}
-                              className="animate-spin"
-                            />
-                          ) : null}
-
-                          {viewLoading
-                            ? "Loading..."
-                            : "View Slip"}
-                        </button>
-                      ) : (
-                        <button
-                          className="btn btn-sm whitespace-nowrap"
-                          onClick={() =>
-                            handleGenerateEmployee(
-                              e.employeeIdMongo,
-                            )
-                          }
-                          disabled={
-                            generating
-                          }
-                        >
-                          {generating ? (
-                            <Loader2
-                              size={14}
-                              className="animate-spin"
-                            />
-                          ) : null}
-
-                          {generating
-                            ? "Generating..."
-                            : "Generate"}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ),
-              )
+                        {generating ? "Generating..." : "Generate"}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))
             )}
           </tbody>
         </table>
@@ -535,12 +348,7 @@ function Page() {
           SALARY SLIP MODAL
       ========================== */}
       {view && (
-        <div
-          className="modal-backdrop"
-          onClick={() =>
-            setView(null)
-          }
-        >
+        <div className="modal-backdrop" onClick={() => setView(null)}>
           <div
             className="
               modal lg
@@ -549,34 +357,20 @@ function Page() {
               max-h-[90vh]
               overflow-y-auto
             "
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
             <div className="modal-head no-print">
               <h2>Salary Slip</h2>
 
               <div className="flex gap-2">
-                <button
-                  className="btn btn-ghost"
-                  onClick={() =>
-                    window.print()
-                  }
-                >
+                <button className="btn btn-ghost" onClick={() => window.print()}>
                   <Printer size={16} />
 
-                  <span className="hidden sm:inline">
-                    Print
-                  </span>
+                  <span className="hidden sm:inline">Print</span>
                 </button>
 
-                <button
-                  className="btn btn-ghost"
-                  onClick={() =>
-                    setView(null)
-                  }
-                >
+                <button className="btn btn-ghost" onClick={() => setView(null)}>
                   <X size={16} />
                 </button>
               </div>
@@ -584,14 +378,8 @@ function Page() {
 
             <SalarySlipView
               slip={view}
-              empName={
-                view.employee
-                  ?.fullName ?? ""
-              }
-              department={
-                view.employee
-                  ?.department ?? ""
-              }
+              empName={view.employee?.fullName ?? ""}
+              department={view.employee?.department ?? ""}
             />
           </div>
         </div>
@@ -600,25 +388,13 @@ function Page() {
       {/* =========================
           CONFIGURATION MODAL
       ========================== */}
-      {showCfg && (
-        <BreakdownConfig
-          onClose={() =>
-            setShowCfg(false)
-          }
-        />
-      )}
+      {showCfg && <BreakdownConfig onClose={() => setShowCfg(false)} />}
     </>
   );
 }
 
-function BreakdownConfig({
-  onClose,
-}: {
-  onClose: () => void;
-}) {
-  const [items, setItems] = useState<
-    SalaryComponent[]
-  >([]);
+function BreakdownConfig({ onClose }: { onClose: () => void }) {
+  const [items, setItems] = useState<SalaryComponent[]>([]);
 
   useEffect(() => {
     loadConfig();
@@ -626,42 +402,25 @@ function BreakdownConfig({
 
   async function loadConfig() {
     try {
-      const data =
-        await getSalaryConfig();
+      const data = await getSalaryConfig();
 
       setItems(data);
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Failed to load salary configuration",
-      );
+      toast.error("Failed to load salary configuration");
     }
   }
 
-  function update(
-    index: number,
-    patch: Partial<SalaryComponent>,
-  ) {
-    setItems((xs) =>
-      xs.map((x, i) =>
-        i === index
-          ? { ...x, ...patch }
-          : x,
-      ),
-    );
+  function update(index: number, patch: Partial<SalaryComponent>) {
+    setItems((xs) => xs.map((x, i) => (i === index ? { ...x, ...patch } : x)));
   }
 
-  function add(
-    type: "Earning" | "Deduction",
-  ) {
+  function add(type: "Earning" | "Deduction") {
     setItems((xs) => [
       ...xs,
       {
-        label:
-          type === "Earning"
-            ? "New Earning"
-            : "New Deduction",
+        label: type === "Earning" ? "New Earning" : "New Deduction",
         type,
         mode: "% of gross",
         value: "",
@@ -670,26 +429,16 @@ function BreakdownConfig({
   }
 
   function remove(index: number) {
-    setItems((xs) =>
-      xs.filter(
-        (_, i) => i !== index,
-      ),
-    );
+    setItems((xs) => xs.filter((_, i) => i !== index));
   }
 
   async function save() {
-    const invalidItem =
-      items.find(
-        (item) =>
-          !item.label.trim() ||
-          item.value === "" ||
-          Number(item.value) < 0,
-      );
+    const invalidItem = items.find(
+      (item) => !item.label.trim() || item.value === "" || Number(item.value) < 0,
+    );
 
     if (invalidItem) {
-      toast.warning(
-        "Please enter a valid label and value",
-      );
+      toast.warning("Please enter a valid label and value");
       return;
     }
 
@@ -697,23 +446,17 @@ function BreakdownConfig({
       await updateSalaryConfig(
         items.map((item) => ({
           ...item,
-          value: Number(
-            item.value,
-          ),
+          value: Number(item.value),
         })),
       );
 
-      toast.success(
-        "Salary configuration updated",
-      );
+      toast.success("Salary configuration updated");
 
       onClose();
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Failed to update salary configuration",
-      );
+      toast.error("Failed to update salary configuration");
     }
   }
 
@@ -741,26 +484,11 @@ function BreakdownConfig({
   }
 
   const earnPct = items
-    .filter(
-      (i) =>
-        i.type === "Earning" &&
-        i.mode === "% of gross",
-    )
-    .reduce(
-      (s, i) =>
-        s +
-        (typeof i.value ===
-        "number"
-          ? i.value
-          : 0),
-      0,
-    );
+    .filter((i) => i.type === "Earning" && i.mode === "% of gross")
+    .reduce((s, i) => s + (typeof i.value === "number" ? i.value : 0), 0);
 
   return (
-    <div
-      className="modal-backdrop"
-      onClick={onClose}
-    >
+    <div className="modal-backdrop" onClick={onClose}>
       <div
         className="
           modal lg
@@ -769,24 +497,17 @@ function BreakdownConfig({
           max-h-[90vh]
           overflow-y-auto
         "
-        onClick={(e) =>
-          e.stopPropagation()
-        }
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="modal-head">
           <h2 className="flex items-center gap-2">
             <Settings2 size={18} />
 
-            <span>
-              Salary Breakdown Configuration
-            </span>
+            <span>Salary Breakdown Configuration</span>
           </h2>
 
-          <button
-            className="btn btn-ghost"
-            onClick={onClose}
-          >
+          <button className="btn btn-ghost" onClick={onClose}>
             <X size={16} />
           </button>
         </div>
@@ -798,11 +519,8 @@ function BreakdownConfig({
             marginTop: 0,
           }}
         >
-          Define the earning and
-          deduction components.
-          Percent values are calculated
-          from the employee's gross
-          monthly salary.
+          Define the earning and deduction components. Percent values are calculated from the
+          employee's gross monthly salary.
         </p>
 
         {/* Configuration Table */}
@@ -819,137 +537,83 @@ function BreakdownConfig({
             </thead>
 
             <tbody>
-              {items.map(
-                (it, index) => (
-                  <tr
-                    key={
-                      it.id ??
-                      `salary-${index}`
-                    }
-                  >
-                    <td>
-                      <input
-                        className="input w-full"
-                        value={it.label}
-                        onChange={(e) =>
-                          update(
-                            index,
-                            {
-                              label:
-                                e
-                                  .target
-                                  .value,
-                            },
-                          )
-                        }
-                      />
-                    </td>
+              {items.map((it, index) => (
+                <tr key={it.id ?? `salary-${index}`}>
+                  <td>
+                    <input
+                      className="input w-full"
+                      value={it.label}
+                      onChange={(e) =>
+                        update(index, {
+                          label: e.target.value,
+                        })
+                      }
+                    />
+                  </td>
 
-                    <td>
-                      <select
-                        className="input w-full"
-                        value={it.type}
-                        onChange={(e) =>
-                          update(
-                            index,
-                            {
-                              type:
-                                e
-                                  .target
-                                  .value as SalaryComponent["type"],
-                            },
-                          )
-                        }
-                      >
-                        <option value="Earning">
-                          Earning
-                        </option>
+                  <td>
+                    <select
+                      className="input w-full"
+                      value={it.type}
+                      onChange={(e) =>
+                        update(index, {
+                          type: e.target.value as SalaryComponent["type"],
+                        })
+                      }
+                    >
+                      <option value="Earning">Earning</option>
 
-                        <option value="Deduction">
-                          Deduction
-                        </option>
-                      </select>
-                    </td>
+                      <option value="Deduction">Deduction</option>
+                    </select>
+                  </td>
 
-                    <td>
-                      <select
-                        className="input w-full"
-                        value={it.mode}
-                        onChange={(e) =>
-                          update(
-                            index,
-                            {
-                              mode:
-                                e
-                                  .target
-                                  .value as SalaryComponent["mode"],
-                            },
-                          )
-                        }
-                      >
-                        <option value="% of gross">
-                          % of gross
-                        </option>
+                  <td>
+                    <select
+                      className="input w-full"
+                      value={it.mode}
+                      onChange={(e) =>
+                        update(index, {
+                          mode: e.target.value as SalaryComponent["mode"],
+                        })
+                      }
+                    >
+                      <option value="% of gross">% of gross</option>
 
-                        <option value="Fixed">
-                          Fixed ₹
-                        </option>
-                      </select>
-                    </td>
+                      <option value="Fixed">Fixed ₹</option>
+                    </select>
+                  </td>
 
-                    <td>
-                      <input
-                        className="input"
-                        type="number"
-                        min="0"
-                        max={
-                          it.mode ===
-                          "% of gross"
-                            ? 100
-                            : undefined
-                        }
-                        value={it.value}
-                        onChange={(e) =>
-                          update(
-                            index,
-                            {
-                              value:
-                                e
-                                  .target
-                                  .value ===
-                                ""
-                                  ? ""
-                                  : Number(
-                                      e
-                                        .target
-                                        .value,
-                                    ),
-                            },
-                          )
-                        }
-                        style={{
-                          width: 110,
-                        }}
-                      />
-                    </td>
+                  <td>
+                    <input
+                      className="input"
+                      type="number"
+                      min="0"
+                      max={it.mode === "% of gross" ? 100 : undefined}
+                      value={it.value}
+                      onChange={(e) =>
+                        update(index, {
+                          value: e.target.value === "" ? "" : Number(e.target.value),
+                        })
+                      }
+                      style={{
+                        width: 110,
+                      }}
+                    />
+                  </td>
 
-                    <td>
-                      <button
-                        type="button"
-                        className="btn btn-sm btn-ghost whitespace-nowrap"
-                        onClick={() =>
-                          remove(index)
-                        }
-                        title={`Remove ${it.label}`}
-                      >
-                        <X size={14} />
-
-                        Remove
-                      </button>
-                    </td>
-                  </tr>
-                ),
-              )}
+                  <td>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-ghost whitespace-nowrap"
+                      onClick={() => remove(index)}
+                      title={`Remove ${it.label}`}
+                    >
+                      <X size={14} />
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
@@ -965,54 +629,29 @@ function BreakdownConfig({
           "
         >
           <div className="flex flex-col gap-2 sm:flex-row">
-            <button
-              className="btn btn-sm"
-              onClick={() =>
-                add("Earning")
-              }
-            >
+            <button className="btn btn-sm" onClick={() => add("Earning")}>
               <Plus size={14} />
               Add Earning
             </button>
 
-            <button
-              className="btn btn-sm"
-              onClick={() =>
-                add("Deduction")
-              }
-            >
+            <button className="btn btn-sm" onClick={() => add("Deduction")}>
               <Plus size={14} />
               Add Deduction
             </button>
           </div>
 
           <span className="muted text-sm">
-            Earnings (%):{" "}
-            <strong>
-              {earnPct}%
-            </strong>{" "}
-            {earnPct !== 100 &&
-              earnPct > 0 && (
-                <em>
-                  (typically 100%)
-                </em>
-              )}
+            Earnings (%): <strong>{earnPct}%</strong>{" "}
+            {earnPct !== 100 && earnPct > 0 && <em>(typically 100%)</em>}
           </span>
 
           <div className="flex flex-col gap-2 sm:ml-auto sm:flex-row">
-            <button
-              className="btn btn-ghost"
-              onClick={reset}
-            >
+            <button className="btn btn-ghost" onClick={reset}>
               <RotateCcw size={14} />
-
               Reset to default
             </button>
 
-            <button
-              className="btn btn-gold"
-              onClick={save}
-            >
+            <button className="btn btn-gold" onClick={save}>
               Save configuration
             </button>
           </div>
@@ -1021,4 +660,3 @@ function BreakdownConfig({
     </div>
   );
 }
-
