@@ -17,10 +17,7 @@ export const Route = createFileRoute("/user/")({
   component: Page,
 });
 
-type RemarkType =
-  | "late-checkin"
-  | "early-checkout"
-  | null;
+type RemarkType = "late-checkin" | "early-checkout" | null;
 
 const MAX_REMARK_LENGTH = 40;
 
@@ -29,8 +26,7 @@ function Page() {
 
   const empId = session!.id;
 
-  const [mode, setMode] =
-    useState<"office" | "wfh">("office");
+  const [mode, setMode] = useState<"office" | "wfh">("office");
 
   const [plan, setPlan] = useState("");
   const [status, setStatus] = useState("");
@@ -41,20 +37,15 @@ function Page() {
   const [dashboard, setDashboard] =
     useState<DashboardResponse | null>(null);
 
-  const [projects, setProjects] =
-    useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [checkingIn, setCheckingIn] =
-    useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
 
-  const [checkingOut, setCheckingOut] =
-    useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
-  const [savingWork, setSavingWork] =
-    useState(false);
+  const [savingWork, setSavingWork] = useState(false);
 
   // --------------------------------------------------
   // REMARK STATE
@@ -77,10 +68,7 @@ function Page() {
     try {
       setLoading(true);
 
-      const [
-        dashboardData,
-        projectData,
-      ] = await Promise.all([
+      const [dashboardData, projectData] = await Promise.all([
         getDashboard(),
         getMyProjects(),
       ]);
@@ -88,22 +76,17 @@ function Page() {
       setDashboard(dashboardData);
       setProjects(projectData);
 
-      setPlan(
-        dashboardData.todayPlan?.plan ?? ""
-      );
+      setPlan(dashboardData.todayPlan?.plan ?? "");
 
-      setStatus(
-        dashboardData.todayPlan?.status ?? ""
-      );
+      setStatus(dashboardData.todayPlan?.status ?? "");
 
       setProjectId(
         dashboardData.todayPlan?.projectId ?? ""
       );
     } catch (err) {
       console.error(err);
-      toast.error(
-        "Failed to load dashboard"
-      );
+
+      toast.error("Failed to load dashboard");
     } finally {
       setLoading(false);
     }
@@ -121,13 +104,9 @@ function Page() {
 
       setDashboard(res);
 
-      setPlan(
-        res.todayPlan?.plan ?? ""
-      );
+      setPlan(res.todayPlan?.plan ?? "");
 
-      setStatus(
-        res.todayPlan?.status ?? ""
-      );
+      setStatus(res.todayPlan?.status ?? "");
 
       setProjectId(
         res.todayPlan?.projectId ?? ""
@@ -135,9 +114,7 @@ function Page() {
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Failed to load dashboard"
-      );
+      toast.error("Failed to load dashboard");
     } finally {
       setLoading(false);
     }
@@ -158,17 +135,13 @@ function Page() {
         workDate: t,
       });
 
-      toast.success(
-        "Work status saved"
-      );
+      toast.success("Work status saved");
 
       await fetchDashboard();
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Unable to save work status"
-      );
+      toast.error("Unable to save work status");
     } finally {
       setSavingWork(false);
     }
@@ -181,16 +154,15 @@ function Page() {
   function getCurrentISTMinutes() {
     const now = new Date();
 
-    const istTime =
-      new Intl.DateTimeFormat(
-        "en-IN",
-        {
-          timeZone: "Asia/Kolkata",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        }
-      ).formatToParts(now);
+    const istTime = new Intl.DateTimeFormat(
+      "en-IN",
+      {
+        timeZone: "Asia/Kolkata",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }
+    ).formatToParts(now);
 
     const hour = Number(
       istTime.find(
@@ -207,11 +179,9 @@ function Page() {
     return hour * 60 + minute;
   }
 
-  const LATE_CHECKIN_TIME =
-    10 * 60 + 15; // 10:15 AM
+  const LATE_CHECKIN_TIME = 10 * 60 + 15;
 
-  const EARLY_CHECKOUT_TIME =
-    18 * 60 + 45; // 6:45 PM
+  const EARLY_CHECKOUT_TIME = 18 * 60 + 45;
 
   // --------------------------------------------------
   // CHECK IN
@@ -244,8 +214,7 @@ function Page() {
       );
 
       toast.success(
-        res.message ||
-          "Checked in successfully"
+        res.message || "Checked in successfully"
       );
 
       closeRemarkModal();
@@ -291,8 +260,7 @@ function Page() {
       );
 
       toast.success(
-        res.message ||
-          "Checked out successfully"
+        res.message || "Checked out successfully"
       );
 
       closeRemarkModal();
@@ -322,7 +290,6 @@ function Page() {
   ) => {
     const value = e.target.value;
 
-    // Extra protection in addition to maxLength
     setRemark(
       value.slice(0, MAX_REMARK_LENGTH)
     );
@@ -333,9 +300,7 @@ function Page() {
       remark.trim();
 
     if (!trimmedRemark) {
-      toast.error(
-        "Please provide a reason"
-      );
+      toast.error("Please provide a reason");
 
       return;
     }
@@ -369,9 +334,7 @@ function Page() {
   // --------------------------------------------------
 
   function formatISTTime(date: string) {
-    return new Date(
-      date
-    ).toLocaleTimeString(
+    return new Date(date).toLocaleTimeString(
       "en-IN",
       {
         timeZone: "Asia/Kolkata",
@@ -430,8 +393,7 @@ function Page() {
           </div>
 
           <div className="kpi-value">
-            {dashboard?.cards.myProjects ??
-              0}
+            {dashboard?.cards.myProjects ?? 0}
           </div>
         </div>
 
@@ -441,8 +403,7 @@ function Page() {
           </div>
 
           <div className="kpi-value">
-            {dashboard?.cards
-              .pendingLeaves ?? 0}
+            {dashboard?.cards.pendingLeaves ?? 0}
           </div>
         </div>
 
@@ -452,8 +413,7 @@ function Page() {
           </div>
 
           <div className="kpi-value">
-            {dashboard?.cards
-              .pendingWFH ?? 0}
+            {dashboard?.cards.pendingWFH ?? 0}
           </div>
         </div>
 
@@ -463,8 +423,7 @@ function Page() {
           </div>
 
           <div className="kpi-value">
-            {dashboard?.cards
-              .salarySlips ?? 0}
+            {dashboard?.cards.salarySlips ?? 0}
           </div>
         </div>
       </div>
@@ -474,7 +433,6 @@ function Page() {
       ================================================== */}
 
       <div className="row-2">
-
         {/* ==================================================
             ATTENDANCE
         ================================================== */}
@@ -486,17 +444,20 @@ function Page() {
             </h2>
           </div>
 
-          {dashboard?.attendance
-            ?.status === "Leave" ? (
+          {/* ON LEAVE */}
+
+          {dashboard?.onLeave ||
+          dashboard?.attendance?.status ===
+            "Leave" ? (
             <p className="badge">
-              You are on approved
-              leave today.
+              You are on approved leave today.
             </p>
-          ) : !dashboard?.attendance ? (
+          ) : !dashboard?.attendance?.checkedIn ? (
+            /* ==================================================
+                NOT CHECKED IN
+            ================================================== */
+
             <div>
-
-              {/* MODE */}
-
               <div className="field">
                 <label>
                   Mode
@@ -507,8 +468,7 @@ function Page() {
                   value={mode}
                   onChange={(e) =>
                     setMode(
-                      e.target
-                        .value as
+                      e.target.value as
                         | "office"
                         | "wfh"
                     )
@@ -524,16 +484,10 @@ function Page() {
                 </select>
               </div>
 
-              {/* CHECK IN */}
-
               <button
                 className="btn btn-gold"
-                onClick={
-                  handleCheckIn
-                }
-                disabled={
-                  checkingIn
-                }
+                onClick={handleCheckIn}
+                disabled={checkingIn}
               >
                 {checkingIn ? (
                   <>
@@ -542,8 +496,7 @@ function Page() {
                       size={18}
                     />
 
-                    &nbsp;
-                    Checking In...
+                    &nbsp; Checking In...
                   </>
                 ) : (
                   "🕒 Check In"
@@ -551,40 +504,30 @@ function Page() {
               </button>
             </div>
           ) : (
+            /* ==================================================
+                CHECKED IN
+            ================================================== */
+
             <div>
-
-              {/* CHECKED IN */}
-
               <p>
                 Checked in at{" "}
                 <strong>
-                  {formatISTTime(
-                    dashboard
-                      .attendance
-                      .checkIn!
-                  )}
+                  {dashboard.attendance.checkIn
+                    ? formatISTTime(
+                        dashboard.attendance.checkIn
+                      )
+                    : "--"}
                 </strong>{" "}
-                (
-                {
-                  dashboard
-                    .attendance
-                    .mode
-                }
-                )
+                ({dashboard.attendance.mode ?? "Office"})
               </p>
 
               {/* CHECK OUT BUTTON */}
 
-              {!dashboard.attendance
-                .checkOut && (
+              {!dashboard.attendance.checkOut && (
                 <button
                   className="btn"
-                  onClick={
-                    handleCheckOut
-                  }
-                  disabled={
-                    checkingOut
-                  }
+                  onClick={handleCheckOut}
+                  disabled={checkingOut}
                 >
                   {checkingOut ? (
                     <>
@@ -593,8 +536,7 @@ function Page() {
                         size={18}
                       />
 
-                      &nbsp;
-                      Checking Out...
+                      &nbsp; Checking Out...
                     </>
                   ) : (
                     `Check out (${nowTime()})`
@@ -604,20 +546,17 @@ function Page() {
 
               {/* DAY COMPLETE */}
 
-              {dashboard.attendance
-                .checkOut && (
+              {dashboard.attendance.checkOut && (
                 <p className="badge success">
                   Day complete —{" "}
-                  {formatISTTime(
-                    dashboard
-                      .attendance
-                      .checkIn!
-                  )}{" "}
+                  {dashboard.attendance.checkIn
+                    ? formatISTTime(
+                        dashboard.attendance.checkIn
+                      )
+                    : "--"}{" "}
                   →{" "}
                   {formatISTTime(
-                    dashboard
-                      .attendance
-                      .checkOut
+                    dashboard.attendance.checkOut
                   )}
                 </p>
               )}
@@ -657,16 +596,10 @@ function Page() {
               {projects.map(
                 (project) => (
                   <option
-                    key={
-                      project._id
-                    }
-                    value={
-                      project._id
-                    }
+                    key={project._id}
+                    value={project._id}
                   >
-                    {
-                      project.projectName
-                    }
+                    {project.projectName}
                   </option>
                 )
               )}
@@ -707,12 +640,8 @@ function Page() {
 
           <button
             className="btn"
-            onClick={
-              handleSaveWorkStatus
-            }
-            disabled={
-              savingWork
-            }
+            onClick={handleSaveWorkStatus}
+            disabled={savingWork}
           >
             {savingWork ? (
               <>
@@ -721,7 +650,7 @@ function Page() {
                   size={18}
                 />
 
-                &nbsp;Saving...
+                &nbsp; Saving...
               </>
             ) : (
               "Save"
@@ -743,8 +672,7 @@ function Page() {
               "rgba(0, 0, 0, 0.45)",
             display: "flex",
             alignItems: "center",
-            justifyContent:
-              "center",
+            justifyContent: "center",
             zIndex: 1000,
             padding: "20px",
           }}
@@ -760,18 +688,15 @@ function Page() {
                 "0 10px 30px rgba(0,0,0,0.2)",
             }}
           >
-
             {/* HEADER */}
 
             <div
               style={{
                 display: "flex",
-                alignItems:
-                  "center",
+                alignItems: "center",
                 justifyContent:
                   "space-between",
-                marginBottom:
-                  "20px",
+                marginBottom: "20px",
               }}
             >
               <h2
@@ -789,9 +714,7 @@ function Page() {
 
               <button
                 type="button"
-                onClick={
-                  closeRemarkModal
-                }
+                onClick={closeRemarkModal}
                 disabled={
                   checkingIn ||
                   checkingOut
@@ -852,14 +775,11 @@ function Page() {
                 autoFocus
               />
 
-              {/* CHARACTER COUNTER */}
-
               <div
                 style={{
                   textAlign:
                     "right",
-                  fontSize:
-                    "12px",
+                  fontSize: "12px",
                   color:
                     remark.length >=
                     MAX_REMARK_LENGTH
