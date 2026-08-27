@@ -68,17 +68,23 @@ function Page() {
     try {
       setLoading(true);
 
-      const [dashboardData, projectData] = await Promise.all([
-        getDashboard(),
-        getMyProjects(),
-      ]);
+      const [dashboardData, projectData] =
+        await Promise.all([
+          getDashboard(),
+          getMyProjects(),
+        ]);
 
       setDashboard(dashboardData);
+
       setProjects(projectData);
 
-      setPlan(dashboardData.todayPlan?.plan ?? "");
+      setPlan(
+        dashboardData.todayPlan?.plan ?? ""
+      );
 
-      setStatus(dashboardData.todayPlan?.status ?? "");
+      setStatus(
+        dashboardData.todayPlan?.status ?? ""
+      );
 
       setProjectId(
         dashboardData.todayPlan?.projectId ?? ""
@@ -98,15 +104,17 @@ function Page() {
 
   const fetchDashboard = async () => {
     try {
-      setLoading(true);
-
       const res = await getDashboard();
 
       setDashboard(res);
 
-      setPlan(res.todayPlan?.plan ?? "");
+      setPlan(
+        res.todayPlan?.plan ?? ""
+      );
 
-      setStatus(res.todayPlan?.status ?? "");
+      setStatus(
+        res.todayPlan?.status ?? ""
+      );
 
       setProjectId(
         res.todayPlan?.projectId ?? ""
@@ -115,8 +123,6 @@ function Page() {
       console.error(err);
 
       toast.error("Failed to load dashboard");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -214,13 +220,19 @@ function Page() {
       );
 
       toast.success(
-        res.message || "Checked in successfully"
+        res.message ||
+          "Checked in successfully"
       );
 
       closeRemarkModal();
 
+      // Refresh dashboard after successful check-in.
+      // The UI will now detect checkIn and show
+      // the Check Out button.
       await fetchDashboard();
     } catch (err: any) {
+      console.error(err);
+
       toast.error(
         err.response?.data?.message ||
           "Check in failed"
@@ -260,13 +272,19 @@ function Page() {
       );
 
       toast.success(
-        res.message || "Checked out successfully"
+        res.message ||
+          "Checked out successfully"
       );
 
       closeRemarkModal();
 
+      // Refresh dashboard after successful check-out.
+      // The UI will now detect checkOut and show
+      // Day Complete.
       await fetchDashboard();
     } catch (err: any) {
+      console.error(err);
+
       toast.error(
         err.response?.data?.message ||
           "Failed to check out"
@@ -300,7 +318,9 @@ function Page() {
       remark.trim();
 
     if (!trimmedRemark) {
-      toast.error("Please provide a reason");
+      toast.error(
+        "Please provide a reason"
+      );
 
       return;
     }
@@ -317,13 +337,15 @@ function Page() {
     }
 
     if (
-      remarkType === "late-checkin"
+      remarkType ===
+      "late-checkin"
     ) {
       await performCheckIn();
     }
 
     if (
-      remarkType === "early-checkout"
+      remarkType ===
+      "early-checkout"
     ) {
       await performCheckOut();
     }
@@ -345,6 +367,38 @@ function Page() {
       }
     );
   }
+
+  // --------------------------------------------------
+  // ATTENDANCE STATE
+  // --------------------------------------------------
+  //
+  // We intentionally use checkIn/checkOut instead
+  // of dashboard.attendance.checkedIn because the
+  // API may return checkIn without returning a
+  // separate checkedIn boolean.
+  //
+  // State:
+  //
+  // 1. No checkIn
+  //    -> Check In
+  //
+  // 2. checkIn exists, checkOut doesn't exist
+  //    -> Check Out
+  //
+  // 3. checkIn exists, checkOut exists
+  //    -> Day Complete
+  //
+  // --------------------------------------------------
+
+  const hasCheckedIn =
+    Boolean(
+      dashboard?.attendance?.checkIn
+    );
+
+  const hasCheckedOut =
+    Boolean(
+      dashboard?.attendance?.checkOut
+    );
 
   // --------------------------------------------------
   // LOADING
@@ -433,6 +487,7 @@ function Page() {
       ================================================== */}
 
       <div className="row-2">
+
         {/* ==================================================
             ATTENDANCE
         ================================================== */}
@@ -444,15 +499,20 @@ function Page() {
             </h2>
           </div>
 
-          {/* ON LEAVE */}
+          {/* ==================================================
+              ON LEAVE
+          ================================================== */}
 
           {dashboard?.onLeave ||
           dashboard?.attendance?.status ===
             "Leave" ? (
+
             <p className="badge">
               You are on approved leave today.
             </p>
-          ) : !dashboard?.attendance?.checkedIn ? (
+
+          ) : !hasCheckedIn ? (
+
             /* ==================================================
                 NOT CHECKED IN
             ================================================== */
@@ -496,70 +556,108 @@ function Page() {
                       size={18}
                     />
 
-                    &nbsp; Checking In...
+                    &nbsp;
+                    Checking In...
                   </>
                 ) : (
                   "🕒 Check In"
                 )}
               </button>
             </div>
-          ) : (
+
+          ) : hasCheckedOut ? (
+
             /* ==================================================
-                CHECKED IN
+                DAY COMPLETE
             ================================================== */
 
             <div>
               <p>
                 Checked in at{" "}
                 <strong>
-                  {dashboard.attendance.checkIn
+                  {dashboard
+                    ?.attendance
+                    ?.checkIn
                     ? formatISTTime(
-                        dashboard.attendance.checkIn
+                        dashboard
+                          .attendance
+                          .checkIn
+                      )
+                    : "--"}
+                </strong>
+              </p>
+
+              <p className="badge success">
+                Day complete —{" "}
+                {dashboard
+                  ?.attendance
+                  ?.checkIn
+                  ? formatISTTime(
+                      dashboard
+                        .attendance
+                        .checkIn
+                    )
+                  : "--"}{" "}
+                →{" "}
+                {dashboard
+                  ?.attendance
+                  ?.checkOut
+                  ? formatISTTime(
+                      dashboard
+                        .attendance
+                        .checkOut
+                    )
+                  : "--"}
+              </p>
+            </div>
+
+          ) : (
+
+            /* ==================================================
+                CHECKED IN → SHOW CHECK OUT
+            ================================================== */
+
+            <div>
+              <p>
+                Checked in at{" "}
+                <strong>
+                  {dashboard
+                    ?.attendance
+                    ?.checkIn
+                    ? formatISTTime(
+                        dashboard
+                          .attendance
+                          .checkIn
                       )
                     : "--"}
                 </strong>{" "}
-                ({dashboard.attendance.mode ?? "Office"})
+                (
+                {dashboard
+                  ?.attendance
+                  ?.mode ??
+                  "Office"}
+                )
               </p>
 
-              {/* CHECK OUT BUTTON */}
+              <button
+                className="btn"
+                onClick={handleCheckOut}
+                disabled={checkingOut}
+              >
+                {checkingOut ? (
+                  <>
+                    <Loader2
+                      className="animate-spin"
+                      size={18}
+                    />
 
-              {!dashboard.attendance.checkOut && (
-                <button
-                  className="btn"
-                  onClick={handleCheckOut}
-                  disabled={checkingOut}
-                >
-                  {checkingOut ? (
-                    <>
-                      <Loader2
-                        className="animate-spin"
-                        size={18}
-                      />
-
-                      &nbsp; Checking Out...
-                    </>
-                  ) : (
-                    `Check out (${nowTime()})`
-                  )}
-                </button>
-              )}
-
-              {/* DAY COMPLETE */}
-
-              {dashboard.attendance.checkOut && (
-                <p className="badge success">
-                  Day complete —{" "}
-                  {dashboard.attendance.checkIn
-                    ? formatISTTime(
-                        dashboard.attendance.checkIn
-                      )
-                    : "--"}{" "}
-                  →{" "}
-                  {formatISTTime(
-                    dashboard.attendance.checkOut
-                  )}
-                </p>
-              )}
+                    &nbsp;
+                    Checking Out...
+                  </>
+                ) : (
+                  `Check Out (${nowTime()})`
+                )}
+              </button>
             </div>
           )}
         </div>
@@ -640,7 +738,9 @@ function Page() {
 
           <button
             className="btn"
-            onClick={handleSaveWorkStatus}
+            onClick={
+              handleSaveWorkStatus
+            }
             disabled={savingWork}
           >
             {savingWork ? (
@@ -650,7 +750,8 @@ function Page() {
                   size={18}
                 />
 
-                &nbsp; Saving...
+                &nbsp;
+                Saving...
               </>
             ) : (
               "Save"
@@ -688,6 +789,7 @@ function Page() {
                 "0 10px 30px rgba(0,0,0,0.2)",
             }}
           >
+
             {/* HEADER */}
 
             <div
@@ -714,7 +816,9 @@ function Page() {
 
               <button
                 type="button"
-                onClick={closeRemarkModal}
+                onClick={
+                  closeRemarkModal
+                }
                 disabled={
                   checkingIn ||
                   checkingOut
