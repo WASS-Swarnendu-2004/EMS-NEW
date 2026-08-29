@@ -4,8 +4,9 @@ type Employee = {
   _id: string;
   employeeId: string;
   fullName: string;
-  role: string;
-  department: string;
+  role?: string;
+  designation?: string;
+  department?: string;
   profileImage?: string;
 };
 
@@ -247,16 +248,6 @@ export default function TaskAssignmentForm({
 
                     <span className="font-medium text-gray-900">{hoveredEmployee.employeeId}</span>
                   </div>
-
-                  {/* ROLE */}
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-gray-500">Role</span>
-
-                    <span className="font-medium text-gray-900">
-                      {hoveredEmployee.role || "N/A"}
-                    </span>
-                  </div>
-
                   {/* DEPARTMENT */}
                   <div className="flex items-center justify-between gap-4">
                     <span className="text-gray-500">Department</span>

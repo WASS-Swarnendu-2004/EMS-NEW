@@ -4,8 +4,9 @@ export interface TaskEmployee {
   _id: string;
   employeeId: string;
   fullName: string;
-  role: string;
-  department: string;
+  role?: string;
+  designation?: string;
+  department?: string;
   profileImage?: string;
 }
 
