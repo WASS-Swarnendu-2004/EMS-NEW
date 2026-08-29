@@ -154,59 +154,10 @@ function Page() {
   }
 
   // --------------------------------------------------
-  // IST TIME
-  // --------------------------------------------------
-
-  function getCurrentISTMinutes() {
-    const now = new Date();
-
-    const istTime = new Intl.DateTimeFormat(
-      "en-IN",
-      {
-        timeZone: "Asia/Kolkata",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }
-    ).formatToParts(now);
-
-    const hour = Number(
-      istTime.find(
-        (part) => part.type === "hour"
-      )?.value ?? 0
-    );
-
-    const minute = Number(
-      istTime.find(
-        (part) => part.type === "minute"
-      )?.value ?? 0
-    );
-
-    return hour * 60 + minute;
-  }
-
-  const LATE_CHECKIN_TIME = 10 * 60 + 15;
-
-  const EARLY_CHECKOUT_TIME = 18 * 60 + 45;
-
-  // --------------------------------------------------
   // CHECK IN
   // --------------------------------------------------
 
   const handleCheckIn = async () => {
-    const currentISTMinutes =
-      getCurrentISTMinutes();
-
-    if (
-      currentISTMinutes >=
-      LATE_CHECKIN_TIME
-    ) {
-      setRemark("");
-      setRemarkType("late-checkin");
-
-      return;
-    }
-
     await performCheckIn();
   };
 
@@ -226,16 +177,32 @@ function Page() {
 
       closeRemarkModal();
 
-      // Refresh dashboard after successful check-in.
-      // The UI will now detect checkIn and show
-      // the Check Out button.
       await fetchDashboard();
     } catch (err: any) {
-      console.error(err);
+      console.error("Check-in error:", err);
+
+      const message =
+        err.response?.data?.message || "";
+
+      /*
+       * The backend decides whether the employee
+       * is late and requires a remark.
+       *
+       * We do NOT check the time in the frontend.
+       */
+      if (
+        err.response?.status === 400 &&
+        message.toLowerCase().includes("late") &&
+        message.toLowerCase().includes("remark")
+      ) {
+        setRemark("");
+        setRemarkType("late-checkin");
+
+        return;
+      }
 
       toast.error(
-        err.response?.data?.message ||
-          "Check in failed"
+        message || "Check in failed"
       );
     } finally {
       setCheckingIn(false);
@@ -247,19 +214,6 @@ function Page() {
   // --------------------------------------------------
 
   const handleCheckOut = async () => {
-    const currentISTMinutes =
-      getCurrentISTMinutes();
-
-    if (
-      currentISTMinutes <
-      EARLY_CHECKOUT_TIME
-    ) {
-      setRemark("");
-      setRemarkType("early-checkout");
-
-      return;
-    }
-
     await performCheckOut();
   };
 
@@ -278,16 +232,32 @@ function Page() {
 
       closeRemarkModal();
 
-      // Refresh dashboard after successful check-out.
-      // The UI will now detect checkOut and show
-      // Day Complete.
       await fetchDashboard();
     } catch (err: any) {
-      console.error(err);
+      console.error("Check-out error:", err);
+
+      const message =
+        err.response?.data?.message || "";
+
+      /*
+       * The backend decides whether the employee
+       * is checking out too early and requires a remark.
+       *
+       * We do NOT check the time in the frontend.
+       */
+      if (
+        err.response?.status === 400 &&
+        message.toLowerCase().includes("early") &&
+        message.toLowerCase().includes("remark")
+      ) {
+        setRemark("");
+        setRemarkType("early-checkout");
+
+        return;
+      }
 
       toast.error(
-        err.response?.data?.message ||
-          "Failed to check out"
+        message || "Failed to check out"
       );
     } finally {
       setCheckingOut(false);
@@ -341,6 +311,8 @@ function Page() {
       "late-checkin"
     ) {
       await performCheckIn();
+
+      return;
     }
 
     if (
@@ -348,6 +320,8 @@ function Page() {
       "early-checkout"
     ) {
       await performCheckOut();
+
+      return;
     }
   };
 
@@ -370,24 +344,6 @@ function Page() {
 
   // --------------------------------------------------
   // ATTENDANCE STATE
-  // --------------------------------------------------
-  //
-  // We intentionally use checkIn/checkOut instead
-  // of dashboard.attendance.checkedIn because the
-  // API may return checkIn without returning a
-  // separate checkedIn boolean.
-  //
-  // State:
-  //
-  // 1. No checkIn
-  //    -> Check In
-  //
-  // 2. checkIn exists, checkOut doesn't exist
-  //    -> Check Out
-  //
-  // 3. checkIn exists, checkOut exists
-  //    -> Day Complete
-  //
   // --------------------------------------------------
 
   const hasCheckedIn =
@@ -847,8 +803,8 @@ function Page() {
             >
               {remarkType ===
               "late-checkin"
-                ? "You are checking in at or after 10:15 AM. Please provide a reason for your late check-in."
-                : "You are checking out before 6:45 PM. Please provide a reason for your early check-out."}
+                ? "You are checking in late. Please provide a reason for your late check-in."
+                : "You are checking out early. Please provide a reason for your early check-out."}
             </p>
 
             {/* REMARK */}
