@@ -27,9 +27,7 @@ const STATUSES: Project["status"][] = [
   "cancelled",
 ];
 
-// =====================================================
 // DATE HELPERS
-// =====================================================
 
 function diffDays(a: string, b: string) {
   if (!a || !b) return 0;
@@ -54,9 +52,7 @@ function formatISTDate(date: string) {
 
 const today = new Date().toISOString().slice(0, 10);
 
-// =====================================================
 // BLANK FORM
-// =====================================================
 
 const blank: {
   projectName: string;
@@ -78,9 +74,7 @@ const blank: {
   assignedEmployees: [],
 };
 
-// =====================================================
 // PAGE
-// =====================================================
 
 function Page() {
   const [open, setOpen] = useState(false);
@@ -106,9 +100,7 @@ function Page() {
   const [selectedEmployees, setSelectedEmployees] =
     useState<string[]>([]);
 
-  // ===================================================
   // LOAD DATA
-  // ===================================================
 
   useEffect(() => {
     loadData();
@@ -151,9 +143,7 @@ function Page() {
     }
   }
 
-  // ===================================================
   // DURATION
-  // ===================================================
 
   const duration = useMemo(
     () =>
@@ -164,9 +154,7 @@ function Page() {
     [form.startDate, form.endDate],
   );
 
-  // ===================================================
   // ADD PROJECT
-  // ===================================================
 
   function openNew() {
     setEditing(null);
@@ -178,9 +166,7 @@ function Page() {
     setOpen(true);
   }
 
-  // ===================================================
   // EDIT PROJECT
-  // ===================================================
 
   function openEdit(project: Project) {
     setEditing(project);
@@ -205,9 +191,7 @@ function Page() {
     setOpen(true);
   }
 
-  // ===================================================
   // SAVE PROJECT
-  // ===================================================
 
   async function save() {
     if (!form.projectName.trim()) {
@@ -291,9 +275,7 @@ function Page() {
     }
   }
 
-  // ===================================================
   // DELETE PROJECT
-  // ===================================================
 
   async function remove(id: string) {
     try {
@@ -317,9 +299,8 @@ function Page() {
     }
   }
 
-  // ===================================================
+  
   // OPEN ASSIGN MODAL
-  // ===================================================
 
   function openAssign(project: Project) {
     setAssignOpen(project);
@@ -334,9 +315,7 @@ function Page() {
     );
   }
 
-  // ===================================================
   // SAVE ASSIGNMENTS
-  // ===================================================
 
   async function saveAssignments() {
     if (!assignOpen) return;
@@ -370,9 +349,7 @@ function Page() {
     }
   }
 
-  // ===================================================
   // EXPORT EXCEL
-  // ===================================================
 
   function exportXlsx() {
     exportToExcel(
@@ -398,9 +375,7 @@ function Page() {
     );
   }
 
-  // ===================================================
   // LOADING
-  // ===================================================
 
   if (loading) {
     return (
@@ -414,15 +389,11 @@ function Page() {
     );
   }
 
-  // ===================================================
   // UI
-  // ===================================================
 
   return (
     <>
-      {/* =================================================
-          TOOLBAR
-          ================================================= */}
+      {/* TOOLBAR */}
 
       <div className="toolbar">
         <span className="spacer" />
@@ -442,9 +413,7 @@ function Page() {
         </button>
       </div>
 
-      {/* =================================================
-          PROJECT TABLE
-          ================================================= */}
+      {/* PROJECT TABLE */}
 
       <div className="table-wrap">
         <table className="table">
@@ -639,9 +608,7 @@ function Page() {
         </table>
       </div>
 
-      {/* =================================================
-          ADD / EDIT MODAL
-          ================================================= */}
+      {/* ADD / EDIT MODAL*/}
 
       {open && (
         <div
@@ -875,9 +842,7 @@ function Page() {
         </div>
       )}
 
-      {/* =================================================
-          VIEW PROJECT MODAL
-          ================================================= */}
+      {/* VIEW PROJECT MODAL*/}
 
       {view && (
         <div
@@ -1003,9 +968,7 @@ function Page() {
         </div>
       )}
 
-      {/* =================================================
-          ASSIGN EMPLOYEES MODAL
-          ================================================= */}
+      {/*ASSIGN EMPLOYEES MODAL*/}
 
       {assignOpen && (
         <div

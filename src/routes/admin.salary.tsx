@@ -160,19 +160,10 @@ function Page() {
 
   return (
     <>
-      {/* =========================
-    COMPACT TOOLBAR
-========================== */}
+      {/* COMPACT TOOLBAR*/}
       <div className="mb-5 w-full">
         <div
-          className="
-      w-full
-      rounded-lg
-      border border-gray-200
-      bg-white
-      p-3
-      shadow-sm
-    "
+          className="w-full rounded-lg border border-gray-200 bg-white p-3 shadow-sm"
         >
           {/* First Row */}
           <div className="flex flex-wrap items-center gap-2">
@@ -237,9 +228,7 @@ function Page() {
         </div>
       </div>
 
-      {/* =========================
-          RESULT COUNT
-      ========================== */}
+      {/* RESULT COUNT */}
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="muted text-sm">
           Showing <strong>{filteredEmployees.length}</strong> of <strong>{employees.length}</strong>{" "}
@@ -249,9 +238,7 @@ function Page() {
         {department !== "All" && <p className="muted text-sm">Filtered results</p>}
       </div>
 
-      {/* =========================
-          SALARY TABLE
-      ========================== */}
+      {/* SALARY TABLE */}
       <div className="table-wrap w-full overflow-x-auto">
         <table className="table min-w-[760px]">
           <thead>
@@ -344,9 +331,7 @@ function Page() {
         </table>
       </div>
 
-      {/* =========================
-          SALARY SLIP MODAL
-      ========================== */}
+      {/* SALARY SLIP MODAL */}
       {view && (
         <div className="modal-backdrop" onClick={() => setView(null)}>
           <div
@@ -385,9 +370,7 @@ function Page() {
         </div>
       )}
 
-      {/* =========================
-          CONFIGURATION MODAL
-      ========================== */}
+      {/* CONFIGURATION MODAL */}
       {showCfg && <BreakdownConfig onClose={() => setShowCfg(false)} />}
     </>
   );

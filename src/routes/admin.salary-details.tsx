@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { CalendarDays, Loader2, Search } from "lucide-react";
+import {
+  ArrowDown,
+  CalendarDays,
+  Loader2,
+  Search,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import * as XLSX from "xlsx";
 import api from "@/api/axios";
 
 type SalaryEmployee = {
@@ -110,12 +116,6 @@ const MONTH_OPTIONS = [
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-const YEARS = [
-  CURRENT_YEAR - 1,
-  CURRENT_YEAR,
-  CURRENT_YEAR + 1,
-];
-
 const formatCurrency = (amount: number | null) => {
   if (amount === null || amount === undefined) {
     return "—";
@@ -129,7 +129,8 @@ function getEarningAmount(
   label: string,
 ): number | null {
   const earning = earnings.find(
-    (item) => item.label.toLowerCase() === label.toLowerCase(),
+    (item) =>
+      item.label.toLowerCase() === label.toLowerCase(),
   );
 
   return earning ? earning.amount : null;
@@ -140,7 +141,8 @@ function getDeductionAmount(
   label: string,
 ): number | null {
   const deduction = deductions.find(
-    (item) => item.label.toLowerCase() === label.toLowerCase(),
+    (item) =>
+      item.label.toLowerCase() === label.toLowerCase(),
   );
 
   return deduction ? deduction.amount : null;
@@ -159,15 +161,15 @@ function AdminSalaryDetails() {
     new Date().getMonth() + 1,
   );
 
-  const [selectedYear, setSelectedYear] = useState(CURRENT_YEAR);
-
   const [loading, setLoading] = useState(true);
 
   const [error, setError] = useState("");
 
+  const [exporting, setExporting] = useState(false);
+
   useEffect(() => {
     loadSalaryData();
-  }, [selectedMonth, selectedYear]);
+  }, [selectedMonth]);
 
   async function loadSalaryData() {
     try {
@@ -175,39 +177,43 @@ function AdminSalaryDetails() {
       setError("");
 
       console.log(
-        `Loading salary data for ${selectedMonth}/${selectedYear}`,
+        `Loading salary data for ${selectedMonth}/${CURRENT_YEAR}`,
       );
 
       /*
-       * STEP 1
-       *
        * Get all employees for the selected month.
+       *
+       * Year is automatically taken as the current year.
        */
       const monthlyResponse =
-        await api.get<MonthlySalaryResponse>("/admin/salary", {
-          params: {
-            month: selectedMonth,
-            year: selectedYear,
+        await api.get<MonthlySalaryResponse>(
+          "/admin/salary",
+          {
+            params: {
+              month: selectedMonth,
+              year: CURRENT_YEAR,
+            },
           },
-        });
+        );
 
-      console.log("MONTHLY SALARY RESPONSE:", monthlyResponse.data);
+      console.log(
+        "MONTHLY SALARY RESPONSE:",
+        monthlyResponse.data,
+      );
 
-      const monthlyEmployees = monthlyResponse.data.employees || [];
+      const monthlyEmployees =
+        monthlyResponse.data.employees || [];
 
       /*
-       * STEP 2
-       *
        * Get detailed salary information only for
        * employees whose salary has already been generated.
-       *
-       * We are NOT calculating anything here.
-       * We are only reading values calculated by backend.
        */
-      const generatedEmployees = monthlyEmployees.filter(
-        (employee) =>
-          employee.generated === true && employee.salarySlipId,
-      );
+      const generatedEmployees =
+        monthlyEmployees.filter(
+          (employee) =>
+            employee.generated === true &&
+            employee.salarySlipId,
+        );
 
       const detailResults = await Promise.all(
         generatedEmployees.map(async (employee) => {
@@ -236,9 +242,7 @@ function AdminSalaryDetails() {
       );
 
       /*
-       * STEP 3
-       *
-       * Create a lookup map for detailed salary data.
+       * Create lookup map for salary details.
        */
       const detailsMap = new Map<
         string,
@@ -247,98 +251,99 @@ function AdminSalaryDetails() {
 
       detailResults.forEach((result) => {
         if (result.details) {
-          detailsMap.set(result.employeeId, result.details);
+          detailsMap.set(
+            result.employeeId,
+            result.details,
+          );
         }
       });
 
       /*
-       * STEP 4
-       *
        * Merge monthly employee information
-       * with the already-calculated salary details.
+       * with backend salary details.
        */
-      const rows: SalaryRow[] = monthlyEmployees.map((employee) => {
-        const details = detailsMap.get(employee.employeeId);
+      const rows: SalaryRow[] =
+        monthlyEmployees.map((employee) => {
+          const details = detailsMap.get(
+            employee.employeeId,
+          );
 
-        /*
-         * Salary has NOT been generated.
-         *
-         * Show employee information but salary
-         * calculation fields remain empty.
-         */
-        if (!details) {
+          /*
+           * Salary not generated.
+           */
+          if (!details) {
+            return {
+              employeeId: employee.employeeId,
+              fullName: employee.fullName,
+              designation: employee.role || "—",
+              monthlyGrossSalary:
+                employee.grossSalary,
+              basic: null,
+              hra: null,
+              specialAllowance: null,
+              absentDeduction: null,
+              pf: null,
+              professionalTax: null,
+              netSalary: null,
+              generated: employee.generated,
+            };
+          }
+
+          /*
+           * Salary generated.
+           *
+           * All values come directly from backend.
+           */
           return {
             employeeId: employee.employeeId,
+
             fullName: employee.fullName,
-            designation: employee.role || "—",
-            monthlyGrossSalary: employee.grossSalary,
-            basic: null,
-            hra: null,
-            specialAllowance: null,
-            absentDeduction: null,
-            pf: null,
-            professionalTax: null,
-            netSalary: null,
-            generated: employee.generated,
+
+            designation:
+              employee.role ||
+              details.employee?.designation ||
+              "—",
+
+            monthlyGrossSalary:
+              details.grossSalary,
+
+            basic: getEarningAmount(
+              details.earnings,
+              "Basic",
+            ),
+
+            hra: getEarningAmount(
+              details.earnings,
+              "HRA",
+            ),
+
+            specialAllowance: getEarningAmount(
+              details.earnings,
+              "Special Allowance",
+            ),
+
+            absentDeduction: getDeductionAmount(
+              details.deductions,
+              "Absent Deduction",
+            ),
+
+            pf: details.employeePF,
+
+            professionalTax:
+              details.professionalTax,
+
+            netSalary: details.netSalary,
+
+            generated: true,
           };
-        }
+        });
 
-        /*
-         * Salary has been generated.
-         *
-         * Every value below comes directly from backend.
-         */
-        return {
-          employeeId: employee.employeeId,
-
-          fullName: employee.fullName,
-
-          designation:
-            employee.role ||
-            details.employee?.designation ||
-            "—",
-
-          monthlyGrossSalary: details.grossSalary,
-
-          basic: getEarningAmount(
-            details.earnings,
-            "Basic",
-          ),
-
-          hra: getEarningAmount(
-            details.earnings,
-            "HRA",
-          ),
-
-          specialAllowance: getEarningAmount(
-            details.earnings,
-            "Special Allowance",
-          ),
-
-          absentDeduction: getDeductionAmount(
-            details.deductions,
-            "Absent Deduction",
-          ),
-
-          pf: details.employeePF,
-
-          professionalTax: details.professionalTax,
-
-          netSalary: details.netSalary,
-
-          generated: true,
-        };
-      });
-
-      /*
-       * One row per employee.
-       *
-       * The monthly API already gives one employee
-       * per record, so we don't add duplicates.
-       */
       setEmployees(rows);
     } catch (err) {
-      console.error("Salary Details Error:", err);
+      console.error(
+        "Salary Details Error:",
+        err,
+      );
 
       setError(
         "Failed to load salary details. Please try again.",
@@ -350,8 +355,12 @@ function AdminSalaryDetails() {
     }
   }
 
+  /*
+   * SEARCH FILTER
+   */
   const filteredData = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch =
+      search.trim().toLowerCase();
 
     if (!normalizedSearch) {
       return employees;
@@ -372,16 +381,133 @@ function AdminSalaryDetails() {
     });
   }, [employees, search]);
 
+  /*
+   * SELECTED MONTH NAME
+   */
   const selectedMonthLabel =
     MONTH_OPTIONS.find(
       (month) => month.value === selectedMonth,
     )?.label || "";
+
+  /*
+   * EXPORT EXCEL
+   */
+  const handleExportExcel = () => {
+    try {
+      if (filteredData.length === 0) {
+        setError(
+          "There is no salary data available to export.",
+        );
+        return;
+      }
+
+      setExporting(true);
+      setError("");
+
+      /*
+       * Convert displayed data into Excel rows.
+       */
+      const excelData = filteredData.map(
+        (employee) => ({
+          "Employee Name": employee.fullName,
+
+          "Employee ID": employee.employeeId,
+
+          "Employee Designation":
+            employee.designation,
+
+          "Monthly Gross Salary":
+            employee.monthlyGrossSalary,
+
+          Basic: employee.basic ?? "",
+
+          HRA: employee.hra ?? "",
+
+          "Special Allowance":
+            employee.specialAllowance ?? "",
+
+          "Absent Deductions":
+            employee.absentDeduction ?? "",
+
+          PF: employee.pf ?? "",
+
+          PTAX:
+            employee.professionalTax ?? "",
+
+          "Net Pay":
+            employee.netSalary ?? "",
+        }),
+      );
+
+      /*
+       * Create worksheet.
+       */
+      const worksheet =
+        XLSX.utils.json_to_sheet(excelData);
+
+      /*
+       * Set Excel column widths.
+       */
+      worksheet["!cols"] = [
+        { wch: 25 },
+        { wch: 16 },
+        { wch: 25 },
+        { wch: 22 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 23 },
+        { wch: 22 },
+        { wch: 16 },
+        { wch: 16 },
+        { wch: 18 },
+      ];
+
+      /*
+       * Create workbook.
+       */
+      const workbook =
+        XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Salary Details",
+      );
+
+      /*
+       * Example:
+       * Salary_Details_August_2026.xlsx
+       */
+      const fileName =
+        `Salary_Details_${selectedMonthLabel}_${CURRENT_YEAR}.xlsx`;
+
+      /*
+       * Download Excel file.
+       */
+      XLSX.writeFile(
+        workbook,
+        fileName,
+      );
+    } catch (exportError) {
+      console.error(
+        "Excel Export Error:",
+        exportError,
+      );
+
+      setError(
+        "Failed to export salary details to Excel.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="min-h-full w-full bg-[#f8f7fb] p-3 sm:p-4 lg:p-5">
 
       {/* HEADER */}
       <div className="mb-4 sm:mb-5">
+
         <h1 className="text-xl font-bold text-[#171b2d] sm:text-2xl">
           Salary Details
         </h1>
@@ -389,38 +515,19 @@ function AdminSalaryDetails() {
         <p className="mt-1 text-xs text-[#737b91] sm:text-sm">
           View salary details of all employees
         </p>
+
       </div>
 
-      {/* FILTERS */}
+      {/* FILTERS + EXPORT */}
       <div className="mb-4 rounded-xl border border-[#ebe8f1] bg-white p-3 shadow-sm sm:p-4">
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 
-          {/* SEARCH */}
-          <div className="flex h-11 w-full items-center gap-2 rounded-lg border border-[#dedbe7] bg-white px-3 lg:max-w-md">
-
-            <Search
-              size={18}
-              className="shrink-0 text-[#737b91]"
-            />
-
-            <input
-              type="text"
-              value={search}
-              onChange={(e) =>
-                setSearch(e.target.value)
-              }
-              placeholder="Search employee..."
-              className="w-full bg-transparent text-sm text-[#171b2d] outline-none placeholder:text-[#9ca2b1]"
-            />
-
-          </div>
-
-          {/* MONTH + YEAR */}
+          {/* LEFT SIDE */}
           <div className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto">
 
             {/* MONTH */}
-            <div className="flex h-11 w-full items-center gap-2 rounded-lg border border-[#dedbe7] bg-white px-3 sm:w-[180px]">
+            <div className="flex h-11 w-full items-center gap-2 rounded-lg border border-[#dedbe7] bg-white px-3 sm:w-[190px]">
 
               <CalendarDays
                 size={18}
@@ -436,40 +543,89 @@ function AdminSalaryDetails() {
                 }
                 className="w-full cursor-pointer bg-transparent text-sm text-[#272b3d] outline-none"
               >
-                {MONTH_OPTIONS.map((month) => (
-                  <option
-                    key={month.value}
-                    value={month.value}
-                  >
-                    {month.label}
-                  </option>
-                ))}
+                {MONTH_OPTIONS.map(
+                  (month) => (
+                    <option
+                      key={month.value}
+                      value={month.value}
+                    >
+                      {month.label}
+                    </option>
+                  ),
+                )}
               </select>
 
             </div>
 
-            {/* YEAR */}
-            <select
-              value={selectedYear}
-              onChange={(e) =>
-                setSelectedYear(
-                  Number(e.target.value),
-                )
-              }
-              className="h-11 w-full cursor-pointer rounded-lg border border-[#dedbe7] bg-white px-3 text-sm text-[#272b3d] outline-none sm:w-[120px]"
-            >
-              {YEARS.map((year) => (
-                <option
-                  key={year}
-                  value={year}
-                >
-                  {year}
-                </option>
-              ))}
-            </select>
+            {/* SEARCH */}
+            <div className="flex h-11 w-full items-center gap-2 rounded-lg border border-[#dedbe7] bg-white px-3 sm:w-[260px]">
+
+              <Search
+                size={18}
+                className="shrink-0 text-[#737b91]"
+              />
+
+              <input
+                type="text"
+                value={search}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+                placeholder="Search employee..."
+                className="w-full bg-transparent text-sm text-[#171b2d] outline-none placeholder:text-[#9ca2b1]"
+              />
+
+            </div>
 
           </div>
+
+          {/* RIGHT SIDE */}
+          <div className="flex w-full items-center justify-between gap-3 lg:w-auto lg:justify-end">
+
+            {/* RECORD COUNT */}
+            <span className="whitespace-nowrap text-sm text-[#737b91]">
+              {filteredData.length}{" "}
+              {filteredData.length === 1
+                ? "record"
+                : "records"}
+            </span>
+
+            {/* EXPORT EXCEL */}
+            <button
+              type="button"
+              onClick={handleExportExcel}
+              disabled={
+                loading ||
+                exporting ||
+                filteredData.length === 0
+              }
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg border border-[#e2d7ec] bg-white px-4 text-sm font-semibold text-[#520087] transition-all duration-200 hover:border-[#cdb5dc] hover:bg-[#faf7fc] active:bg-[#f5eff8] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {exporting ? (
+                <>
+                  <Loader2
+                    size={17}
+                    className="animate-spin"
+                  />
+
+                  Exporting...
+                </>
+              ) : (
+                <>
+                  <ArrowDown
+                    size={17}
+                    strokeWidth={2.5}
+                  />
+
+                  Export Excel
+                </>
+              )}
+            </button>
+
+          </div>
+
         </div>
+
       </div>
 
       {/* ERROR */}
@@ -539,6 +695,7 @@ function AdminSalaryDetails() {
               {loading ? (
                 <tr>
                   <td colSpan={10}>
+
                     <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
 
                       <Loader2
@@ -551,102 +708,121 @@ function AdminSalaryDetails() {
                       </p>
 
                     </div>
+
                   </td>
                 </tr>
               ) : filteredData.length > 0 ? (
 
-                filteredData.map((employee) => (
-                  <tr
-                    key={employee.employeeId}
-                    className="border-b border-[#e5e1ea] transition-colors last:border-b-0 hover:bg-[#faf8fc]"
-                  >
+                filteredData.map(
+                  (employee) => (
+                    <tr
+                      key={
+                        employee.employeeId
+                      }
+                      className="border-b border-[#e5e1ea] transition-colors last:border-b-0 hover:bg-[#faf8fc]"
+                    >
 
-                    {/* EMPLOYEE */}
-                    <td className="px-3 py-3.5 sm:px-4">
+                      {/* EMPLOYEE */}
+                      <td className="px-3 py-3.5 sm:px-4">
 
-                      <div className="flex min-w-[210px] items-center gap-3">
+                        <div className="flex min-w-[210px] items-center gap-3">
 
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f1f2f5] text-sm font-medium text-[#70798d] sm:h-11 sm:w-11">
-                          {employee.fullName
-                            .charAt(0)
-                            .toUpperCase()}
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f1f2f5] text-sm font-medium text-[#70798d] sm:h-11 sm:w-11">
+                            {employee.fullName
+                              .charAt(0)
+                              .toUpperCase()}
+                          </div>
+
+                          <div>
+
+                            <p className="text-sm font-semibold text-[#182033]">
+                              {
+                                employee.fullName
+                              }
+                            </p>
+
+                            <p className="mt-0.5 text-xs text-[#7b8497]">
+                              {
+                                employee.employeeId
+                              }
+                            </p>
+
+                          </div>
+
                         </div>
 
-                        <div>
+                      </td>
 
-                          <p className="text-sm font-semibold text-[#182033]">
-                            {employee.fullName}
-                          </p>
+                      {/* DESIGNATION */}
+                      <td className="px-3 py-3.5 sm:px-4">
 
-                          <p className="mt-0.5 text-xs text-[#7b8497]">
-                            {employee.employeeId}
-                          </p>
+                        <span className="inline-flex whitespace-nowrap rounded-full bg-[#eadff2] px-3 py-1.5 text-xs font-semibold text-[#520087]">
+                          {
+                            employee.designation
+                          }
+                        </span>
 
-                        </div>
+                      </td>
 
-                      </div>
+                      {/* GROSS */}
+                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                        {formatCurrency(
+                          employee.monthlyGrossSalary,
+                        )}
+                      </td>
 
-                    </td>
+                      {/* BASIC */}
+                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                        {formatCurrency(
+                          employee.basic,
+                        )}
+                      </td>
 
-                    {/* DESIGNATION */}
-                    <td className="px-3 py-3.5 sm:px-4">
+                      {/* HRA */}
+                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                        {formatCurrency(
+                          employee.hra,
+                        )}
+                      </td>
 
-                      <span className="inline-flex whitespace-nowrap rounded-full bg-[#eadff2] px-3 py-1.5 text-xs font-semibold text-[#520087]">
-                        {employee.designation}
-                      </span>
+                      {/* SPECIAL ALLOWANCE */}
+                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                        {formatCurrency(
+                          employee.specialAllowance,
+                        )}
+                      </td>
 
-                    </td>
+                      {/* ABSENT DEDUCTION */}
+                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                        {formatCurrency(
+                          employee.absentDeduction,
+                        )}
+                      </td>
 
-                    {/* GROSS */}
-                    <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
-                      {formatCurrency(
-                        employee.monthlyGrossSalary,
-                      )}
-                    </td>
+                      {/* PF */}
+                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                        {formatCurrency(
+                          employee.pf,
+                        )}
+                      </td>
 
-                    {/* BASIC */}
-                    <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
-                      {formatCurrency(employee.basic)}
-                    </td>
+                      {/* PTAX */}
+                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                        {formatCurrency(
+                          employee.professionalTax,
+                        )}
+                      </td>
 
-                    {/* HRA */}
-                    <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
-                      {formatCurrency(employee.hra)}
-                    </td>
+                      {/* NET PAY */}
+                      <td className="px-3 py-3.5 text-right text-sm font-bold text-[#182033] sm:px-4">
+                        {formatCurrency(
+                          employee.netSalary,
+                        )}
+                      </td>
 
-                    {/* SPECIAL ALLOWANCE */}
-                    <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
-                      {formatCurrency(
-                        employee.specialAllowance,
-                      )}
-                    </td>
-
-                    {/* ABSENT DEDUCTION */}
-                    <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
-                      {formatCurrency(
-                        employee.absentDeduction,
-                      )}
-                    </td>
-
-                    {/* PF */}
-                    <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
-                      {formatCurrency(employee.pf)}
-                    </td>
-
-                    {/* PTAX */}
-                    <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
-                      {formatCurrency(
-                        employee.professionalTax,
-                      )}
-                    </td>
-
-                    {/* NET PAY */}
-                    <td className="px-3 py-3.5 text-right text-sm font-bold text-[#182033] sm:px-4">
-                      {formatCurrency(employee.netSalary)}
-                    </td>
-
-                  </tr>
-                ))
+                    </tr>
+                  ),
+                )
 
               ) : (
 
@@ -669,9 +845,12 @@ function AdminSalaryDetails() {
                       </h3>
 
                       <p className="mt-1 text-xs text-[#8a91a2] sm:text-sm">
-                        No salary records found for{" "}
-                        {selectedMonthLabel}{" "}
-                        {selectedYear}.
+                        No salary records found
+                        for{" "}
+                        {
+                          selectedMonthLabel
+                        }{" "}
+                        {CURRENT_YEAR}.
                       </p>
 
                     </div>
@@ -682,9 +861,11 @@ function AdminSalaryDetails() {
               )}
 
             </tbody>
+
           </table>
 
         </div>
+
       </div>
 
       {/* RESULT COUNT */}
@@ -697,12 +878,15 @@ function AdminSalaryDetails() {
         </span>{" "}
 
         employee
-        {filteredData.length !== 1 ? "s" : ""}
+        {filteredData.length !== 1
+          ? "s"
+          : ""}
 
         {" "}for{" "}
 
         <span className="font-semibold text-[#30364a]">
-          {selectedMonthLabel} {selectedYear}
+          {selectedMonthLabel}{" "}
+          {CURRENT_YEAR}
         </span>
 
       </div>
@@ -710,4 +894,3 @@ function AdminSalaryDetails() {
     </div>
   );
 }
-

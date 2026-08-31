@@ -1,10 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import {
-  getAttendance,
-  overrideAttendance,
-  type Attendance,
-} from "@/api/attendance";
+import { getAttendance, overrideAttendance, type Attendance } from "@/api/attendance";
 import { exportToExcel } from "@/lib/excel";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
@@ -22,31 +18,23 @@ function Page() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const [period, setPeriod] = useState<
-    "today" | "week" | "month" | "custom"
-  >("today");
+  const [period, setPeriod] = useState<"today" | "week" | "month" | "custom">("today");
 
   const [empId, setEmpId] = useState<string>("all");
 
   const [department, setDepartment] = useState<string>("all");
 
-  // --------------------------------------------------
   // ADMIN OVERRIDE STATE
-  // --------------------------------------------------
 
-  const [
-    overrideAttendanceRecord,
-    setOverrideAttendanceRecord,
-  ] = useState<Attendance | null>(null);
+
+  const [overrideAttendanceRecord, setOverrideAttendanceRecord] = useState<Attendance | null>(null);
 
   const [adminRemark, setAdminRemark] = useState("");
 
-  const [overrideLoading, setOverrideLoading] =
-    useState(false);
+  const [overrideLoading, setOverrideLoading] = useState(false);
 
-  // --------------------------------------------------
   // FETCH ATTENDANCE
-  // --------------------------------------------------
+
 
   const fetchAttendance = async () => {
     setLoading(true);
@@ -56,10 +44,7 @@ function Page() {
 
       setAttendance(data);
     } catch (error) {
-      console.error(
-        "Attendance fetch error:",
-        error
-      );
+      console.error("Attendance fetch error:", error);
 
       toast.error("Failed to load attendance.");
     } finally {
@@ -67,9 +52,8 @@ function Page() {
     }
   };
 
-  // --------------------------------------------------
   // FETCH EMPLOYEES
-  // --------------------------------------------------
+
 
   async function fetchEmployees() {
     try {
@@ -77,58 +61,41 @@ function Page() {
 
       let allEmployees = [...firstPage.employees];
 
-      for (
-        let page = 2;
-        page <= firstPage.totalPages;
-        page++
-      ) {
+      for (let page = 2; page <= firstPage.totalPages; page++) {
         const data = await getEmployees(page);
 
-        allEmployees = [
-          ...allEmployees,
-          ...data.employees,
-        ];
+        allEmployees = [...allEmployees, ...data.employees];
       }
 
       setEmployees(allEmployees);
     } catch (err: any) {
       console.error(err);
 
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to load employees"
-      );
+      toast.error(err.response?.data?.message || "Failed to load employees");
     }
   }
 
-  // --------------------------------------------------
+
   // INITIAL LOAD
-  // --------------------------------------------------
+
 
   useEffect(() => {
-    Promise.all([
-      fetchAttendance(),
-      fetchEmployees(),
-    ]);
+    Promise.all([fetchAttendance(), fetchEmployees()]);
   }, []);
 
-  // --------------------------------------------------
+
   // DEPARTMENTS
-  // --------------------------------------------------
+
 
   const departments = useMemo(() => {
     return Array.from(
-      new Set(
-        employees
-          .map((employee) => employee.department)
-          .filter(Boolean)
-      )
+      new Set(employees.map((employee) => employee.department).filter(Boolean)),
     ).sort();
   }, [employees]);
 
-  // --------------------------------------------------
+
   // DATE FILTER
-  // --------------------------------------------------
+
 
   const today = new Date();
 
@@ -142,53 +109,36 @@ function Page() {
 
       attendanceDate.setHours(0, 0, 0, 0);
 
-      // --------------------------------------------
       // Employee filter
-      // --------------------------------------------
+  
 
-      const employeeMatch =
-        empId === "all" ||
-        a.employee._id === empId;
+      const employeeMatch = empId === "all" || a.employee._id === empId;
 
       if (!employeeMatch) return false;
 
-      // --------------------------------------------
       // Department filter
-      // --------------------------------------------
-
-      const departmentMatch =
-        department === "all" ||
-        a.employee.department === department;
+      const departmentMatch = department === "all" || a.employee.department === department;
 
       if (!departmentMatch) return false;
 
-      // --------------------------------------------
       // Date filter
-      // --------------------------------------------
 
       switch (period) {
         case "today":
-          return (
-            attendanceDate.getTime() ===
-            today.getTime()
-          );
+          return attendanceDate.getTime() === today.getTime();
 
         case "week": {
           const weekStart = new Date(today);
 
-          weekStart.setDate(
-            today.getDate() - today.getDay()
-          );
+          weekStart.setDate(today.getDate() - today.getDay());
 
           return attendanceDate >= weekStart;
         }
 
         case "month":
           return (
-            attendanceDate.getMonth() ===
-              today.getMonth() &&
-            attendanceDate.getFullYear() ===
-              today.getFullYear()
+            attendanceDate.getMonth() === today.getMonth() &&
+            attendanceDate.getFullYear() === today.getFullYear()
           );
 
         case "custom": {
@@ -204,43 +154,28 @@ function Page() {
 
           to.setHours(23, 59, 59, 999);
 
-          return (
-            attendanceDate >= from &&
-            attendanceDate <= to
-          );
+          return attendanceDate >= from && attendanceDate <= to;
         }
 
         default:
           return true;
       }
     })
-    .sort(
-      (a, b) =>
-        new Date(b.date).getTime() -
-        new Date(a.date).getTime()
-    );
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
-  // --------------------------------------------------
   // FORMAT TIME
-  // --------------------------------------------------
 
   function formatTime(date: string | null) {
     if (!date) return "—";
 
-    return new Date(date).toLocaleTimeString(
-      "en-IN",
-      {
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      }
-    );
+    return new Date(date).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
   }
-
-  // --------------------------------------------------
-  // APPROVE FULL DAY
-  // --------------------------------------------------
+// APPROVE FULL DAY
 
   const handleOverrideAttendance = async () => {
     if (!overrideAttendanceRecord) {
@@ -248,9 +183,7 @@ function Page() {
     }
 
     if (!adminRemark.trim()) {
-      toast.warning(
-        "Please enter an admin remark."
-      );
+      toast.warning("Please enter an admin remark.");
 
       return;
     }
@@ -258,19 +191,14 @@ function Page() {
     setOverrideLoading(true);
 
     try {
-      await overrideAttendance(
-        overrideAttendanceRecord._id,
-        {
-          // 540 minutes = 9 hours
-          adminApprovedMinutes: 540,
+      await overrideAttendance(overrideAttendanceRecord._id, {
+        // 540 minutes = 9 hours
+        adminApprovedMinutes: 540,
 
-          adminRemark: adminRemark.trim(),
-        }
-      );
+        adminRemark: adminRemark.trim(),
+      });
 
-      toast.success(
-        "Full day attendance approved successfully."
-      );
+      toast.success("Full day attendance approved successfully.");
 
       // Close modal
       setOverrideAttendanceRecord(null);
@@ -280,36 +208,24 @@ function Page() {
       // Refresh attendance
       await fetchAttendance();
     } catch (error: any) {
-      console.error(
-        "Attendance override error:",
-        error
-      );
+      console.error("Attendance override error:", error);
 
-      toast.error(
-        error?.response?.data?.message ||
-          "Failed to approve full day attendance."
-      );
+      toast.error(error?.response?.data?.message || "Failed to approve full day attendance.");
     } finally {
       setOverrideLoading(false);
     }
   };
 
-  // --------------------------------------------------
   // OPEN OVERRIDE MODAL
-  // --------------------------------------------------
 
-  const openOverrideModal = (
-    record: Attendance
-  ) => {
+  const openOverrideModal = (record: Attendance) => {
     setOverrideAttendanceRecord(record);
 
     setAdminRemark("");
   };
 
-  // --------------------------------------------------
   // CLOSE OVERRIDE MODAL
-  // --------------------------------------------------
-
+  
   const closeOverrideModal = () => {
     if (overrideLoading) return;
 
@@ -318,144 +234,97 @@ function Page() {
     setAdminRemark("");
   };
 
-  // --------------------------------------------------
+ 
   // EXPORT
-  // --------------------------------------------------
+  
 
   function exportXlsx() {
     if (filtered.length === 0) {
-      toast.warning(
-        "No attendance records to export"
-      );
+      toast.warning("No attendance records to export");
 
       return;
     }
 
     exportToExcel(
       filtered.map((a) => ({
-        Date: new Date(
-          a.date
-        ).toLocaleDateString(),
+        Date: new Date(a.date).toLocaleDateString(),
 
-        Employee:
-          a.employee?.fullName ??
-          "Deleted Employee",
+        Employee: a.employee?.fullName ?? "Deleted Employee",
 
-        EmployeeId:
-          a.employee?.employeeId ?? "-",
+        EmployeeId: a.employee?.employeeId ?? "-",
 
-        Department:
-          a.employee?.department ?? "-",
+        Department: a.employee?.department ?? "-",
 
-        Designation:
-          a.employee?.designation ?? "-",
+        Designation: a.employee?.designation ?? "-",
 
         Status: a.status,
 
         Mode: a.mode,
 
-        CheckIn: a.checkIn
-          ? formatTime(a.checkIn)
-          : "—",
+        CheckIn: a.checkIn ? formatTime(a.checkIn) : "—",
 
-        CheckInRemark:
-          a.isLateCheckIn
-            ? a.checkInRemark || "—"
-            : "—",
+        CheckInRemark: a.isLateCheckIn ? a.checkInRemark || "—" : "—",
 
-        CheckOut: a.checkOut
-          ? formatTime(a.checkOut)
-          : "—",
+        CheckOut: a.checkOut ? formatTime(a.checkOut) : "—",
 
-        CheckOutRemark:
-          a.isEarlyCheckOut
-            ? a.checkOutRemark || "—"
-            : "—",
+        CheckOutRemark: a.isEarlyCheckOut ? a.checkOutRemark || "—" : "—",
 
-        WorkingMinutes:
-          a.workingMinutes ?? 0,
+        WorkingMinutes: a.workingMinutes ?? 0,
 
-        PaidMinutes:
-          a.paidMinutes ?? 0,
+        PaidMinutes: a.paidMinutes ?? 0,
 
-        AdminApproved:
-          a.adminApproved
-            ? "Yes"
-            : "No",
+        AdminApproved: a.adminApproved ? "Yes" : "No",
 
-        AdminApprovedMinutes:
-          a.adminApprovedMinutes ?? 0,
+        AdminApprovedMinutes: a.adminApprovedMinutes ?? 0,
 
-        AdminRemark:
-          a.adminRemark ?? "—",
+        AdminRemark: a.adminRemark ?? "—",
       })),
 
       `attendance-${period}.xlsx`,
-      "Attendance"
+      "Attendance",
     );
 
-    toast.success(
-      "Attendance exported successfully"
-    );
+    toast.success("Attendance exported successfully");
   }
 
-  // --------------------------------------------------
+ 
   // LOADING
-  // --------------------------------------------------
+  
 
   if (loading) {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
 
-        <p className="text-gray-500 text-lg font-medium">
-          Loading attendance...
-        </p>
+        <p className="text-gray-500 text-lg font-medium">Loading attendance...</p>
       </div>
     );
   }
 
-  // --------------------------------------------------
+
   // UI
-  // --------------------------------------------------
 
   return (
     <>
-      {/* ------------------------------------------- */}
+      
       {/* FILTER TOOLBAR */}
-      {/* ------------------------------------------- */}
+      
 
       <div className="toolbar">
         {/* Period */}
         <select
           className="select"
           value={period}
-          onChange={(e) =>
-            setPeriod(
-              e.target.value as
-                | "today"
-                | "week"
-                | "month"
-                | "custom"
-            )
-          }
+          onChange={(e) => setPeriod(e.target.value as "today" | "week" | "month" | "custom")}
           style={{ width: 160 }}
         >
-          <option value="today">
-            Today
-          </option>
+          <option value="today">Today</option>
 
-          <option value="week">
-            This Week
-          </option>
+          <option value="week">This Week</option>
 
-          <option value="month">
-            This Month
-          </option>
+          <option value="month">This Month</option>
 
-          <option value="custom">
-            Custom Date Range
-          </option>
+          <option value="custom">Custom Date Range</option>
         </select>
 
         {/* Custom dates */}
@@ -465,18 +334,14 @@ function Page() {
               type="date"
               className="input"
               value={fromDate}
-              onChange={(e) =>
-                setFromDate(e.target.value)
-              }
+              onChange={(e) => setFromDate(e.target.value)}
             />
 
             <input
               type="date"
               className="input"
               value={toDate}
-              onChange={(e) =>
-                setToDate(e.target.value)
-              }
+              onChange={(e) => setToDate(e.target.value)}
             />
           </>
         )}
@@ -485,20 +350,13 @@ function Page() {
         <select
           className="select"
           value={empId}
-          onChange={(e) =>
-            setEmpId(e.target.value)
-          }
+          onChange={(e) => setEmpId(e.target.value)}
           style={{ width: 220 }}
         >
-          <option value="all">
-            All Employees
-          </option>
+          <option value="all">All Employees</option>
 
           {employees.map((employee) => (
-            <option
-              key={employee._id}
-              value={employee._id}
-            >
+            <option key={employee._id} value={employee._id}>
               {employee.fullName}
             </option>
           ))}
@@ -508,20 +366,13 @@ function Page() {
         <select
           className="select"
           value={department}
-          onChange={(e) =>
-            setDepartment(e.target.value)
-          }
+          onChange={(e) => setDepartment(e.target.value)}
           style={{ width: 200 }}
         >
-          <option value="all">
-            All Departments
-          </option>
+          <option value="all">All Departments</option>
 
           {departments.map((dept) => (
-            <option
-              key={dept}
-              value={dept}
-            >
+            <option key={dept} value={dept}>
               {dept}
             </option>
           ))}
@@ -529,21 +380,16 @@ function Page() {
 
         <span className="spacer" />
 
-        <span className="muted">
-          {filtered.length} records
-        </span>
+        <span className="muted">{filtered.length} records</span>
 
-        <button
-          className="btn btn-ghost"
-          onClick={exportXlsx}
-        >
+        <button className="btn btn-ghost" onClick={exportXlsx}>
           ⬇ Export Excel
         </button>
       </div>
 
-      {/* ------------------------------------------- */}
+    
       {/* TABLE */}
-      {/* ------------------------------------------- */}
+      
 
       <div className="table-wrap">
         <table className="table">
@@ -571,155 +417,107 @@ function Page() {
             {filtered.map((a) => (
               <tr
                 key={a._id}
-                className={
-                  a.status
-                    ?.trim()
-                    .toLowerCase() ===
-                  "leave"
-                    ? "leave-row"
-                    : ""
-                }
+                className={a.status?.trim().toLowerCase() === "leave" ? "leave-row" : ""}
               >
-                {/* -------------------------------- */}
+                
                 {/* Date */}
-                {/* -------------------------------- */}
+               
 
-                <td>
-                  {new Date(
-                    a.date
-                  ).toLocaleDateString()}
-                </td>
+                <td>{new Date(a.date).toLocaleDateString()}</td>
 
-                {/* -------------------------------- */}
+                
                 {/* Employee */}
-                {/* -------------------------------- */}
+                
 
                 <td>
                   {a.employee ? (
                     <>
-                      <strong>
-                        {a.employee.fullName}
-                      </strong>
+                      <strong>{a.employee.fullName}</strong>
 
                       <br />
 
-                      <small>
-                        {a.employee.employeeId}
-                      </small>
+                      <small>{a.employee.employeeId}</small>
                     </>
                   ) : (
-                    <span className="muted">
-                      Deleted Employee
-                    </span>
+                    <span className="muted">Deleted Employee</span>
                   )}
                 </td>
 
-                {/* -------------------------------- */}
+                
                 {/* Department */}
-                {/* -------------------------------- */}
+                
 
-                <td>
-                  {a.employee?.department || (
-                    <span className="muted">
-                      —
-                    </span>
-                  )}
-                </td>
+                <td>{a.employee?.department || <span className="muted">—</span>}</td>
 
-                {/* -------------------------------- */}
+              
                 {/* Status */}
-                {/* -------------------------------- */}
+               
 
                 <td>
-                  <span className="badge purple">
-                    {a.status}
-                  </span>
+                  <span className="badge purple">{a.status}</span>
                 </td>
 
-                {/* -------------------------------- */}
                 {/* Check In */}
-                {/* -------------------------------- */}
+                
 
                 <td>
                   {a.checkIn ? (
                     <div>
-                      <div>
-                        {formatTime(
-                          a.checkIn
-                        )}
-                      </div>
+                      <div>{formatTime(a.checkIn)}</div>
 
-                      {a.isLateCheckIn &&
-                        a.checkInRemark && (
-                          <small
-                            style={{
-                              display: "block",
-                              marginTop: "4px",
-                              color: "#dc2626",
-                            }}
-                          >
-                            Late:{" "}
-                            {a.checkInRemark}
-                          </small>
-                        )}
+                      {a.isLateCheckIn && a.checkInRemark && (
+                        <small
+                          style={{
+                            display: "block",
+                            marginTop: "4px",
+                            color: "#dc2626",
+                          }}
+                        >
+                          Late: {a.checkInRemark}
+                        </small>
+                      )}
                     </div>
                   ) : (
                     "—"
                   )}
                 </td>
 
-                {/* -------------------------------- */}
+               
                 {/* Check Out */}
-                {/* -------------------------------- */}
+                
 
                 <td>
                   {a.checkOut ? (
                     <div>
-                      <div>
-                        {formatTime(
-                          a.checkOut
-                        )}
-                      </div>
+                      <div>{formatTime(a.checkOut)}</div>
 
-                      {a.isEarlyCheckOut &&
-                        a.checkOutRemark && (
-                          <small
-                            style={{
-                              display: "block",
-                              marginTop: "4px",
-                              color: "#dc2626",
-                            }}
-                          >
-                            Early:{" "}
-                            {a.checkOutRemark}
-                          </small>
-                        )}
+                      {a.isEarlyCheckOut && a.checkOutRemark && (
+                        <small
+                          style={{
+                            display: "block",
+                            marginTop: "4px",
+                            color: "#dc2626",
+                          }}
+                        >
+                          Early: {a.checkOutRemark}
+                        </small>
+                      )}
                     </div>
                   ) : (
-                    <span className="muted">
-                      —
-                    </span>
+                    <span className="muted">—</span>
                   )}
                 </td>
 
-                {/* -------------------------------- */}
                 {/* Working Minutes */}
-                {/* -------------------------------- */}
 
-                <td>
-                  {a.workingMinutes ?? 0} min
-                </td>
+                <td>{a.workingMinutes ?? 0} min</td>
 
-                {/* -------------------------------- */}
                 {/* Admin Approval */}
-                {/* -------------------------------- */}
 
                 <td>
                   {a.adminApproved ? (
                     <div>
-                      <span className="badge green">
-                        Full Day Approved
-                      </span>
+                      <span className="badge green">Full Day Approved</span>
 
                       {a.adminApprovedMinutes && (
                         <small
@@ -733,18 +531,11 @@ function Page() {
                       )}
                     </div>
                   ) : a.workingMinutes < 540 ? (
-                    <button
-                      className="btn btn-ghost"
-                      onClick={() =>
-                        openOverrideModal(a)
-                      }
-                    >
+                    <button className="btn btn-ghost" onClick={() => openOverrideModal(a)}>
                       Approve Full Day
                     </button>
                   ) : (
-                    <span className="muted">
-                      —
-                    </span>
+                    <span className="muted">—</span>
                   )}
                 </td>
               </tr>
@@ -752,10 +543,7 @@ function Page() {
 
             {filtered.length === 0 && (
               <tr>
-                <td
-                  colSpan={8}
-                  className="empty"
-                >
+                <td colSpan={8} className="empty">
                   No attendance for this period
                 </td>
               </tr>
@@ -764,10 +552,7 @@ function Page() {
         </table>
       </div>
 
-      {/* ------------------------------------------- */}
       {/* FULL DAY APPROVAL MODAL */}
-      {/* ------------------------------------------- */}
-
       {overrideAttendanceRecord && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -775,88 +560,58 @@ function Page() {
         >
           <div
             className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
-            onClick={(e) =>
-              e.stopPropagation()
-            }
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
 
             <div className="mb-5">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Approve Full Day Attendance
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-900">Approve Full Day Attendance</h2>
 
               <p className="mt-1 text-sm text-gray-500">
-                Approve 9 hours of paid
-                attendance for this employee
-                as an emergency exception.
+                Approve 9 hours of paid attendance for this employee as an emergency exception.
               </p>
             </div>
 
             {/* Employee Information */}
 
             <div className="mb-4 rounded-lg bg-gray-50 p-4">
-              <p className="text-sm text-gray-500">
-                Employee
-              </p>
+              <p className="text-sm text-gray-500">Employee</p>
 
               <p className="font-semibold text-gray-900">
-                {overrideAttendanceRecord.employee
-                  ?.fullName ||
-                  "Deleted Employee"}
+                {overrideAttendanceRecord.employee?.fullName || "Deleted Employee"}
               </p>
 
-              <p className="mt-2 text-sm text-gray-500">
-                Employee ID
-              </p>
+              <p className="mt-2 text-sm text-gray-500">Employee ID</p>
 
               <p className="font-medium text-gray-900">
-                {overrideAttendanceRecord.employee
-                  ?.employeeId || "—"}
+                {overrideAttendanceRecord.employee?.employeeId || "—"}
               </p>
 
-              <p className="mt-2 text-sm text-gray-500">
-                Date
-              </p>
+              <p className="mt-2 text-sm text-gray-500">Date</p>
 
               <p className="font-medium text-gray-900">
-                {new Date(
-                  overrideAttendanceRecord.date
-                ).toLocaleDateString()}
+                {new Date(overrideAttendanceRecord.date).toLocaleDateString()}
               </p>
 
-              <p className="mt-2 text-sm text-gray-500">
-                Actual Working Time
-              </p>
+              <p className="mt-2 text-sm text-gray-500">Actual Working Time</p>
 
               <p className="font-medium text-gray-900">
-                {overrideAttendanceRecord.workingMinutes}{" "}
-                minutes
+                {overrideAttendanceRecord.workingMinutes} minutes
               </p>
 
-              <p className="mt-2 text-sm text-gray-500">
-                Approved Paid Time
-              </p>
+              <p className="mt-2 text-sm text-gray-500">Approved Paid Time</p>
 
-              <p className="font-semibold text-green-600">
-                540 minutes (9 hours)
-              </p>
+              <p className="font-semibold text-green-600">540 minutes (9 hours)</p>
             </div>
 
             {/* Admin Remark */}
 
             <div className="mb-5">
-              <label className="mb-2 block text-sm font-medium text-gray-700">
-                Admin Remark
-              </label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Admin Remark</label>
 
               <textarea
                 value={adminRemark}
-                onChange={(e) =>
-                  setAdminRemark(
-                    e.target.value
-                  )
-                }
+                onChange={(e) => setAdminRemark(e.target.value)}
                 placeholder="Enter reason for approving full day attendance..."
                 rows={4}
                 disabled={overrideLoading}
@@ -879,13 +634,8 @@ function Page() {
               <button
                 type="button"
                 className="btn"
-                disabled={
-                  overrideLoading ||
-                  !adminRemark.trim()
-                }
-                onClick={
-                  handleOverrideAttendance
-                }
+                disabled={overrideLoading || !adminRemark.trim()}
+                onClick={handleOverrideAttendance}
               >
                 {overrideLoading ? (
                   <>

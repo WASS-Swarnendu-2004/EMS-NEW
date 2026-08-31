@@ -71,9 +71,7 @@ function Page() {
     }
   };
 
-  // --------------------------------------------------
   // EMPLOYEE IMAGE URL
-  // --------------------------------------------------
 
   const getEmployeeImageUrl = (
     profileImage?: string,
@@ -88,9 +86,7 @@ function Page() {
     )}`;
   };
 
-  // --------------------------------------------------
   // CHECK WHETHER LEAVE PERIOD HAS ENDED
-  // --------------------------------------------------
 
   const isLeaveExpired = (toDate: string) => {
     const today = new Date();
@@ -116,9 +112,7 @@ function Page() {
     return todayDate > leaveEndDateOnly;
   };
 
-  // --------------------------------------------------
   // EMPLOYEE HOVER
-  // --------------------------------------------------
 
   const handleEmployeeMouseEnter = (
     employee: LeaveEmployee,
@@ -161,9 +155,7 @@ function Page() {
     setHoverPosition(null);
   };
 
-  // --------------------------------------------------
   // APPROVE
-  // --------------------------------------------------
 
   const handleApprove = async (id: string) => {
     // Find the leave being approved
@@ -204,9 +196,7 @@ function Page() {
     }
   };
 
-  // --------------------------------------------------
   // OPEN REJECT MODAL
-  // --------------------------------------------------
 
   const openRejectModal = (leave: Leave) => {
     // Extra protection against expired leave
@@ -227,9 +217,8 @@ function Page() {
     setHoverPosition(null);
   };
 
-  // --------------------------------------------------
+
   // CLOSE REJECT MODAL
-  // --------------------------------------------------
 
   const closeRejectModal = () => {
     if (processingId) return;
@@ -238,9 +227,7 @@ function Page() {
     setRejectionRemark("");
   };
 
-  // --------------------------------------------------
   // REJECT
-  // --------------------------------------------------
 
   const handleReject = async () => {
     if (!rejectingLeave) return;
@@ -302,9 +289,7 @@ function Page() {
     }
   };
 
-  // --------------------------------------------------
   // EXPORT
-  // --------------------------------------------------
 
   function exportXlsx() {
     if (leaves.length === 0) {
@@ -348,9 +333,7 @@ function Page() {
     );
   }
 
-  // --------------------------------------------------
   // LOADING
-  // --------------------------------------------------
 
   if (loading) {
     return (
@@ -366,9 +349,7 @@ function Page() {
 
   return (
     <>
-      {/* ========================================= */}
       {/* TOOLBAR */}
-      {/* ========================================= */}
 
       <div className="toolbar">
         <div className="flex items-center gap-2">
@@ -393,9 +374,7 @@ function Page() {
         </button>
       </div>
 
-      {/* ========================================= */}
       {/* TABLE */}
-      {/* ========================================= */}
 
       <div className="table-wrap">
         <table className="table">
@@ -424,9 +403,8 @@ function Page() {
 
               return (
                 <tr key={leave._id}>
-                  {/* ================================= */}
+
                   {/* EMPLOYEE */}
-                  {/* ================================= */}
 
                   <td>
                     {employee ? (
@@ -487,9 +465,7 @@ function Page() {
                     )}
                   </td>
 
-                  {/* ================================= */}
                   {/* TYPE */}
-                  {/* ================================= */}
 
                   <td>
                     <span className="badge purple">
@@ -497,9 +473,7 @@ function Page() {
                     </span>
                   </td>
 
-                  {/* ================================= */}
                   {/* FROM */}
-                  {/* ================================= */}
 
                   <td>
                     {new Date(
@@ -507,19 +481,14 @@ function Page() {
                     ).toLocaleDateString()}
                   </td>
 
-                  {/* ================================= */}
                   {/* TO */}
-                  {/* ================================= */}
-
                   <td>
                     {new Date(
                       leave.toDate,
                     ).toLocaleDateString()}
                   </td>
 
-                  {/* ================================= */}
                   {/* REASON */}
-                  {/* ================================= */}
 
                   <td
                     style={{
@@ -529,9 +498,7 @@ function Page() {
                     {leave.reason}
                   </td>
 
-                  {/* ================================= */}
                   {/* APPLIED */}
-                  {/* ================================= */}
 
                   <td>
                     {new Date(
@@ -539,9 +506,7 @@ function Page() {
                     ).toLocaleDateString()}
                   </td>
 
-                  {/* ================================= */}
                   {/* STATUS */}
-                  {/* ================================= */}
 
                   <td>
                     <span
@@ -582,9 +547,7 @@ function Page() {
                       )}
                   </td>
 
-                  {/* ================================= */}
                   {/* ACTIONS */}
-                  {/* ================================= */}
 
                   <td>
                     <div className="actions">
@@ -696,9 +659,7 @@ function Page() {
         </table>
       </div>
 
-      {/* ========================================= */}
       {/* EMPLOYEE HOVER POPUP */}
-      {/* ========================================= */}
 
       {hoveredEmployee &&
         hoverPosition && (
@@ -792,9 +753,7 @@ function Page() {
           </div>
         )}
 
-      {/* ========================================= */}
       {/* REJECT MODAL */}
-      {/* ========================================= */}
 
       {rejectingLeave && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 px-4">

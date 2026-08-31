@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-// import { useDB } from "@/lib/store";
 import { useEffect, useState } from "react";
 import {
   getAdminDashboard,
@@ -12,12 +11,6 @@ import { toast } from "react-toastify";
 export const Route = createFileRoute("/admin/")({ component: Dashboard });
 
 function Dashboard() {
-  // const db = useDB();
-  // const today = new Date().toISOString().slice(0, 10);
-  // const pendingLeaves = db.leaves.filter((l) => l.status === "pending").length;
-  // const pendingWfh = db.wfh.filter((l) => l.status === "pending").length;
-  // const presentToday = db.attendance.filter((a) => a.date === today).length;
-  // const activeProjects = db.projects.filter((p) => p.status === "in_progress").length;
 
   const [cards, setCards] = useState<DashboardCards | null>(null);
   const [recentWorkStatus, setRecentWorkStatus] = useState<RecentWorkStatus[]>([]);

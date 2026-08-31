@@ -19,75 +19,75 @@ function Page() {
   const [attachment, setAttachment] = useState("");
   const [sentMsg, setSentMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-const [sending, setSending] = useState(false);
+  const [sending, setSending] = useState(false);
 
   async function loadMailHistory() {
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const data = await getMailHistory();
-    setMailHistory(data);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to load mail history");
-  } finally {
-    setLoading(false);
-  }
-  }
-  
-async function loadEmployees() {
-  try {
-    const firstPage = await getEmployees(1);
-
-    let allEmployees = [...firstPage.employees];
-
-    for (let page = 2; page <= firstPage.totalPages; page++) {
-      const data = await getEmployees(page);
-
-      allEmployees = [...allEmployees, ...data.employees];
+      const data = await getMailHistory();
+      setMailHistory(data);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load mail history");
+    } finally {
+      setLoading(false);
     }
-
-    setEmployees(allEmployees);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to load employees");
   }
-}
+
+  async function loadEmployees() {
+    try {
+      const firstPage = await getEmployees(1);
+
+      let allEmployees = [...firstPage.employees];
+
+      for (let page = 2; page <= firstPage.totalPages; page++) {
+        const data = await getEmployees(page);
+
+        allEmployees = [...allEmployees, ...data.employees];
+      }
+
+      setEmployees(allEmployees);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load employees");
+    }
+  }
 
   useEffect(() => {
     loadMailHistory();
     loadEmployees();
   }, []);
 
- async function send(e: React.FormEvent) {
-  e.preventDefault();
+  async function send(e: React.FormEvent) {
+    e.preventDefault();
 
-  if (!to || !subject || !body) return;
+    if (!to || !subject || !body) return;
 
-  try {
-    setSending(true);
+    try {
+      setSending(true);
 
-    await sendMail({
-      employee: to,
-      subject,
-      message: body,
-    });
+      await sendMail({
+        employee: to,
+        subject,
+        message: body,
+      });
 
-    await loadMailHistory();
+      await loadMailHistory();
 
-    toast.success("Mail sent successfully");
+      toast.success("Mail sent successfully");
 
-    setSubject("");
-    setBody("");
-    setAttachment("");
-    setTo("");
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to send mail");
-  } finally {
-    setSending(false);
+      setSubject("");
+      setBody("");
+      setAttachment("");
+      setTo("");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to send mail");
+    } finally {
+      setSending(false);
+    }
   }
-}
 
   function exportXlsx() {
     exportToExcel(
@@ -106,7 +106,7 @@ async function loadEmployees() {
     );
   }
 
-    if (loading) {
+  if (loading) {
     return (
       <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
         <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
@@ -133,10 +133,10 @@ async function loadEmployees() {
               >
                 <option value="">Select an employee…</option>
                 {employees.map((e) => (
-  <option key={e._id} value={e._id}>
-    {e.fullName} — {e.email}
-  </option>
-))}
+                  <option key={e._id} value={e._id}>
+                    {e.fullName} — {e.email}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="field">
@@ -179,20 +179,16 @@ async function loadEmployees() {
                 {sentMsg}
               </div>
             )}
-            <button
-  className="btn"
-  type="submit"
-  disabled={sending}
->
-  {sending ? (
-    <>
-      <Loader2 size={16} className="animate-spin" />
-      Sending...
-    </>
-  ) : (
-    "Send"
-  )}
-</button>
+            <button className="btn" type="submit" disabled={sending}>
+              {sending ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                "Send"
+              )}
+            </button>
           </form>
         </div>
 

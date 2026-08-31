@@ -113,8 +113,8 @@ function Page() {
     useState<string | null>(null);
 
   /*
-   * Keep roleName because the existing API expects
-   * roleName.
+    Keep roleName because the existing API expects
+    roleName.
    */
   const [newRole, setNewRole] = useState({
     roleName: "",

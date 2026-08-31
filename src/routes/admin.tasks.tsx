@@ -610,9 +610,7 @@ function SummaryCard({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Task Details Modal                                                         */
-/* -------------------------------------------------------------------------- */
+/* Task Details Modal*/
 
 interface TaskDetailsModalProps {
   task: AdminTask;
@@ -810,9 +808,7 @@ function TaskDetailsModal({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/* Detail Item                                                                */
-/* -------------------------------------------------------------------------- */
+/* Detail Item */
 
 interface DetailItemProps {
   label: string;
