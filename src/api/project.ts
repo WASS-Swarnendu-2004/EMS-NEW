@@ -1,5 +1,11 @@
 import api from "./axios";
 
+export interface AssignedEmployee {
+  _id: string;
+  employeeId: string;
+  fullName: string;
+}
+
 export interface Project {
   _id: string;
   projectName: string;
@@ -10,14 +16,20 @@ export interface Project {
   duration: number;
   valuation: number;
   status:
-  | "planning"
-  | "in-progress"
-  | "hold"
-  | "completed"
-  | "cancelled";
+    | "planning"
+    | "in-progress"
+    | "hold"
+    | "completed"
+    | "cancelled";
   description: string;
-  assignedEmployees: string[];
+
+  // API returns employee objects here
+  assignedEmployees: AssignedEmployee[];
 }
+
+// =====================================================
+// CREATE PROJECT
+// =====================================================
 
 export interface CreateProjectPayload {
   projectName: string;
@@ -26,8 +38,14 @@ export interface CreateProjectPayload {
   endDate: string;
   valuation: number;
   description: string;
+
+  // When creating, backend expects employee IDs
   assignedEmployees: string[];
 }
+
+// =====================================================
+// UPDATE PROJECT
+// =====================================================
 
 export interface UpdateProjectPayload {
   projectName?: string;
@@ -38,8 +56,15 @@ export interface UpdateProjectPayload {
   status?: Project["status"];
   consumerDetails?: string;
   description?: string;
+
+  // Backend expects employee IDs
   assignedEmployees?: string[];
 }
+
+// =====================================================
+// API RESPONSES
+// =====================================================
+
 interface UpdateProjectResponse {
   success: boolean;
   message: string;
@@ -57,11 +82,26 @@ interface CreateProjectResponse {
   project: Project;
 }
 
+interface GetProjectsResponse {
+  success: boolean;
+  projects: Project[];
+}
+
 interface GetMyProjectsResponse {
   success: boolean;
   total: number;
   projects: Project[];
 }
+
+interface AssignEmployeesResponse {
+  success: boolean;
+  message: string;
+  project: Project;
+}
+
+// =====================================================
+// GET ALL PROJECTS - ADMIN
+// =====================================================
 
 export const getProjects = async (): Promise<Project[]> => {
   try {
@@ -75,11 +115,10 @@ export const getProjects = async (): Promise<Project[]> => {
     throw error;
   }
 };
-interface AssignEmployeesResponse {
-  success: boolean;
-  message: string;
-  project: Project;
-}
+
+// =====================================================
+// CREATE PROJECT
+// =====================================================
 
 export const createProject = async (
   data: CreateProjectPayload
@@ -97,7 +136,9 @@ export const createProject = async (
   }
 };
 
-// Pending APIs
+// =====================================================
+// UPDATE PROJECT
+// =====================================================
 
 export const updateProject = async (
   id: string,
@@ -111,9 +152,17 @@ export const updateProject = async (
   return response.data.project;
 };
 
+// =====================================================
+// DELETE PROJECT
+// =====================================================
+
 export const deleteProject = async (id: string) => {
   await api.delete(`/admin/projects/${id}`);
 };
+
+// =====================================================
+// ASSIGN EMPLOYEES
+// =====================================================
 
 export const assignEmployeesToProject = async (
   id: string,
@@ -128,6 +177,10 @@ export const assignEmployeesToProject = async (
 
   return response.data.project;
 };
+
+// =====================================================
+// GET MY PROJECTS - EMPLOYEE
+// =====================================================
 
 export const getMyProjects = async (): Promise<Project[]> => {
   const response = await api.get<GetMyProjectsResponse>(
