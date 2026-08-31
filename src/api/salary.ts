@@ -14,6 +14,11 @@ export interface SalaryItem {
   amount: number;
 }
 
+export interface SalaryCustomField {
+  label: string;
+  value: string;
+}
+
 export interface SalaryEmployee {
   _id: string;
   employeeId: string;
@@ -23,6 +28,15 @@ export interface SalaryEmployee {
   department: string;
   designation: string;
   bankAccount: string;
+
+  joiningDate?: string;
+
+  customFields?: SalaryCustomField[];
+}
+
+export interface SalaryEmployeeInfo {
+  uanNumber?: string;
+  joiningDate?: string;
 }
 
 export interface SalarySlip {
@@ -32,6 +46,10 @@ export interface SalarySlip {
 
   // Employee information
   employee?: SalaryEmployee;
+
+  // Additional employee information returned
+  // by GET /admin/salary/:salarySlipId
+  employeeInfo?: SalaryEmployeeInfo;
 
   // Salary information
   gross: number;
@@ -77,15 +95,26 @@ export interface SalaryListItem {
   netSalary?: number;
 }
 
-export const getMySalarySlips = async (): Promise<SalarySlip[]> => {
+/*
+ * Get logged-in employee salary slips
+ */
+export const getMySalarySlips = async (): Promise<
+  SalarySlip[]
+> => {
   const response = await api.get("/salary");
 
   return response.data.salaries.map((s: any) => ({
     id: s._id,
-    employeeId:
-      typeof s.employee === "object" ? s.employee._id : s.employee,
 
-    month: `${s.year}-${String(s.month).padStart(2, "0")}`,
+    employeeId:
+      typeof s.employee === "object"
+        ? s.employee._id
+        : s.employee,
+
+    month: `${s.year}-${String(s.month).padStart(
+      2,
+      "0",
+    )}`,
 
     employee:
       typeof s.employee === "object"
@@ -97,101 +126,194 @@ export const getMySalarySlips = async (): Promise<SalarySlip[]> => {
             phone: s.employee.phone,
             department: s.employee.department,
             designation: s.employee.designation,
-            bankAccount: s.employee.bankAccount || "",
+            bankAccount:
+              s.employee.bankAccount || "",
+            joiningDate:
+              s.employee.joiningDate,
+            customFields:
+              s.employee.customFields || [],
           }
         : undefined,
 
+    /*
+     * employeeInfo may or may not be returned
+     * by the normal employee salary endpoint.
+     */
+    employeeInfo: s.employeeInfo
+      ? {
+          uanNumber:
+            s.employeeInfo.uanNumber,
+          joiningDate:
+            s.employeeInfo.joiningDate,
+        }
+      : undefined,
+
     gross: s.grossSalary,
+
     net: s.netSalary,
 
-    totalEarnings: s.totalEarnings,
-    totalDeductions: s.totalDeductions,
+    totalEarnings:
+      s.totalEarnings,
 
-    workingDays: s.workingDays,
-    absentDays: s.absentDays,
-    totalAvailableMinutes: s.totalAvailableMinutes,
-    paidCasualLeaveDays: s.paidCasualLeaveDays,
-    paidSickLeaveDays: s.paidSickLeaveDays,
-    unpaidLeaveDays: s.unpaidLeaveDays,
-    actualWorkingMinutes: s.actualWorkingMinutes,
-    finalPaidMinutes: s.finalPaidMinutes,
-    earlyCheckoutMinutes: s.earlyCheckoutMinutes,
-    leaveDeduction: s.leaveDeduction,
-    earlyCheckoutDeduction: s.earlyCheckoutDeduction,
+    totalDeductions:
+      s.totalDeductions,
 
-    pfApplicable: s.pfApplicable,
-    pfPercentage: s.pfPercentage,
-    pfWage: s.pfWage,
-    employeePF: s.employeePF,
-    employerPF: s.employerPF,
-    professionalTax: s.professionalTax,
+    workingDays:
+      s.workingDays,
 
-    generatedAt: s.generatedAt,
+    absentDays:
+      s.absentDays,
+
+    totalAvailableMinutes:
+      s.totalAvailableMinutes,
+
+    paidCasualLeaveDays:
+      s.paidCasualLeaveDays,
+
+    paidSickLeaveDays:
+      s.paidSickLeaveDays,
+
+    unpaidLeaveDays:
+      s.unpaidLeaveDays,
+
+    actualWorkingMinutes:
+      s.actualWorkingMinutes,
+
+    finalPaidMinutes:
+      s.finalPaidMinutes,
+
+    earlyCheckoutMinutes:
+      s.earlyCheckoutMinutes,
+
+    leaveDeduction:
+      s.leaveDeduction,
+
+    earlyCheckoutDeduction:
+      s.earlyCheckoutDeduction,
+
+    pfApplicable:
+      s.pfApplicable,
+
+    pfPercentage:
+      s.pfPercentage,
+
+    pfWage:
+      s.pfWage,
+
+    employeePF:
+      s.employeePF,
+
+    employerPF:
+      s.employerPF,
+
+    professionalTax:
+      s.professionalTax,
+
+    generatedAt:
+      s.generatedAt,
 
     items: [
-      ...(s.earnings || []).map((e: any) => ({
-        label: e.label,
-        amount: e.amount,
-        type: "earning" as const,
-      })),
+      ...(s.earnings || []).map(
+        (e: any) => ({
+          label: e.label,
+          amount: e.amount,
+          type: "earning" as const,
+        }),
+      ),
 
-      ...(s.deductions || []).map((d: any) => ({
-        label: d.label,
-        amount: d.amount,
-        type: "deduction" as const,
-      })),
+      ...(s.deductions || []).map(
+        (d: any) => ({
+          label: d.label,
+          amount: d.amount,
+          type: "deduction" as const,
+        }),
+      ),
     ],
   }));
 };
 
+/*
+ * Get salary list for a particular month
+ */
 export const getSalaryList = async (
   month: string,
 ): Promise<SalaryListItem[]> => {
   const [year, mon] = month.split("-");
 
-  const response = await api.get("/admin/salary", {
-    params: {
-      month: Number(mon),
-      year: Number(year),
+  const response = await api.get(
+    "/admin/salary",
+    {
+      params: {
+        month: Number(mon),
+        year: Number(year),
+      },
     },
-  });
+  );
 
   return response.data.employees;
 };
 
-export const generateSalary = async (month: string) => {
+/*
+ * Generate salary for all employees
+ */
+export const generateSalary = async (
+  month: string,
+) => {
   const [year, mon] = month.split("-");
 
   try {
-    const response = await api.post("/admin/salary/generate", {
-      month: Number(mon),
-      year: Number(year),
-    });
+    const response = await api.post(
+      "/admin/salary/generate",
+      {
+        month: Number(mon),
+        year: Number(year),
+      },
+    );
 
     return response.data;
   } catch (error) {
-    console.error("Generate Salary Error:", error);
+    console.error(
+      "Generate Salary Error:",
+      error,
+    );
+
     throw error;
   }
 };
 
-export const getSalaryConfig = async (): Promise<SalaryComponent[]> => {
+/*
+ * Get salary configuration
+ */
+export const getSalaryConfig = async (): Promise<
+  SalaryComponent[]
+> => {
   try {
-    const response = await api.get("/admin/salary/config");
+    const response = await api.get(
+      "/admin/salary/config",
+    );
 
-    return response.data.configs.map((c: any) => ({
-      id: c._id,
-      label: c.label,
-      type: c.type,
-      mode: c.mode,
-      value: c.value,
-    }));
+    return response.data.configs.map(
+      (c: any) => ({
+        id: c._id,
+        label: c.label,
+        type: c.type,
+        mode: c.mode,
+        value: c.value,
+      }),
+    );
   } catch (error) {
-    console.error("Get Salary Configuration Error:", error);
+    console.error(
+      "Get Salary Configuration Error:",
+      error,
+    );
+
     throw error;
   }
 };
 
+/*
+ * Update salary configuration
+ */
 export const updateSalaryConfig = async (
   data: SalaryComponent[],
 ) => {
@@ -203,6 +325,9 @@ export const updateSalaryConfig = async (
   return response.data;
 };
 
+/*
+ * Generate salary for one employee
+ */
 export const generateSalaryForEmployee = async (
   employeeId: string,
   month: string,
@@ -220,6 +345,12 @@ export const generateSalaryForEmployee = async (
   return response.data;
 };
 
+/*
+ * Get one salary slip
+ *
+ * GET:
+ * /admin/salary/:salarySlipId
+ */
 export const getSalarySlip = async (
   salarySlipId: string,
 ): Promise<SalarySlip> => {
@@ -229,6 +360,9 @@ export const getSalarySlip = async (
 
   const s = response.data.salary;
 
+  const employeeInfo =
+    response.data.employeeInfo;
+
   return {
     id: s._id,
 
@@ -237,62 +371,147 @@ export const getSalarySlip = async (
         ? s.employee._id
         : s.employee,
 
-    month: `${s.year}-${String(s.month).padStart(2, "0")}`,
+    month: `${s.year}-${String(s.month).padStart(
+      2,
+      "0",
+    )}`,
 
     employee:
       typeof s.employee === "object"
         ? {
             _id: s.employee._id,
-            employeeId: s.employee.employeeId,
-            fullName: s.employee.fullName,
-            email: s.employee.email,
-            phone: s.employee.phone,
-            department: s.employee.department,
-            designation: s.employee.designation,
-            bankAccount: s.employee.bankAccount || "",
+
+            employeeId:
+              s.employee.employeeId,
+
+            fullName:
+              s.employee.fullName,
+
+            email:
+              s.employee.email,
+
+            phone:
+              s.employee.phone,
+
+            department:
+              s.employee.department,
+
+            designation:
+              s.employee.designation,
+
+            bankAccount:
+              s.employee.bankAccount || "",
+
+            joiningDate:
+              s.employee.joiningDate,
+
+            customFields:
+              s.employee.customFields || [],
           }
         : undefined,
 
-    gross: s.grossSalary,
-    net: s.netSalary,
+    /*
+     * UAN + Joining Date
+     *
+     * API response:
+     *
+     * employeeInfo: {
+     *   uanNumber: "101525794635",
+     *   joiningDate: "2026-08-17T00:00:00.000Z"
+     * }
+     */
+    employeeInfo: employeeInfo
+      ? {
+          uanNumber:
+            employeeInfo.uanNumber,
 
-    totalEarnings: s.totalEarnings,
-    totalDeductions: s.totalDeductions,
+          joiningDate:
+            employeeInfo.joiningDate,
+        }
+      : undefined,
 
-    workingDays: s.workingDays,
-    absentDays: s.absentDays,
-    totalAvailableMinutes: s.totalAvailableMinutes,
-    paidCasualLeaveDays: s.paidCasualLeaveDays,
-    paidSickLeaveDays: s.paidSickLeaveDays,
-    unpaidLeaveDays: s.unpaidLeaveDays,
-    actualWorkingMinutes: s.actualWorkingMinutes,
-    finalPaidMinutes: s.finalPaidMinutes,
-    earlyCheckoutMinutes: s.earlyCheckoutMinutes,
-    leaveDeduction: s.leaveDeduction,
-    earlyCheckoutDeduction: s.earlyCheckoutDeduction,
+    gross:
+      s.grossSalary,
 
-    pfApplicable: s.pfApplicable,
-    pfPercentage: s.pfPercentage,
-    pfWage: s.pfWage,
-    employeePF: s.employeePF,
-    employerPF: s.employerPF,
-    professionalTax: s.professionalTax,
+    net:
+      s.netSalary,
 
-    generatedAt: s.generatedAt,
+    totalEarnings:
+      s.totalEarnings,
+
+    totalDeductions:
+      s.totalDeductions,
+
+    workingDays:
+      s.workingDays,
+
+    absentDays:
+      s.absentDays,
+
+    totalAvailableMinutes:
+      s.totalAvailableMinutes,
+
+    paidCasualLeaveDays:
+      s.paidCasualLeaveDays,
+
+    paidSickLeaveDays:
+      s.paidSickLeaveDays,
+
+    unpaidLeaveDays:
+      s.unpaidLeaveDays,
+
+    actualWorkingMinutes:
+      s.actualWorkingMinutes,
+
+    finalPaidMinutes:
+      s.finalPaidMinutes,
+
+    earlyCheckoutMinutes:
+      s.earlyCheckoutMinutes,
+
+    leaveDeduction:
+      s.leaveDeduction,
+
+    earlyCheckoutDeduction:
+      s.earlyCheckoutDeduction,
+
+    pfApplicable:
+      s.pfApplicable,
+
+    pfPercentage:
+      s.pfPercentage,
+
+    pfWage:
+      s.pfWage,
+
+    employeePF:
+      s.employeePF,
+
+    employerPF:
+      s.employerPF,
+
+    professionalTax:
+      s.professionalTax,
+
+    generatedAt:
+      s.generatedAt,
 
     items: [
-      ...(s.earnings || []).map((e: any) => ({
-        label: e.label,
-        amount: e.amount,
-        type: "earning" as const,
-      })),
+      ...(s.earnings || []).map(
+        (e: any) => ({
+          label: e.label,
+          amount: e.amount,
+          type: "earning" as const,
+        }),
+      ),
 
-      ...(s.deductions || []).map((d: any) => ({
-        label: d.label,
-        amount: d.amount,
-        type: "deduction" as const,
-      })),
+      ...(s.deductions || []).map(
+        (d: any) => ({
+          label: d.label,
+          amount: d.amount,
+          type: "deduction" as const,
+        }),
+      ),
     ],
   };
 };
-
