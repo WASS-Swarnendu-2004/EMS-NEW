@@ -135,10 +135,6 @@ export const getMySalarySlips = async (): Promise<
           }
         : undefined,
 
-    /*
-     * employeeInfo may or may not be returned
-     * by the normal employee salary endpoint.
-     */
     employeeInfo: s.employeeInfo
       ? {
           uanNumber:
@@ -148,9 +144,11 @@ export const getMySalarySlips = async (): Promise<
         }
       : undefined,
 
-    gross: s.grossSalary,
+    gross:
+      s.grossSalary,
 
-    net: s.netSalary,
+    net:
+      s.netSalary,
 
     totalEarnings:
       s.totalEarnings,
@@ -350,6 +348,15 @@ export const generateSalaryForEmployee = async (
  *
  * GET:
  * /admin/salary/:salarySlipId
+ *
+ * This endpoint returns the complete salary slip,
+ * including:
+ *
+ * employee.customFields:
+ * - Name Bank
+ * - UAN No
+ * - DOB
+ * - ESI No
  */
 export const getSalarySlip = async (
   salarySlipId: string,
@@ -359,7 +366,6 @@ export const getSalarySlip = async (
   );
 
   const s = response.data.salary;
-
   const employeeInfo =
     response.data.employeeInfo;
 
@@ -405,6 +411,17 @@ export const getSalarySlip = async (
             joiningDate:
               s.employee.joiningDate,
 
+            /*
+             * Keep all custom fields.
+             *
+             * Example:
+             * [
+             *   { label: "Name Bank", value: "HDFC Bank" },
+             *   { label: "UAN No", value: "101525794635" },
+             *   { label: "DOB", value: "1999-01-01" },
+             *   { label: "ESI No", value: "5555557878" }
+             * ]
+             */
             customFields:
               s.employee.customFields || [],
           }
@@ -412,13 +429,6 @@ export const getSalarySlip = async (
 
     /*
      * UAN + Joining Date
-     *
-     * API response:
-     *
-     * employeeInfo: {
-     *   uanNumber: "101525794635",
-     *   joiningDate: "2026-08-17T00:00:00.000Z"
-     * }
      */
     employeeInfo: employeeInfo
       ? {
@@ -515,3 +525,4 @@ export const getSalarySlip = async (
     ],
   };
 };
+

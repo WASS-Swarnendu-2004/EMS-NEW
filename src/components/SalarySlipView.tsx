@@ -10,9 +10,39 @@ export function SalarySlipView({
   empName?: string;
   department?: string;
 }) {
-  const earnings = slip.items.filter(
-    (i) => i.type === "earning",
-  );
+  /*
+   * Earnings order:
+   *
+   * 1. Basic
+   * 2. HRA
+   * 3. All other earnings / allowances
+   *
+   * Other earnings keep the same order
+   * in which they came from the API.
+   */
+  const earnings = slip.items
+    .filter((i) => i.type === "earning")
+    .sort((a, b) => {
+      const getPriority = (label: string) => {
+        const normalized =
+          label.trim().toLowerCase();
+
+        if (normalized === "basic") {
+          return 1;
+        }
+
+        if (normalized === "hra") {
+          return 2;
+        }
+
+        return 3;
+      };
+
+      return (
+        getPriority(a.label) -
+        getPriority(b.label)
+      );
+    });
 
   const deductions = slip.items.filter(
     (i) => i.type === "deduction",
@@ -39,48 +69,63 @@ export function SalarySlipView({
     employee?.bankAccount || "-";
 
   /*
-   * UAN NUMBER
+   * Get employee custom field by label.
    *
-   * Primary source:
-   * slip.employeeInfo?.uanNumber
+   * API example:
    *
-   * Fallback:
-   * employee.customFields -> "UAN No"
+   * {
+   *   label: "Name Bank",
+   *   value: "HDFC Bank"
+   * }
+   */
+  const getCustomField = (
+    label: string,
+  ): string => {
+    const field =
+      employee?.customFields?.find(
+        (item) =>
+          item.label?.trim().toLowerCase() ===
+          label.trim().toLowerCase(),
+      );
+
+    return field?.value || "-";
+  };
+
+  /*
+   * UAN
    */
   const uanNumber =
     slip.employeeInfo?.uanNumber ||
-    employee?.customFields?.find(
-      (field) =>
-        field.label.toLowerCase() === "uan no",
-    )?.value ||
-    "-";
+    getCustomField("UAN No");
 
   /*
-   * JOINING DATE
+   * Bank Name
    *
-   * Primary source:
-   * slip.employeeInfo?.joiningDate
-   *
-   * Fallback:
-   * employee?.joiningDate
+   * API custom field label:
+   * "Name Bank"
    */
-  const joiningDate =
-    slip.employeeInfo?.joiningDate ||
-    employee?.joiningDate;
+  const bankName =
+    getCustomField("Name Bank");
 
   /*
-   * Format date in IST.
-   *
-   * Example:
-   * 2026-08-17T00:00:00.000Z
-   *
-   * becomes:
-   * 17/08/2026
+   * DOB
+   */
+  const dateOfBirth =
+    getCustomField("DOB");
+
+  /*
+   * ESI Number
+   */
+  const esiNumber =
+    getCustomField("ESI No");
+
+  /*
+   * Format date in Indian format.
    */
   const formatISTDate = (
     dateString?: string,
   ) => {
-    if (!dateString) {
+    if (!dateString || dateString === "-") {
       return "-";
     }
 
@@ -98,6 +143,24 @@ export function SalarySlipView({
       return "-";
     }
   };
+
+  /*
+   * Format DOB
+   *
+   * Example:
+   * "1999-01-01"
+   * becomes
+   * "01/01/1999"
+   */
+  const formattedDateOfBirth =
+    formatISTDate(dateOfBirth);
+
+  /*
+   * Joining Date
+   */
+  const joiningDate =
+    slip.employeeInfo?.joiningDate ||
+    employee?.joiningDate;
 
   const formattedJoiningDate =
     formatISTDate(joiningDate);
@@ -274,6 +337,16 @@ export function SalarySlipView({
             </strong>
           </div>
 
+          {/* Bank Name */}
+          <div className="min-w-0">
+            <span className="muted">
+              Bank Name:
+            </span>{" "}
+            <strong className="break-words">
+              {bankName}
+            </strong>
+          </div>
+
           {/* UAN NUMBER */}
           <div className="min-w-0">
             <span className="muted">
@@ -281,6 +354,26 @@ export function SalarySlipView({
             </span>{" "}
             <strong className="break-all">
               {uanNumber}
+            </strong>
+          </div>
+
+          {/* DOB */}
+          <div className="min-w-0">
+            <span className="muted">
+              DOB:
+            </span>{" "}
+            <strong>
+              {formattedDateOfBirth}
+            </strong>
+          </div>
+
+          {/* ESI NUMBER */}
+          <div className="min-w-0">
+            <span className="muted">
+              ESI No:
+            </span>{" "}
+            <strong className="break-all">
+              {esiNumber}
             </strong>
           </div>
 
@@ -388,6 +481,7 @@ export function SalarySlipView({
                 </tr>
               ))}
 
+              {/* GROSS SALARY */}
               <tr>
                 <td>
                   <strong>
@@ -540,7 +634,6 @@ export function SalarySlipView({
                 Yes
               </strong>
             </div>
-
           </div>
         )}
 
@@ -559,9 +652,7 @@ export function SalarySlipView({
 
         {/* SLIP ID */}
         <div className="min-w-0 sm:col-span-2">
-          <span className="muted">
-            
-          </span>{" "}
+          <span className="muted"></span>{" "}
           <strong className="break-all">
             {slip.id}
           </strong>
@@ -570,3 +661,4 @@ export function SalarySlipView({
     </div>
   );
 }
+
