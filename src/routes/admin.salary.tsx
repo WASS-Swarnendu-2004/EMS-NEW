@@ -455,13 +455,13 @@ function BreakdownConfig({ onClose }: { onClose: () => void }) {
         label: "HRA",
         type: "Earning",
         mode: "% of gross",
-        value: 20,
+        value: 30,
       },
       {
         label: "Special Allowance",
         type: "Earning",
         mode: "% of gross",
-        value: 30,
+        value: 20,
       },
     ]);
   }
