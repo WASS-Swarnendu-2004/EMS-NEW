@@ -234,26 +234,34 @@ export function SalarySlipView({
    * UAN
    */
   const uanNumber =
-    slip.employeeInfo?.uanNumber ||
-    getCustomField("UAN No");
+  slip.employeeInfo?.uanNumber ||
+  getCustomField("UAN No") ||
+  "-";
 
   /*
    * Bank Name
    */
   const bankName =
-    getCustomField("Name Bank");
+  slip.employeeInfo?.bankName ||
+  getCustomField("Bank Name") ||
+  getCustomField("Name Bank") ||
+  "-";
 
   /*
    * DOB
    */
   const dateOfBirth =
-    getCustomField("DOB");
+  slip.employeeInfo?.dob ||
+  getCustomField("DOB") ||
+  "-";
 
   /*
    * ESI Number
    */
   const esiNumber =
-    getCustomField("ESI No");
+  slip.employeeInfo?.esiNumber ||
+  getCustomField("ESI No") ||
+  "-";
 
   /*
    * ============================================================

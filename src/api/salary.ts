@@ -36,7 +36,11 @@ export interface SalaryEmployee {
 
 export interface SalaryEmployeeInfo {
   uanNumber?: string;
+  esiNumber?: string;
+  dob?: string;
+  bankName?: string;
   joiningDate?: string;
+  bankAccount?: string;
 }
 
 export interface SalarySlip {
@@ -47,8 +51,7 @@ export interface SalarySlip {
   // Employee information
   employee?: SalaryEmployee;
 
-  // Additional employee information returned
-  // by GET /admin/salary/:salarySlipId
+  // Additional employee information
   employeeInfo?: SalaryEmployeeInfo;
 
   // Salary information
@@ -139,8 +142,21 @@ export const getMySalarySlips = async (): Promise<
       ? {
           uanNumber:
             s.employeeInfo.uanNumber,
+
+          esiNumber:
+            s.employeeInfo.esiNumber,
+
+          dob:
+            s.employeeInfo.dob,
+
+          bankName:
+            s.employeeInfo.bankName,
+
           joiningDate:
             s.employeeInfo.joiningDate,
+
+          bankAccount:
+            s.employeeInfo.bankAccount,
         }
       : undefined,
 
@@ -348,15 +364,6 @@ export const generateSalaryForEmployee = async (
  *
  * GET:
  * /admin/salary/:salarySlipId
- *
- * This endpoint returns the complete salary slip,
- * including:
- *
- * employee.customFields:
- * - Name Bank
- * - UAN No
- * - DOB
- * - ESI No
  */
 export const getSalarySlip = async (
   salarySlipId: string,
@@ -411,32 +418,34 @@ export const getSalarySlip = async (
             joiningDate:
               s.employee.joiningDate,
 
-            /*
-             * Keep all custom fields.
-             *
-             * Example:
-             * [
-             *   { label: "Name Bank", value: "HDFC Bank" },
-             *   { label: "UAN No", value: "101525794635" },
-             *   { label: "DOB", value: "1999-01-01" },
-             *   { label: "ESI No", value: "5555557878" }
-             * ]
-             */
             customFields:
               s.employee.customFields || [],
           }
         : undefined,
 
     /*
-     * UAN + Joining Date
+     * Complete employee information
+     * returned by the salary slip API.
      */
     employeeInfo: employeeInfo
       ? {
           uanNumber:
             employeeInfo.uanNumber,
 
+          esiNumber:
+            employeeInfo.esiNumber,
+
+          dob:
+            employeeInfo.dob,
+
+          bankName:
+            employeeInfo.bankName,
+
           joiningDate:
             employeeInfo.joiningDate,
+
+          bankAccount:
+            employeeInfo.bankAccount,
         }
       : undefined,
 
@@ -525,4 +534,3 @@ export const getSalarySlip = async (
     ],
   };
 };
-
