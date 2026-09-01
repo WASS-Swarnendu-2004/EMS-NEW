@@ -20,28 +20,47 @@ type NewField = {
 type EmployeeFormModalProps = {
   open: boolean;
   editing: Employee | null;
+
   form: CreateEmployeePayload;
+
   fields: EmployeeField[];
+
   roles: Role[];
+
   newField: NewField;
+
   saving: boolean;
 
   photoFile: File | null;
+
   photoPreview: string | null;
-  onPhotoChange: (file: File | null) => void;
+
+  onPhotoChange: (
+    file: File | null,
+  ) => void;
 
   onClose: () => void;
+
   onSave: () => void;
+
   onAddField: () => void;
-  onRemoveField: (id: string) => void;
+
+  onRemoveField: (
+    id: string,
+  ) => void;
 
   onOpenDesignationModal: () => void;
 
-  onNewFieldChange: (value: NewField) => void;
+  onNewFieldChange: (
+    value: NewField,
+  ) => void;
 
   onFieldChange: (
     fieldName: string,
-    value: string | number,
+    value:
+      | string
+      | number
+      | boolean,
   ) => void;
 
   onReorder: (
@@ -70,9 +89,10 @@ export function EmployeeFormModal({
   onOpenDesignationModal,
   onNewFieldChange,
   onFieldChange,
-  onReorder
+  onReorder,
 }: EmployeeFormModalProps) {
-  const [error, setError] = useState("");
+  const [error, setError] =
+    useState("");
 
   if (!open) {
     return null;
@@ -80,51 +100,81 @@ export function EmployeeFormModal({
 
   function handleChange(
     fieldName: string,
-    value: string | number,
+    value:
+      | string
+      | number
+      | boolean,
   ) {
     let newValue = value;
 
-    // Full name - alphabets and spaces only
+    // PF Applicable
+    if (
+      fieldName ===
+        "pfApplicable" &&
+      typeof value === "boolean"
+    ) {
+      newValue = value;
+    }
+
+    // Full name
     if (
       fieldName === "fullName" &&
       typeof value === "string"
     ) {
-      newValue = value.replace(/[^A-Za-z ]/g, "");
+      newValue =
+        value.replace(
+          /[^A-Za-z ]/g,
+          "",
+        );
     }
 
-    // Phone - numbers only and maximum 10 digits
+    // Phone
     if (
       fieldName === "phone" &&
       typeof value === "string"
     ) {
-      newValue = value.replace(/\D/g, "").slice(0, 10);
+      newValue =
+        value
+          .replace(/\D/g, "")
+          .slice(0, 10);
     }
 
-    // Emergency contact - numbers only and maximum 10 digits
+    // Emergency contact
     if (
-      fieldName === "emergencyContact" &&
+      fieldName ===
+        "emergencyContact" &&
       typeof value === "string"
     ) {
-      newValue = value.replace(/\D/g, "").slice(0, 10);
+      newValue =
+        value
+          .replace(/\D/g, "")
+          .slice(0, 10);
     }
 
-    // Bank account - numbers only
+    // Bank account
     if (
-      fieldName === "bankAccount" &&
+      fieldName ===
+        "bankAccount" &&
       typeof value === "string"
     ) {
-      newValue = value.replace(/\D/g, "").slice(0, 18);
+      newValue =
+        value
+          .replace(/\D/g, "")
+          .slice(0, 18);
     }
 
-    // PAN - uppercase
+    // PAN
     if (
       fieldName === "pan" &&
       typeof value === "string"
     ) {
-      newValue = value.toUpperCase().slice(0, 10);
+      newValue =
+        value
+          .toUpperCase()
+          .slice(0, 10);
     }
 
-    // Salary - allow empty value
+    // Salary
     if (fieldName === "salary") {
       if (value === "") {
         newValue = "";
@@ -133,7 +183,10 @@ export function EmployeeFormModal({
       }
     }
 
-    onFieldChange(fieldName, newValue);
+    onFieldChange(
+      fieldName,
+      newValue,
+    );
 
     if (error) {
       setError("");
@@ -141,47 +194,62 @@ export function EmployeeFormModal({
   }
 
   function validate(): boolean {
-    const fullName = String(
-      form.fullName || "",
-    ).trim();
+    const fullName =
+      String(
+        form.fullName || "",
+      ).trim();
 
-    const email = String(
-      form.email || "",
-    ).trim();
+    const email =
+      String(
+        form.email || "",
+      ).trim();
 
-    const phone = String(
-      form.phone || "",
-    ).trim();
+    const phone =
+      String(
+        form.phone || "",
+      ).trim();
 
-    const password = String(
-      form.password || "",
-    ).trim();
+    const password =
+      String(
+        form.password || "",
+      ).trim();
 
-    const designation = String(
-      form.designation || "",
-    ).trim();
+    const designation =
+      String(
+        form.designation || "",
+      ).trim();
 
-    const department = String(
-      form.department || "",
-    ).trim();
+    const department =
+      String(
+        form.department || "",
+      ).trim();
 
-    const salary = Number(form.salary);
+    const salary =
+      Number(form.salary);
 
-    const joiningDate = String(
-      form.joiningDate || "",
-    ).trim();
+    const joiningDate =
+      String(
+        form.joiningDate || "",
+      ).trim();
 
-    const bankAccount = String(
-      form.bankAccount || "",
-    ).trim();
+    const bankAccount =
+      String(
+        form.bankAccount || "",
+      ).trim();
 
     // Full name
     if (!fullName) {
-      setError("Full name is required");
+      setError(
+        "Full name is required",
+      );
       return false;
     }
 
-    if (!/^[A-Za-z ]+$/.test(fullName)) {
+    if (
+      !/^[A-Za-z ]+$/.test(
+        fullName,
+      )
+    ) {
       setError(
         "Full name should contain alphabets only",
       );
@@ -190,12 +258,16 @@ export function EmployeeFormModal({
 
     // Email
     if (!email) {
-      setError("Email is required");
+      setError(
+        "Email is required",
+      );
       return false;
     }
 
     if (
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+        email,
+      )
     ) {
       setError(
         "Please enter a valid email address",
@@ -204,20 +276,29 @@ export function EmployeeFormModal({
     }
 
     // Phone
-    if (!/^[6-9]\d{9}$/.test(phone)) {
+    if (
+      !/^[6-9]\d{9}$/.test(
+        phone,
+      )
+    ) {
       setError(
         "Phone number must be exactly 10 digits and start with 6-9",
       );
       return false;
     }
 
-    // Password - required only while creating
+    // Password
     if (!editing && !password) {
-      setError("Password is required");
+      setError(
+        "Password is required",
+      );
       return false;
     }
 
-    if (password && password.length < 6) {
+    if (
+      password &&
+      password.length < 6
+    ) {
       setError(
         "Password must contain at least 6 characters",
       );
@@ -226,17 +307,25 @@ export function EmployeeFormModal({
 
     // Designation
     if (!designation) {
-      setError("Designation is required");
+      setError(
+        "Designation is required",
+      );
       return false;
     }
 
     // Department
     if (!department) {
-      setError("Department is required");
+      setError(
+        "Department is required",
+      );
       return false;
     }
 
-    if (!/^[A-Za-z ]+$/.test(department)) {
+    if (
+      !/^[A-Za-z ]+$/.test(
+        department,
+      )
+    ) {
       setError(
         "Department should contain alphabets only",
       );
@@ -244,19 +333,32 @@ export function EmployeeFormModal({
     }
 
     // Salary
-    if (!Number.isFinite(salary) || salary <= 0) {
-      setError("Salary must be greater than 0");
+    if (
+      !Number.isFinite(
+        salary,
+      ) ||
+      salary <= 0
+    ) {
+      setError(
+        "Salary must be greater than 0",
+      );
       return false;
     }
 
     // Joining date
     if (!joiningDate) {
-      setError("Joining date is required");
+      setError(
+        "Joining date is required",
+      );
       return false;
     }
 
     // Bank account
-    if (!/^\d{9,18}$/.test(bankAccount)) {
+    if (
+      !/^\d{9,18}$/.test(
+        bankAccount,
+      )
+    ) {
       setError(
         "Bank account must contain 9 to 18 digits",
       );
@@ -264,6 +366,7 @@ export function EmployeeFormModal({
     }
 
     setError("");
+
     return true;
   }
 
@@ -281,8 +384,10 @@ export function EmployeeFormModal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl"
-        onClick={(e) => e.stopPropagation()}
+        className="max-h-[90vh] w-full max-w-6xl overflow-y-auto rounded-xl bg-white shadow-xl"
+        onClick={(e) =>
+          e.stopPropagation()
+        }
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b px-5 py-4">
@@ -306,14 +411,22 @@ export function EmployeeFormModal({
         <div className="p-5">
           <EmployeePhotoUpload
             file={photoFile}
-            preview={photoPreview}
-            onChange={onPhotoChange}
+            preview={
+              photoPreview
+            }
+            onChange={
+              onPhotoChange
+            }
           />
 
           <CustomizeEmployeeForm
             newField={newField}
-            setNewField={onNewFieldChange}
-            onAddField={onAddField}
+            setNewField={
+              onNewFieldChange
+            }
+            onAddField={
+              onAddField
+            }
           />
 
           {/* Validation Error */}
@@ -327,12 +440,18 @@ export function EmployeeFormModal({
             fields={fields}
             form={form}
             roles={roles}
-            onRemoveField={onRemoveField}
+            onRemoveField={
+              onRemoveField
+            }
             onOpenDesignationModal={
               onOpenDesignationModal
             }
-            onChange={handleChange}
-            onReorder={onReorder}
+            onChange={
+              handleChange
+            }
+            onReorder={
+              onReorder
+            }
           />
 
           {/* Footer */}
@@ -355,6 +474,7 @@ export function EmployeeFormModal({
               {saving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+
                   {editing
                     ? "Saving..."
                     : "Creating..."}
@@ -371,3 +491,4 @@ export function EmployeeFormModal({
     </div>
   );
 }
+

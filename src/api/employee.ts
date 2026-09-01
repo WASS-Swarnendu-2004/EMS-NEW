@@ -1,6 +1,5 @@
 import api from "./axios";
 
-
 export interface CustomField {
   label: string;
   value: string;
@@ -29,14 +28,22 @@ export interface Employee {
   profileImage?: string;
 
   customFields?: CustomField[];
+
+  // PF
+  pfApplicable: boolean;
 }
 
 export interface CreateEmployeePayload
-  extends Omit<Employee, "_id" | "employeeId" | "userId"> {}
+  extends Omit<
+    Employee,
+    "_id" | "employeeId" | "userId"
+  > {}
 
 export interface UpdateEmployeePayload
-  extends Omit<Employee, "_id" | "employeeId" | "userId" | "password"> { }
-  
+  extends Omit<
+    Employee,
+    "_id" | "employeeId" | "userId" | "password"
+  > {}
 
 export interface EmployeePagination {
   employees: Employee[];
@@ -44,76 +51,94 @@ export interface EmployeePagination {
   currentPage: number;
   totalPages: number;
 }
+
 export const getEmployees = async (
-  page: number = 1
+  page: number = 1,
 ): Promise<EmployeePagination> => {
   try {
-    const response = await api.get("/admin/employees", {
-      params: {
-        page,
+    const response = await api.get(
+      "/admin/employees",
+      {
+        params: {
+          page,
+        },
       },
-    });
+    );
 
     return {
       employees: response.data.employees,
-      totalEmployees: response.data.totalEmployees,
-      currentPage: response.data.currentPage,
-      totalPages: response.data.totalPages,
+      totalEmployees:
+        response.data.totalEmployees,
+      currentPage:
+        response.data.currentPage,
+      totalPages:
+        response.data.totalPages,
     };
   } catch (error) {
-    console.error("Get Employees Error:", error);
+    console.error(
+      "Get Employees Error:",
+      error,
+    );
     throw error;
   }
 };
 
 export const createEmployee = async (
-  data: CreateEmployeePayload
+  data: CreateEmployeePayload,
 ): Promise<Employee> => {
   try {
-  const response = await api.post(
-  "/admin/employees",
-  data
-);
+    const response = await api.post(
+      "/admin/employees",
+      data,
+    );
 
-return response.data.employee;
+    return response.data.employee;
   } catch (error) {
-    console.error("Create Employee Error:", error);
+    console.error(
+      "Create Employee Error:",
+      error,
+    );
     throw error;
   }
 };
 
 export const updateEmployee = async (
   id: string,
-  data: UpdateEmployeePayload
+  data: UpdateEmployeePayload,
 ): Promise<Employee> => {
   try {
-   const response = await api.put(
-    `/admin/employees/${id}`,
-    data
-);
+    const response = await api.put(
+      `/admin/employees/${id}`,
+      data,
+    );
 
-return response.data.employee;
+    return response.data.employee;
   } catch (error) {
-    console.error("Update Employee Error:", error);
+    console.error(
+      "Update Employee Error:",
+      error,
+    );
     throw error;
   }
 };
 
 export const deleteEmployee = async (
-  id: string
+  id: string,
 ) => {
   try {
-const response = await api.delete(
-    `/admin/employees/${id}`
-);
+    const response = await api.delete(
+      `/admin/employees/${id}`,
+    );
 
-return response.data;
+    return response.data;
   } catch (error) {
-    console.error("Delete Employee Error:", error);
+    console.error(
+      "Delete Employee Error:",
+      error,
+    );
     throw error;
   }
 };
-
 
 export const createEmployeeWithPhoto = async (
   data: CreateEmployeePayload,
@@ -122,11 +147,20 @@ export const createEmployeeWithPhoto = async (
   try {
     const formData = new FormData();
 
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, String(value ?? ""));
-    });
+    Object.entries(data).forEach(
+      ([key, value]) => {
+        formData.append(
+          key,
+          String(value ?? ""),
+        );
+      },
+    );
 
-    formData.append("profileImage", photo, photo.name);
+    formData.append(
+      "profileImage",
+      photo,
+      photo.name,
+    );
 
     const response = await api.post(
       "/admin/employees/with-photo",
@@ -140,7 +174,10 @@ export const createEmployeeWithPhoto = async (
 
     return response.data.employee;
   } catch (error) {
-    console.error("Create Employee With Photo Error:", error);
+    console.error(
+      "Create Employee With Photo Error:",
+      error,
+    );
     throw error;
   }
 };
@@ -153,11 +190,20 @@ export const updateEmployeeWithPhoto = async (
   try {
     const formData = new FormData();
 
-    Object.entries(data).forEach(([key, value]) => {
-      formData.append(key, String(value ?? ""));
-    });
+    Object.entries(data).forEach(
+      ([key, value]) => {
+        formData.append(
+          key,
+          String(value ?? ""),
+        );
+      },
+    );
 
-    formData.append("profileImage", photo, photo.name);
+    formData.append(
+      "profileImage",
+      photo,
+      photo.name,
+    );
 
     const response = await api.put(
       `/admin/employees/${id}`,
@@ -171,11 +217,13 @@ export const updateEmployeeWithPhoto = async (
 
     return response.data.employee;
   } catch (error) {
-    console.error("Update Employee With Photo Error:", error);
+    console.error(
+      "Update Employee With Photo Error:",
+      error,
+    );
     throw error;
   }
 };
-
 
 export interface TaskEmployee {
   _id: string;
@@ -192,15 +240,21 @@ export interface TaskEmployeesResponse {
   employees: TaskEmployee[];
 }
 
-export const getTaskEmployees = async (): Promise<TaskEmployee[]> => {
-  try {
-    const response = await api.get<TaskEmployeesResponse>(
-      "/tasks/employees"
-    );
+export const getTaskEmployees =
+  async (): Promise<TaskEmployee[]> => {
+    try {
+      const response =
+        await api.get<TaskEmployeesResponse>(
+          "/tasks/employees",
+        );
 
-    return response.data.employees;
-  } catch (error) {
-    console.error("Get Task Employees Error:", error);
-    throw error;
-  }
-};
+      return response.data.employees;
+    } catch (error) {
+      console.error(
+        "Get Task Employees Error:",
+        error,
+      );
+      throw error;
+    }
+  };
+
