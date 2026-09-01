@@ -79,6 +79,10 @@ type SalaryDetailsResponse = {
     absentDays: number;
     absentDeduction: number;
 
+    paidCasualLeaveDays: number;
+    paidSickLeaveDays: number;
+    unpaidLeaveDays: number;
+
     leaveDeduction: number;
     earlyCheckoutDeduction: number;
   };
@@ -89,13 +93,19 @@ type SalaryRow = {
   fullName: string;
   designation: string;
   monthlyGrossSalary: number;
+
   basic: number | null;
   hra: number | null;
   specialAllowance: number | null;
+
+  paidLeaves: number | null;
+  unpaidLeaves: number | null;
+
   absentDeduction: number | null;
   pf: number | null;
   professionalTax: number | null;
   netSalary: number | null;
+
   generated: boolean;
 };
 
@@ -180,11 +190,6 @@ function AdminSalaryDetails() {
         `Loading salary data for ${selectedMonth}/${CURRENT_YEAR}`,
       );
 
-      /*
-       * Get all employees for the selected month.
-       *
-       * Year is automatically taken as the current year.
-       */
       const monthlyResponse =
         await api.get<MonthlySalaryResponse>(
           "/admin/salary",
@@ -204,10 +209,6 @@ function AdminSalaryDetails() {
       const monthlyEmployees =
         monthlyResponse.data.employees || [];
 
-      /*
-       * Get detailed salary information only for
-       * employees whose salary has already been generated.
-       */
       const generatedEmployees =
         monthlyEmployees.filter(
           (employee) =>
@@ -241,9 +242,6 @@ function AdminSalaryDetails() {
         }),
       );
 
-      /*
-       * Create lookup map for salary details.
-       */
       const detailsMap = new Map<
         string,
         SalaryDetailsResponse["salary"]
@@ -258,10 +256,6 @@ function AdminSalaryDetails() {
         }
       });
 
-      /*
-       * Merge monthly employee information
-       * with backend salary details.
-       */
       const rows: SalaryRow[] =
         monthlyEmployees.map((employee) => {
           const details = detailsMap.get(
@@ -278,22 +272,38 @@ function AdminSalaryDetails() {
               designation: employee.role || "—",
               monthlyGrossSalary:
                 employee.grossSalary,
+
               basic: null,
               hra: null,
               specialAllowance: null,
+
+              paidLeaves: null,
+              unpaidLeaves: null,
+
               absentDeduction: null,
               pf: null,
               professionalTax: null,
               netSalary: null,
+
               generated: employee.generated,
             };
           }
 
           /*
-           * Salary generated.
-           *
-           * All values come directly from backend.
+           * Paid leaves =
+           * Casual Leave + Sick Leave
            */
+          const paidLeaves =
+            (details.paidCasualLeaveDays || 0) +
+            (details.paidSickLeaveDays || 0);
+
+          /*
+           * Unpaid leaves come directly
+           * from backend.
+           */
+          const unpaidLeaves =
+            details.unpaidLeaveDays || 0;
+
           return {
             employeeId: employee.employeeId,
 
@@ -321,6 +331,10 @@ function AdminSalaryDetails() {
               details.earnings,
               "Special Allowance",
             ),
+
+            paidLeaves,
+
+            unpaidLeaves,
 
             absentDeduction: getDeductionAmount(
               details.deductions,
@@ -404,14 +418,13 @@ function AdminSalaryDetails() {
       setExporting(true);
       setError("");
 
-      /*
-       * Convert displayed data into Excel rows.
-       */
       const excelData = filteredData.map(
         (employee) => ({
-          "Employee Name": employee.fullName,
+          "Employee Name":
+            employee.fullName,
 
-          "Employee ID": employee.employeeId,
+          "Employee ID":
+            employee.employeeId,
 
           "Employee Designation":
             employee.designation,
@@ -419,17 +432,26 @@ function AdminSalaryDetails() {
           "Monthly Gross Salary":
             employee.monthlyGrossSalary,
 
-          Basic: employee.basic ?? "",
+          Basic:
+            employee.basic ?? "",
 
-          HRA: employee.hra ?? "",
+          HRA:
+            employee.hra ?? "",
 
           "Special Allowance":
             employee.specialAllowance ?? "",
 
+          "Paid Leaves":
+            employee.paidLeaves ?? "",
+
+          "Unpaid Leaves":
+            employee.unpaidLeaves ?? "",
+
           "Absent Deductions":
             employee.absentDeduction ?? "",
 
-          PF: employee.pf ?? "",
+          PF:
+            employee.pf ?? "",
 
           PTAX:
             employee.professionalTax ?? "",
@@ -439,15 +461,11 @@ function AdminSalaryDetails() {
         }),
       );
 
-      /*
-       * Create worksheet.
-       */
       const worksheet =
-        XLSX.utils.json_to_sheet(excelData);
+        XLSX.utils.json_to_sheet(
+          excelData,
+        );
 
-      /*
-       * Set Excel column widths.
-       */
       worksheet["!cols"] = [
         { wch: 25 },
         { wch: 16 },
@@ -456,15 +474,14 @@ function AdminSalaryDetails() {
         { wch: 16 },
         { wch: 16 },
         { wch: 23 },
+        { wch: 16 },
+        { wch: 17 },
         { wch: 22 },
         { wch: 16 },
         { wch: 16 },
         { wch: 18 },
       ];
 
-      /*
-       * Create workbook.
-       */
       const workbook =
         XLSX.utils.book_new();
 
@@ -474,16 +491,9 @@ function AdminSalaryDetails() {
         "Salary Details",
       );
 
-      /*
-       * Example:
-       * Salary_Details_August_2026.xlsx
-       */
       const fileName =
         `Salary_Details_${selectedMonthLabel}_${CURRENT_YEAR}.xlsx`;
 
-      /*
-       * Download Excel file.
-       */
       XLSX.writeFile(
         workbook,
         fileName,
@@ -507,7 +517,6 @@ function AdminSalaryDetails() {
 
       {/* HEADER */}
       <div className="mb-4 sm:mb-5">
-
         <h1 className="text-xl font-bold text-[#171b2d] sm:text-2xl">
           Salary Details
         </h1>
@@ -515,7 +524,6 @@ function AdminSalaryDetails() {
         <p className="mt-1 text-xs text-[#737b91] sm:text-sm">
           View salary details of all employees
         </p>
-
       </div>
 
       {/* FILTERS + EXPORT */}
@@ -582,7 +590,6 @@ function AdminSalaryDetails() {
           {/* RIGHT SIDE */}
           <div className="flex w-full items-center justify-between gap-3 lg:w-auto lg:justify-end">
 
-            {/* RECORD COUNT */}
             <span className="whitespace-nowrap text-sm text-[#737b91]">
               {filteredData.length}{" "}
               {filteredData.length === 1
@@ -590,7 +597,6 @@ function AdminSalaryDetails() {
                 : "records"}
             </span>
 
-            {/* EXPORT EXCEL */}
             <button
               type="button"
               onClick={handleExportExcel}
@@ -640,61 +646,69 @@ function AdminSalaryDetails() {
 
         <div className="w-full overflow-x-auto">
 
-          <table className="w-full min-w-[1400px] border-collapse">
+          <table className="w-full min-w-[1750px] border-collapse">
 
-            {/* TABLE HEADER */}
+            {/* HEADER */}
             <thead>
               <tr className="bg-[#dca8f5]">
 
-                <th className="px-3 py-4 text-left text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   EMPLOYEE NAME
                 </th>
 
-                <th className="px-3 py-4 text-left text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   EMPLOYEE DESIGNATION
                 </th>
 
-                <th className="px-3 py-4 text-right text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   MONTHLY GROSS SALARY
                 </th>
 
-                <th className="px-3 py-4 text-right text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   BASIC
                 </th>
 
-                <th className="px-3 py-4 text-right text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   HRA
                 </th>
 
-                <th className="px-3 py-4 text-right text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   SPECIAL ALLOWANCE
                 </th>
 
-                <th className="px-3 py-4 text-right text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
+                  PAID LEAVES
+                </th>
+
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
+                  UNPAID LEAVES
+                </th>
+
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   ABSENT DEDUCTIONS
                 </th>
 
-                <th className="px-3 py-4 text-right text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   PF
                 </th>
 
-                <th className="px-3 py-4 text-right text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   PTAX
                 </th>
 
-                <th className="px-3 py-4 text-right text-xs font-bold tracking-wide text-[#240051] sm:px-4">
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   NET PAY
                 </th>
 
               </tr>
             </thead>
 
-            {/* TABLE BODY */}
+            {/* BODY */}
             <tbody>
 
               {loading ? (
                 <tr>
-                  <td colSpan={10}>
+                  <td colSpan={12}>
 
                     <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
 
@@ -711,6 +725,7 @@ function AdminSalaryDetails() {
 
                   </td>
                 </tr>
+
               ) : filteredData.length > 0 ? (
 
                 filteredData.map(
@@ -723,9 +738,9 @@ function AdminSalaryDetails() {
                     >
 
                       {/* EMPLOYEE */}
-                      <td className="px-3 py-3.5 sm:px-4">
+                      <td className="px-4 py-3.5 text-center">
 
-                        <div className="flex min-w-[210px] items-center gap-3">
+                        <div className="flex min-w-[210px] items-center justify-center gap-3">
 
                           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f1f2f5] text-sm font-medium text-[#70798d] sm:h-11 sm:w-11">
                             {employee.fullName
@@ -733,7 +748,7 @@ function AdminSalaryDetails() {
                               .toUpperCase()}
                           </div>
 
-                          <div>
+                          <div className="text-left">
 
                             <p className="text-sm font-semibold text-[#182033]">
                               {
@@ -754,7 +769,7 @@ function AdminSalaryDetails() {
                       </td>
 
                       {/* DESIGNATION */}
-                      <td className="px-3 py-3.5 sm:px-4">
+                      <td className="px-4 py-3.5 text-center">
 
                         <span className="inline-flex whitespace-nowrap rounded-full bg-[#eadff2] px-3 py-1.5 text-xs font-semibold text-[#520087]">
                           {
@@ -765,56 +780,68 @@ function AdminSalaryDetails() {
                       </td>
 
                       {/* GROSS */}
-                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
                         {formatCurrency(
                           employee.monthlyGrossSalary,
                         )}
                       </td>
 
                       {/* BASIC */}
-                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
                         {formatCurrency(
                           employee.basic,
                         )}
                       </td>
 
                       {/* HRA */}
-                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
                         {formatCurrency(
                           employee.hra,
                         )}
                       </td>
 
                       {/* SPECIAL ALLOWANCE */}
-                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
                         {formatCurrency(
                           employee.specialAllowance,
                         )}
                       </td>
 
+                      {/* PAID LEAVES */}
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
+                        {employee.paidLeaves ??
+                          "—"}
+                      </td>
+
+                      {/* UNPAID LEAVES */}
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
+                        {employee.unpaidLeaves ??
+                          "—"}
+                      </td>
+
                       {/* ABSENT DEDUCTION */}
-                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
                         {formatCurrency(
                           employee.absentDeduction,
                         )}
                       </td>
 
                       {/* PF */}
-                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
                         {formatCurrency(
                           employee.pf,
                         )}
                       </td>
 
                       {/* PTAX */}
-                      <td className="px-3 py-3.5 text-right text-sm font-medium text-[#1a2140] sm:px-4">
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
                         {formatCurrency(
                           employee.professionalTax,
                         )}
                       </td>
 
                       {/* NET PAY */}
-                      <td className="px-3 py-3.5 text-right text-sm font-bold text-[#182033] sm:px-4">
+                      <td className="px-4 py-3.5 text-center text-sm font-bold text-[#182033]">
                         {formatCurrency(
                           employee.netSalary,
                         )}
@@ -827,7 +854,7 @@ function AdminSalaryDetails() {
               ) : (
 
                 <tr>
-                  <td colSpan={10}>
+                  <td colSpan={12}>
 
                     <div className="flex min-h-[240px] flex-col items-center justify-center px-4 text-center">
 
@@ -894,3 +921,4 @@ function AdminSalaryDetails() {
     </div>
   );
 }
+
