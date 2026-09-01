@@ -7,7 +7,10 @@ import type {
 } from "@/api/employee";
 import type { Role } from "@/api/role";
 
-import { Loader2 } from "lucide-react";
+import {
+  Info,
+  Loader2,
+} from "lucide-react";
 
 import { CustomizeEmployeeForm } from "./CustomizeEmployeeForm";
 import { EmployeeFormFields } from "./EmployeeFormFields";
@@ -389,7 +392,10 @@ export function EmployeeFormModal({
           e.stopPropagation()
         }
       >
-        {/* Header */}
+        {/* ================================================= */}
+        {/* HEADER                                            */}
+        {/* ================================================= */}
+
         <div className="flex items-center justify-between border-b px-5 py-4">
           <h2 className="text-xl font-semibold text-gray-800">
             {editing
@@ -407,34 +413,25 @@ export function EmployeeFormModal({
           </button>
         </div>
 
-        {/* Body */}
+        {/* ================================================= */}
+        {/* BODY                                              */}
+        {/* ================================================= */}
+
         <div className="p-5">
+
+          {/* ================================================= */}
+          {/* 1. EMPLOYEE PHOTO                                 */}
+          {/* ================================================= */}
+
           <EmployeePhotoUpload
             file={photoFile}
-            preview={
-              photoPreview
-            }
-            onChange={
-              onPhotoChange
-            }
+            preview={photoPreview}
+            onChange={onPhotoChange}
           />
 
-          <CustomizeEmployeeForm
-            newField={newField}
-            setNewField={
-              onNewFieldChange
-            }
-            onAddField={
-              onAddField
-            }
-          />
-
-          {/* Validation Error */}
-          {error && (
-            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
+          {/* ================================================= */}
+          {/* 2. NORMAL EMPLOYEE FIELDS                         */}
+          {/* ================================================= */}
 
           <EmployeeFormFields
             fields={fields}
@@ -446,16 +443,98 @@ export function EmployeeFormModal({
             onOpenDesignationModal={
               onOpenDesignationModal
             }
-            onChange={
-              handleChange
-            }
-            onReorder={
-              onReorder
-            }
+            onChange={handleChange}
+            onReorder={onReorder}
           />
 
-          {/* Footer */}
+          {/* ================================================= */}
+          {/* 3. CUSTOMIZE EMPLOYEE FORM                         */}
+          {/* ================================================= */}
+
+          <div className="mt-6 border-t border-gray-200 pt-5">
+            <CustomizeEmployeeForm
+              newField={newField}
+              setNewField={
+                onNewFieldChange
+              }
+              onAddField={
+                onAddField
+              }
+            />
+          </div>
+
+          {/* ================================================= */}
+          {/* 4. IMPORTANT NOTE                                  */}
+          {/* ================================================= */}
+
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="flex items-start gap-3">
+
+              <Info
+                size={19}
+                className="mt-0.5 shrink-0 text-amber-600"
+              />
+
+              <div className="min-w-0">
+
+                <p className="text-sm font-semibold text-amber-800">
+                  Important Note
+                </p>
+
+                <p className="mt-1 text-sm leading-6 text-amber-700">
+                  When adding custom fields, please use
+                  the following field labels exactly as
+                  shown below:
+                </p>
+
+                <div className="mt-2 flex flex-wrap gap-2">
+
+                  <span className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-amber-800 shadow-sm ring-1 ring-amber-200">
+                    Bank Name
+                  </span>
+
+                  <span className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-amber-800 shadow-sm ring-1 ring-amber-200">
+                    UAN No
+                  </span>
+
+                  <span className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-amber-800 shadow-sm ring-1 ring-amber-200">
+                    DOB
+                  </span>
+
+                  <span className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-amber-800 shadow-sm ring-1 ring-amber-200">
+                    ESI No
+                  </span>
+
+                </div>
+
+                <p className="mt-2 text-xs leading-5 text-amber-700">
+                  Please keep the spelling, spacing, and
+                  capitalization exactly the same so these
+                  fields can be correctly identified in
+                  salary slips and other salary-related
+                  documents.
+                </p>
+
+              </div>
+            </div>
+          </div>
+
+          {/* ================================================= */}
+          {/* VALIDATION ERROR                                   */}
+          {/* ================================================= */}
+
+          {error && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* ================================================= */}
+          {/* 5. FOOTER - CANCEL / SAVE                         */}
+          {/* ================================================= */}
+
           <div className="mt-6 flex flex-col-reverse gap-3 border-t pt-5 sm:flex-row sm:justify-end">
+
             <button
               type="button"
               className="btn btn-ghost w-full sm:w-auto"
@@ -485,7 +564,9 @@ export function EmployeeFormModal({
                 "Create Employee"
               )}
             </button>
+
           </div>
+
         </div>
       </div>
     </div>
