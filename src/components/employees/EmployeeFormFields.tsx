@@ -110,12 +110,6 @@ export function EmployeeFormFields({
       {/* ================================================= */}
 
       <div className="field rounded-lg">
-        <div className="mb-2 flex items-center">
-          <label className="font-medium text-gray-700">
-            PF Applicable
-          </label>
-        </div>
-
         <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 transition hover:bg-gray-100">
           <input
             type="checkbox"
