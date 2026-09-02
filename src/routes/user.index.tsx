@@ -1,40 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { today, nowTime } from "@/lib/store";
-import {
-  checkIn,
-  checkOut,
-  getDashboard,
-  type DashboardResponse,
-} from "@/api/dashboard";
+import { checkIn, checkOut, getDashboard, type DashboardResponse } from "@/api/dashboard";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
-import {
-  CalendarDays,
-  CheckCircle2,
-  Info,
-  Loader2,
-  Sparkles,
-  X,
-} from "lucide-react";
+import { CalendarDays, CheckCircle2, Info, Loader2, Sparkles, X } from "lucide-react";
 import { toast } from "react-toastify";
-import {
-  getMyProjects,
-  type Project,
-} from "@/api/project";
+import { getMyProjects, type Project } from "@/api/project";
 import { saveWorkStatus } from "@/api/workStatus";
-import {
-  getTodayHoliday,
-  type Holiday,
-} from "@/api/holiday";
+import { getTodayHoliday, type Holiday } from "@/api/holiday";
 
 export const Route = createFileRoute("/user/")({
   component: Page,
 });
 
-type RemarkType =
-  | "late-checkin"
-  | "early-checkout"
-  | null;
+type RemarkType = "late-checkin" | "early-checkout" | null;
 
 const MAX_REMARK_LENGTH = 40;
 
@@ -43,8 +22,7 @@ function Page() {
 
   const empId = session!.id;
 
-  const [mode, setMode] =
-    useState<"office" | "wfh">("office");
+  const [mode, setMode] = useState<"office" | "wfh">("office");
 
   const [plan, setPlan] = useState("");
   const [status, setStatus] = useState("");
@@ -52,46 +30,35 @@ function Page() {
 
   const t = today();
 
-  const [dashboard, setDashboard] =
-    useState<DashboardResponse | null>(null);
+  const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
 
-  const [projects, setProjects] =
-    useState<Project[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [checkingIn, setCheckingIn] =
-    useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
 
-  const [checkingOut, setCheckingOut] =
-    useState(false);
+  const [checkingOut, setCheckingOut] = useState(false);
 
-  const [savingWork, setSavingWork] =
-    useState(false);
+  const [savingWork, setSavingWork] = useState(false);
 
   // --------------------------------------------------
   // HOLIDAY STATE
   // --------------------------------------------------
 
-  const [isHoliday, setIsHoliday] =
-    useState(false);
+  const [isHoliday, setIsHoliday] = useState(false);
 
-  const [todayHoliday, setTodayHoliday] =
-    useState<Holiday | null>(null);
+  const [todayHoliday, setTodayHoliday] = useState<Holiday | null>(null);
 
-  const [holidayPopupOpen, setHolidayPopupOpen] =
-    useState(false);
+  const [holidayPopupOpen, setHolidayPopupOpen] = useState(false);
 
   // --------------------------------------------------
   // REMARK STATE
   // --------------------------------------------------
 
-  const [remarkType, setRemarkType] =
-    useState<RemarkType>(null);
+  const [remarkType, setRemarkType] = useState<RemarkType>(null);
 
-  const [remark, setRemark] =
-    useState("");
+  const [remark, setRemark] = useState("");
 
   // --------------------------------------------------
   // LOAD DATA
@@ -105,11 +72,7 @@ function Page() {
     try {
       setLoading(true);
 
-      const [
-        dashboardData,
-        projectData,
-        holidayData,
-      ] = await Promise.all([
+      const [dashboardData, projectData, holidayData] = await Promise.all([
         getDashboard(),
         getMyProjects(),
         getTodayHoliday(),
@@ -119,31 +82,19 @@ function Page() {
 
       setProjects(projectData);
 
-      setPlan(
-        dashboardData.todayPlan?.plan ?? "",
-      );
+      setPlan(dashboardData.todayPlan?.plan ?? "");
 
-      setStatus(
-        dashboardData.todayPlan?.status ?? "",
-      );
+      setStatus(dashboardData.todayPlan?.status ?? "");
 
-      setProjectId(
-        dashboardData.todayPlan?.projectId ?? "",
-      );
+      setProjectId(dashboardData.todayPlan?.projectId ?? "");
 
       // ------------------------------------------------
       // HOLIDAY
       // ------------------------------------------------
 
-      if (
-        holidayData.success &&
-        holidayData.isHoliday &&
-        holidayData.holiday
-      ) {
+      if (holidayData.success && holidayData.isHoliday && holidayData.holiday) {
         setIsHoliday(true);
-        setTodayHoliday(
-          holidayData.holiday,
-        );
+        setTodayHoliday(holidayData.holiday);
 
         // Automatically show popup
         setHolidayPopupOpen(true);
@@ -154,9 +105,7 @@ function Page() {
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Failed to load dashboard",
-      );
+      toast.error("Failed to load dashboard");
     } finally {
       setLoading(false);
     }
@@ -172,23 +121,15 @@ function Page() {
 
       setDashboard(res);
 
-      setPlan(
-        res.todayPlan?.plan ?? "",
-      );
+      setPlan(res.todayPlan?.plan ?? "");
 
-      setStatus(
-        res.todayPlan?.status ?? "",
-      );
+      setStatus(res.todayPlan?.status ?? "");
 
-      setProjectId(
-        res.todayPlan?.projectId ?? "",
-      );
+      setProjectId(res.todayPlan?.projectId ?? "");
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Failed to load dashboard",
-      );
+      toast.error("Failed to load dashboard");
     }
   };
 
@@ -207,17 +148,13 @@ function Page() {
         workDate: t,
       });
 
-      toast.success(
-        "Work status saved",
-      );
+      toast.success("Work status saved");
 
       await fetchDashboard();
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        "Unable to save work status",
-      );
+      toast.error("Unable to save work status");
     } finally {
       setSavingWork(false);
     }
@@ -230,39 +167,23 @@ function Page() {
   function getCurrentISTMinutes() {
     const now = new Date();
 
-    const istTime =
-      new Intl.DateTimeFormat(
-        "en-IN",
-        {
-          timeZone: "Asia/Kolkata",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        },
-      ).formatToParts(now);
+    const istTime = new Intl.DateTimeFormat("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(now);
 
-    const hour = Number(
-      istTime.find(
-        (part) =>
-          part.type === "hour",
-      )?.value ?? 0,
-    );
+    const hour = Number(istTime.find((part) => part.type === "hour")?.value ?? 0);
 
-    const minute = Number(
-      istTime.find(
-        (part) =>
-          part.type === "minute",
-      )?.value ?? 0,
-    );
+    const minute = Number(istTime.find((part) => part.type === "minute")?.value ?? 0);
 
     return hour * 60 + minute;
   }
 
-  const LATE_CHECKIN_TIME =
-    10 * 60 + 15;
+  const LATE_CHECKIN_TIME = 10 * 60 + 15;
 
-  const EARLY_CHECKOUT_TIME =
-    18 * 60 + 45;
+  const EARLY_CHECKOUT_TIME = 18 * 60 + 45;
 
   // --------------------------------------------------
   // CHECK IN
@@ -275,18 +196,12 @@ function Page() {
       return;
     }
 
-    const currentISTMinutes =
-      getCurrentISTMinutes();
+    const currentISTMinutes = getCurrentISTMinutes();
 
-    if (
-      currentISTMinutes >=
-      LATE_CHECKIN_TIME
-    ) {
+    if (currentISTMinutes >= LATE_CHECKIN_TIME) {
       setRemark("");
 
-      setRemarkType(
-        "late-checkin",
-      );
+      setRemarkType("late-checkin");
 
       return;
     }
@@ -298,15 +213,9 @@ function Page() {
     try {
       setCheckingIn(true);
 
-      const res = await checkIn(
-        mode,
-        remark.trim() || undefined,
-      );
+      const res = await checkIn(mode, remark.trim() || undefined);
 
-      toast.success(
-        res.message ||
-          "Checked in successfully",
-      );
+      toast.success(res.message || "Checked in successfully");
 
       closeRemarkModal();
 
@@ -314,10 +223,7 @@ function Page() {
     } catch (err: any) {
       console.error(err);
 
-      toast.error(
-        err.response?.data?.message ||
-          "Check in failed",
-      );
+      toast.error(err.response?.data?.message || "Check in failed");
     } finally {
       setCheckingIn(false);
     }
@@ -334,18 +240,12 @@ function Page() {
       return;
     }
 
-    const currentISTMinutes =
-      getCurrentISTMinutes();
+    const currentISTMinutes = getCurrentISTMinutes();
 
-    if (
-      currentISTMinutes <
-      EARLY_CHECKOUT_TIME
-    ) {
+    if (currentISTMinutes < EARLY_CHECKOUT_TIME) {
       setRemark("");
 
-      setRemarkType(
-        "early-checkout",
-      );
+      setRemarkType("early-checkout");
 
       return;
     }
@@ -357,14 +257,9 @@ function Page() {
     try {
       setCheckingOut(true);
 
-      const res = await checkOut(
-        remark.trim() || undefined,
-      );
+      const res = await checkOut(remark.trim() || undefined);
 
-      toast.success(
-        res.message ||
-          "Checked out successfully",
-      );
+      toast.success(res.message || "Checked out successfully");
 
       closeRemarkModal();
 
@@ -372,10 +267,7 @@ function Page() {
     } catch (err: any) {
       console.error(err);
 
-      toast.error(
-        err.response?.data?.message ||
-          "Failed to check out",
-      );
+      toast.error(err.response?.data?.message || "Failed to check out");
     } finally {
       setCheckingOut(false);
     }
@@ -390,117 +282,71 @@ function Page() {
     setRemark("");
   };
 
-  const handleRemarkChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
+  const handleRemarkChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
 
-    setRemark(
-      value.slice(
-        0,
-        MAX_REMARK_LENGTH,
-      ),
-    );
+    setRemark(value.slice(0, MAX_REMARK_LENGTH));
   };
 
-  const handleRemarkSubmit =
-    async () => {
-      const trimmedRemark =
-        remark.trim();
+  const handleRemarkSubmit = async () => {
+    const trimmedRemark = remark.trim();
 
-      if (!trimmedRemark) {
-        toast.error(
-          "Please provide a reason",
-        );
+    if (!trimmedRemark) {
+      toast.error("Please provide a reason");
 
-        return;
-      }
+      return;
+    }
 
-      if (
-        trimmedRemark.length >
-        MAX_REMARK_LENGTH
-      ) {
-        toast.error(
-          `Reason cannot exceed ${MAX_REMARK_LENGTH} characters`,
-        );
+    if (trimmedRemark.length > MAX_REMARK_LENGTH) {
+      toast.error(`Reason cannot exceed ${MAX_REMARK_LENGTH} characters`);
 
-        return;
-      }
+      return;
+    }
 
-      if (
-        remarkType ===
-        "late-checkin"
-      ) {
-        await performCheckIn();
-      }
+    if (remarkType === "late-checkin") {
+      await performCheckIn();
+    }
 
-      if (
-        remarkType ===
-        "early-checkout"
-      ) {
-        await performCheckOut();
-      }
-    };
+    if (remarkType === "early-checkout") {
+      await performCheckOut();
+    }
+  };
 
   // --------------------------------------------------
   // FORMAT IST TIME
   // --------------------------------------------------
 
-  function formatISTTime(
-    date: string,
-  ) {
-    return new Date(
-      date,
-    ).toLocaleTimeString(
-      "en-IN",
-      {
-        timeZone:
-          "Asia/Kolkata",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: true,
-      },
-    );
+  function formatISTTime(date: string) {
+    return new Date(date).toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
   }
 
   // --------------------------------------------------
   // FORMAT HOLIDAY DATE
   // --------------------------------------------------
 
-  function formatHolidayDate(
-    date: string,
-  ) {
-    return new Date(
-      date,
-    ).toLocaleDateString(
-      "en-IN",
-      {
-        timeZone:
-          "Asia/Kolkata",
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      },
-    );
+  function formatHolidayDate(date: string) {
+    return new Date(date).toLocaleDateString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
   }
 
   // --------------------------------------------------
   // ATTENDANCE STATE
   // --------------------------------------------------
 
-  const hasCheckedIn =
-    Boolean(
-      dashboard?.attendance
-        ?.checkIn,
-    );
+  const hasCheckedIn = Boolean(dashboard?.attendance?.checkIn);
 
-  const hasCheckedOut =
-    Boolean(
-      dashboard?.attendance
-        ?.checkOut,
-    );
+  const hasCheckedOut = Boolean(dashboard?.attendance?.checkOut);
 
   // --------------------------------------------------
   // LOADING
@@ -512,17 +358,13 @@ function Page() {
         style={{
           display: "flex",
           flexDirection: "column",
-          justifyContent:
-            "center",
+          justifyContent: "center",
           alignItems: "center",
           height: "70vh",
           gap: "12px",
         }}
       >
-        <Loader2
-          className="animate-spin"
-          size={40}
-        />
+        <Loader2 className="animate-spin" size={40} />
 
         <p
           style={{
@@ -545,47 +387,27 @@ function Page() {
 
       <div className="kpis">
         <div className="kpi">
-          <div className="kpi-label">
-            My projects
-          </div>
+          <div className="kpi-label">My projects</div>
 
-          <div className="kpi-value">
-            {dashboard?.cards
-              .myProjects ?? 0}
-          </div>
+          <div className="kpi-value">{dashboard?.cards.myProjects ?? 0}</div>
         </div>
 
         <div className="kpi">
-          <div className="kpi-label">
-            Pending leaves
-          </div>
+          <div className="kpi-label">Pending leaves</div>
 
-          <div className="kpi-value">
-            {dashboard?.cards
-              .pendingLeaves ?? 0}
-          </div>
+          <div className="kpi-value">{dashboard?.cards.pendingLeaves ?? 0}</div>
         </div>
 
         <div className="kpi">
-          <div className="kpi-label">
-            Pending WFH
-          </div>
+          <div className="kpi-label">Pending WFH</div>
 
-          <div className="kpi-value">
-            {dashboard?.cards
-              .pendingWFH ?? 0}
-          </div>
+          <div className="kpi-value">{dashboard?.cards.pendingWFH ?? 0}</div>
         </div>
 
         <div className="kpi gold">
-          <div className="kpi-label">
-            Salary slips
-          </div>
+          <div className="kpi-label">Salary slips</div>
 
-          <div className="kpi-value">
-            {dashboard?.cards
-              .salarySlips ?? 0}
-          </div>
+          <div className="kpi-value">{dashboard?.cards.salarySlips ?? 0}</div>
         </div>
       </div>
 
@@ -600,9 +422,7 @@ function Page() {
 
         <div className="card">
           <div className="card-header">
-            <h2>
-              Attendance — {t}
-            </h2>
+            <h2>Attendance — {t}</h2>
           </div>
 
           {/* ==================================================
@@ -614,19 +434,14 @@ function Page() {
               <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5">
                 <div className="flex items-start gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100">
-                    <CalendarDays
-                      className="h-6 w-6 text-amber-600"
-                    />
+                    <CalendarDays className="h-6 w-6 text-amber-600" />
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Today is a Holiday
-                    </h3>
+                    <h3 className="text-lg font-semibold text-gray-900">Today is a Holiday</h3>
 
                     <p className="mt-1 text-sm leading-5 text-gray-600">
-                      {todayHoliday?.reason ||
-                        "Today has been declared a company holiday."}
+                      {todayHoliday?.reason || "Today has been declared a company holiday."}
                     </p>
                   </div>
                 </div>
@@ -642,19 +457,12 @@ function Page() {
                 </button>
 
                 <p className="mt-3 text-center text-xs text-gray-500">
-                  Check-in and check-out are
-                  unavailable on company
-                  holidays.
+                  Check-in and check-out are unavailable on company holidays.
                 </p>
               </div>
             </div>
-          ) : dashboard?.onLeave ||
-            dashboard?.attendance
-              ?.status === "Leave" ? (
-            <p className="badge">
-              You are on approved
-              leave today.
-            </p>
+          ) : dashboard?.onLeave || dashboard?.attendance?.status === "Leave" ? (
+            <p className="badge">You are on approved leave today.</p>
           ) : !hasCheckedIn ? (
             /* ==================================================
                 NOT CHECKED IN
@@ -662,48 +470,24 @@ function Page() {
 
             <div>
               <div className="field">
-                <label>
-                  Mode
-                </label>
+                <label>Mode</label>
 
                 <select
                   className="select"
                   value={mode}
-                  onChange={(e) =>
-                    setMode(
-                      e.target
-                        .value as
-                        | "office"
-                        | "wfh",
-                    )
-                  }
+                  onChange={(e) => setMode(e.target.value as "office" | "wfh")}
                 >
-                  <option value="office">
-                    Office
-                  </option>
+                  <option value="office">Office</option>
 
-                  <option value="wfh">
-                    Work from home
-                  </option>
+                  <option value="wfh">Work from home</option>
                 </select>
               </div>
 
-              <button
-                className="btn btn-gold"
-                onClick={
-                  handleCheckIn
-                }
-                disabled={checkingIn}
-              >
+              <button className="btn btn-gold" onClick={handleCheckIn} disabled={checkingIn}>
                 {checkingIn ? (
                   <>
-                    <Loader2
-                      className="animate-spin"
-                      size={18}
-                    />
-
-                    &nbsp;
-                    Checking In...
+                    <Loader2 className="animate-spin" size={18} />
+                    &nbsp; Checking In...
                   </>
                 ) : (
                   "🕒 Check In"
@@ -719,38 +503,20 @@ function Page() {
               <p>
                 Checked in at{" "}
                 <strong>
-                  {dashboard
-                    ?.attendance
-                    ?.checkIn
-                    ? formatISTTime(
-                        dashboard
-                          .attendance
-                          .checkIn,
-                      )
+                  {dashboard?.attendance?.checkIn
+                    ? formatISTTime(dashboard.attendance.checkIn)
                     : "--"}
                 </strong>
               </p>
 
               <p className="badge success">
                 Day complete —{" "}
-                {dashboard
-                  ?.attendance
-                  ?.checkIn
-                  ? formatISTTime(
-                      dashboard
-                        .attendance
-                        .checkIn,
-                    )
+                {dashboard?.attendance?.checkIn
+                  ? formatISTTime(dashboard.attendance.checkIn)
                   : "--"}{" "}
                 →{" "}
-                {dashboard
-                  ?.attendance
-                  ?.checkOut
-                  ? formatISTTime(
-                      dashboard
-                        .attendance
-                        .checkOut,
-                    )
+                {dashboard?.attendance?.checkOut
+                  ? formatISTTime(dashboard.attendance.checkOut)
                   : "--"}
               </p>
             </div>
@@ -763,40 +529,18 @@ function Page() {
               <p>
                 Checked in at{" "}
                 <strong>
-                  {dashboard
-                    ?.attendance
-                    ?.checkIn
-                    ? formatISTTime(
-                        dashboard
-                          .attendance
-                          .checkIn,
-                      )
+                  {dashboard?.attendance?.checkIn
+                    ? formatISTTime(dashboard.attendance.checkIn)
                     : "--"}
                 </strong>{" "}
-                (
-                {dashboard
-                  ?.attendance
-                  ?.mode ??
-                  "Office"}
-                )
+                ({dashboard?.attendance?.mode ?? "Office"})
               </p>
 
-              <button
-                className="btn"
-                onClick={
-                  handleCheckOut
-                }
-                disabled={checkingOut}
-              >
+              <button className="btn" onClick={handleCheckOut} disabled={checkingOut}>
                 {checkingOut ? (
                   <>
-                    <Loader2
-                      className="animate-spin"
-                      size={18}
-                    />
-
-                    &nbsp;
-                    Checking Out...
+                    <Loader2 className="animate-spin" size={18} />
+                    &nbsp; Checking Out...
                   </>
                 ) : (
                   `Check Out (${nowTime()})`
@@ -812,96 +556,48 @@ function Page() {
 
         <div className="card">
           <div className="card-header">
-            <h2>
-              Today's work plan
-            </h2>
+            <h2>Today's work plan</h2>
           </div>
 
           <div className="field">
-            <label>
-              Project
-            </label>
+            <label>Project</label>
 
             <select
               className="select"
               value={projectId}
-              onChange={(e) =>
-                setProjectId(
-                  e.target.value,
-                )
-              }
+              onChange={(e) => setProjectId(e.target.value)}
             >
-              <option value="">
-                — No project —
-              </option>
+              <option value="">— No project —</option>
 
-              {projects.map(
-                (project) => (
-                  <option
-                    key={
-                      project._id
-                    }
-                    value={
-                      project._id
-                    }
-                  >
-                    {
-                      project.projectName
-                    }
-                  </option>
-                ),
-              )}
+              {projects.map((project) => (
+                <option key={project._id} value={project._id}>
+                  {project.projectName}
+                </option>
+              ))}
             </select>
           </div>
 
           <div className="field">
-            <label>
-              Morning plan
-            </label>
+            <label>Morning plan</label>
 
-            <textarea
-              className="textarea"
-              value={plan}
-              onChange={(e) =>
-                setPlan(
-                  e.target.value,
-                )
-              }
-            />
+            <textarea className="textarea" value={plan} onChange={(e) => setPlan(e.target.value)} />
           </div>
 
           <div className="field">
-            <label>
-              End-of-day status
-            </label>
+            <label>End-of-day status</label>
 
             <textarea
               className="textarea"
               value={status}
-              onChange={(e) =>
-                setStatus(
-                  e.target.value,
-                )
-              }
+              onChange={(e) => setStatus(e.target.value)}
             />
           </div>
 
-          <button
-            className="btn"
-            onClick={
-              handleSaveWorkStatus
-            }
-            disabled={savingWork}
-          >
+          <button className="btn" onClick={handleSaveWorkStatus} disabled={savingWork}>
             {savingWork ? (
               <>
-                <Loader2
-                  className="animate-spin"
-                  size={18}
-                />
-
-                &nbsp;
-                Saving...
+                <Loader2 className="animate-spin" size={18} />
+                &nbsp; Saving...
               </>
             ) : (
               "Save"
@@ -911,235 +607,196 @@ function Page() {
       </div>
 
       {/* ==================================================
-          ATTRACTIVE HORIZONTAL HOLIDAY POPUP
-      ================================================== */}
+    COMPACT ATTRACTIVE HOLIDAY POPUP
+================================================== */}
 
-      {holidayPopupOpen &&
-        isHoliday &&
-        todayHoliday && (
+      {holidayPopupOpen && isHoliday && todayHoliday && (
+        <div
+          className="fixed inset-0 z-[1000] flex items-center justify-center overflow-y-auto bg-slate-950/60 p-3 backdrop-blur-md sm:p-4"
+          onClick={() => setHolidayPopupOpen(false)}
+        >
           <div
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md"
-            onClick={() =>
-              setHolidayPopupOpen(false)
-            }
+            className="relative my-auto w-full max-w-3xl overflow-hidden rounded-[22px] border border-white/20 bg-white shadow-[0_25px_70px_rgba(0,0,0,0.25)] sm:rounded-[26px]"
+            onClick={(e) => e.stopPropagation()}
           >
-            <div
-              className="relative w-full max-w-4xl overflow-hidden rounded-[28px] border border-white/20 bg-white shadow-[0_25px_80px_rgba(0,0,0,0.25)]"
-              onClick={(e) =>
-                e.stopPropagation()
-              }
-            >
+            {/* TOP ACCENT */}
+            <div className="h-1.5 w-full bg-gradient-to-r from-yellow-300 via-amber-500 to-orange-500" />
+
+            <div className="flex flex-col md:flex-row">
               {/* ==================================================
-                  DECORATIVE TOP LINE
-              ================================================== */}
+            LEFT HERO SECTION
+        ================================================== */}
 
-              <div className="h-1.5 w-full bg-gradient-to-r from-yellow-300 via-amber-500 to-orange-500" />
+              <div className="relative flex min-h-[210px] w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 px-5 py-6 text-center sm:min-h-[235px] sm:px-6 sm:py-7 md:min-h-[285px] md:w-[36%]">
+                {/* Background decorations */}
 
-              <div className="flex flex-col md:flex-row">
-                {/* ==================================================
-                    LEFT HERO SECTION
-                ================================================== */}
+                <div className="absolute -right-14 -top-14 h-36 w-36 rounded-full border-[18px] border-white/10" />
 
-                <div className="relative flex min-h-[310px] w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 px-8 py-10 text-center md:w-[38%]">
-                  {/* Background decorations */}
+                <div className="absolute -bottom-16 -left-14 h-40 w-40 rounded-full border-[20px] border-white/10" />
 
-                  <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full border-[20px] border-white/10" />
+                <div className="absolute left-7 top-7 h-2.5 w-2.5 rounded-full bg-white/30" />
 
-                  <div className="absolute -bottom-20 -left-16 h-48 w-48 rounded-full border-[24px] border-white/10" />
+                <div className="absolute right-10 top-16 h-2 w-2 rounded-full bg-white/40" />
 
-                  <div className="absolute left-10 top-10 h-3 w-3 rounded-full bg-white/30" />
+                <div className="absolute bottom-12 right-7 h-3 w-3 rounded-full bg-white/20" />
 
-                  <div className="absolute right-16 top-24 h-2 w-2 rounded-full bg-white/40" />
+                {/* Holiday badge */}
 
-                  <div className="absolute bottom-20 right-10 h-4 w-4 rounded-full bg-white/20" />
+                <div className="relative mb-3 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.15em] text-white backdrop-blur-sm sm:mb-4 sm:text-[10px]">
+                  <Sparkles size={12} />
+                  Holiday
+                </div>
 
-                  {/* Small badge */}
+                {/* Calendar Icon */}
 
-                  <div className="relative mb-5 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-white backdrop-blur-sm">
-                    <Sparkles
-                      size={13}
-                    />
-                    Holiday
+                <div className="relative flex h-[68px] w-[68px] items-center justify-center rounded-[20px] border border-white/50 bg-white/95 shadow-[0_12px_28px_rgba(0,0,0,0.15)] sm:h-20 sm:w-20 sm:rounded-[23px]">
+                  <div className="absolute inset-1.5 rounded-[15px] bg-gradient-to-br from-amber-50 to-yellow-100 sm:rounded-[18px]" />
+
+                  <CalendarDays
+                    className="relative h-8 w-8 text-amber-500 sm:h-10 sm:w-10"
+                    strokeWidth={1.8}
+                  />
+                </div>
+
+                <h2 className="relative mt-3 text-[19px] font-bold tracking-tight text-white sm:mt-4 sm:text-[22px]">
+                  Today is a Holiday
+                </h2>
+
+                <p className="relative mt-1 text-[11px] font-medium text-white/85 sm:text-xs">
+                  Take a break & enjoy your day
+                </p>
+              </div>
+
+              {/* ==================================================
+            RIGHT CONTENT SECTION
+        ================================================== */}
+
+              <div className="relative max-h-[calc(100vh-24px)] w-full overflow-y-auto px-5 py-5 sm:max-h-[calc(100vh-40px)] sm:px-6 sm:py-6 md:w-[64%] md:px-7 md:py-7">
+                {/* CLOSE BUTTON */}
+
+                <button
+                  type="button"
+                  onClick={() => setHolidayPopupOpen(false)}
+                  className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700 sm:right-4 sm:top-4"
+                  aria-label="Close holiday announcement"
+                >
+                  <X size={16} />
+                </button>
+
+                {/* HEADER */}
+
+                <div className="pr-9">
+                  <div className="flex items-center gap-2">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+
+                    <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-600 sm:text-[10px]">
+                      Company Announcement
+                    </p>
                   </div>
 
-                  {/* Icon */}
+                  <h3 className="mt-1.5 text-lg font-bold tracking-tight text-gray-900 sm:text-xl">
+                    Enjoy your day off!
+                  </h3>
 
-                  <div className="relative flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/50 bg-white/95 shadow-[0_15px_35px_rgba(0,0,0,0.15)]">
-                    <div className="absolute inset-2 rounded-[21px] bg-gradient-to-br from-amber-50 to-yellow-100" />
-
-                    <CalendarDays
-                      className="relative h-12 w-12 text-amber-500"
-                      strokeWidth={1.8}
-                    />
-                  </div>
-
-                  <h2 className="relative mt-6 text-[26px] font-bold tracking-tight text-white">
-                    Today is a Holiday
-                  </h2>
-
-                  <p className="relative mt-2 text-sm font-medium text-white/85">
-                    Take a break & enjoy your day
+                  <p className="mt-1 text-[11px] text-gray-500 sm:text-xs">
+                    There is no attendance requirement for today.
                   </p>
                 </div>
 
-                {/* ==================================================
-                    RIGHT CONTENT SECTION
-                ================================================== */}
+                {/* INFORMATION CARDS */}
 
-                <div className="flex w-full flex-col justify-center px-6 py-7 sm:px-8 md:w-[62%] md:px-10 md:py-8">
-                  {/* Close */}
+                <div className="mt-4 grid grid-cols-1 gap-2.5 sm:mt-5 sm:grid-cols-2">
+                  {/* DATE */}
+
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 transition hover:border-amber-200 hover:bg-amber-50/40">
+                    <div className="flex items-start gap-2.5">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-gray-100">
+                        <CalendarDays className="h-4 w-4 text-amber-500" strokeWidth={2} />
+                      </div>
+
+                      <div className="min-w-0">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-gray-400">
+                          Date
+                        </p>
+
+                        <p className="mt-0.5 text-[11px] font-semibold leading-4 text-gray-800 sm:text-xs">
+                          {formatHolidayDate(todayHoliday.date)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ATTENDANCE */}
+
+                  <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
+                    <div className="flex items-start gap-2.5">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm ring-1 ring-emerald-100">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" strokeWidth={2} />
+                      </div>
+
+                      <div>
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-500">
+                          Attendance
+                        </p>
+
+                        <p className="mt-0.5 text-[11px] font-semibold text-emerald-700 sm:text-xs">
+                          Not Required
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* REASON */}
+
+                <div className="mt-2.5 rounded-xl border border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50 p-3">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-amber-600">
+                    Holiday Reason
+                  </p>
+
+                  <p className="mt-1 text-[11px] font-semibold leading-4 text-gray-800 sm:text-xs sm:leading-5">
+                    {todayHoliday.reason || "Company Holiday"}
+                  </p>
+                </div>
+
+                {/* IMPORTANT NOTE */}
+
+                <div className="mt-2.5 flex gap-2.5 rounded-xl border border-blue-100 bg-blue-50/70 p-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white shadow-sm">
+                    <Info className="text-blue-500" size={16} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-blue-700">Important Note</p>
+
+                    <p className="mt-0.5 text-[10px] leading-4 text-blue-700/80 sm:text-[11px]">
+                      Check-in and check-out are unavailable today. No attendance is required, so
+                      you can enjoy your holiday without worrying about marking attendance.
+                    </p>
+                  </div>
+                </div>
+
+                {/* BOTTOM ACTION */}
+
+                <div className="mt-4 flex flex-col gap-2.5 border-t border-gray-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-center text-[10px] text-gray-400 sm:text-left sm:text-[11px]">
+                    Have a wonderful holiday! ✨
+                  </p>
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setHolidayPopupOpen(
-                        false,
-                      )
-                    }
-                    className="absolute right-4 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
-                    aria-label="Close holiday announcement"
+                    onClick={() => setHolidayPopupOpen(false)}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-gray-900 px-6 py-2.5 text-xs font-semibold text-white shadow-md shadow-gray-900/10 transition-all hover:-translate-y-0.5 hover:bg-gray-800 hover:shadow-lg sm:w-auto sm:text-sm"
                   >
-                    <X size={18} />
+                    <CheckCircle2 size={15} />
+                    Got it
                   </button>
-
-                  {/* Header */}
-
-                  <div className="pr-10">
-                    <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-amber-500" />
-
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-600">
-                        Company Announcement
-                      </p>
-                    </div>
-
-                    <h3 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">
-                      Enjoy your day off!
-                    </h3>
-
-                    <p className="mt-1 text-sm text-gray-500">
-                      There is no attendance requirement
-                      for today.
-                    </p>
-                  </div>
-
-                  {/* Information cards */}
-
-                  <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                    {/* Date */}
-
-                    <div className="group rounded-2xl border border-gray-200 bg-gray-50 p-4 transition hover:border-amber-200 hover:bg-amber-50/40">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
-                          <CalendarDays
-                            className="h-5 w-5 text-amber-500"
-                            strokeWidth={2}
-                          />
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
-                            Date
-                          </p>
-
-                          <p className="mt-1 text-sm font-semibold leading-5 text-gray-800">
-                            {formatHolidayDate(
-                              todayHoliday.date,
-                            )}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Status */}
-
-                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-emerald-100">
-                          <CheckCircle2
-                            className="h-5 w-5 text-emerald-500"
-                            strokeWidth={2}
-                          />
-                        </div>
-
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">
-                            Attendance
-                          </p>
-
-                          <p className="mt-1 text-sm font-semibold text-emerald-700">
-                            Not Required
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Reason */}
-
-                  <div className="mt-3 rounded-2xl border border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-600">
-                      Holiday Reason
-                    </p>
-
-                    <p className="mt-1.5 text-sm font-semibold leading-6 text-gray-800">
-                      {todayHoliday.reason ||
-                        "Company Holiday"}
-                    </p>
-                  </div>
-
-                  {/* Important Note */}
-
-                  <div className="mt-3 flex gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-                      <Info
-                        className="h-4.5 w-4.5 text-blue-500"
-                        size={18}
-                      />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-blue-700">
-                        Important Note
-                      </p>
-
-                      <p className="mt-1 text-xs leading-5 text-blue-700/80">
-                        Check-in and check-out are
-                        unavailable today. No attendance
-                        is required, so you can enjoy
-                        your holiday without worrying
-                        about marking attendance.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Bottom */}
-
-                  <div className="mt-6 flex flex-col-reverse items-center justify-between gap-3 border-t border-gray-100 pt-5 sm:flex-row">
-                    <p className="text-xs text-gray-400">
-                      Have a wonderful holiday! ✨
-                    </p>
-
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setHolidayPopupOpen(
-                          false,
-                        )
-                      }
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/10 transition-all hover:-translate-y-0.5 hover:bg-gray-800 hover:shadow-xl sm:w-auto"
-                    >
-                      <CheckCircle2
-                        size={17}
-                      />
-                      Got it
-                    </button>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
       {/* ==================================================
           REMARK MODAL
@@ -1150,8 +807,7 @@ function Page() {
           style={{
             position: "fixed",
             inset: 0,
-            background:
-              "rgba(0, 0, 0, 0.45)",
+            background: "rgba(0, 0, 0, 0.45)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -1166,8 +822,7 @@ function Page() {
               background: "#fff",
               borderRadius: "12px",
               padding: "24px",
-              boxShadow:
-                "0 10px 30px rgba(0,0,0,0.2)",
+              boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
             }}
           >
             {/* HEADER */}
@@ -1176,8 +831,7 @@ function Page() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent:
-                  "space-between",
+                justifyContent: "space-between",
                 marginBottom: "20px",
               }}
             >
@@ -1188,25 +842,16 @@ function Page() {
                   fontWeight: 600,
                 }}
               >
-                {remarkType ===
-                "late-checkin"
-                  ? "Late Check-In"
-                  : "Early Check-Out"}
+                {remarkType === "late-checkin" ? "Late Check-In" : "Early Check-Out"}
               </h2>
 
               <button
                 type="button"
-                onClick={
-                  closeRemarkModal
-                }
-                disabled={
-                  checkingIn ||
-                  checkingOut
-                }
+                onClick={closeRemarkModal}
+                disabled={checkingIn || checkingOut}
                 style={{
                   border: "none",
-                  background:
-                    "transparent",
+                  background: "transparent",
                   cursor: "pointer",
                   padding: "4px",
                 }}
@@ -1219,14 +864,12 @@ function Page() {
 
             <p
               style={{
-                marginBottom:
-                  "16px",
+                marginBottom: "16px",
                 color: "#555",
                 lineHeight: 1.5,
               }}
             >
-              {remarkType ===
-              "late-checkin"
+              {remarkType === "late-checkin"
                 ? "You are checking in at or after 10:15 AM. Please provide a reason for your late check-in."
                 : "You are checking out before 6:45 PM. Please provide a reason for your early check-out."}
             </p>
@@ -1248,32 +891,22 @@ function Page() {
               <textarea
                 className="textarea"
                 value={remark}
-                onChange={
-                  handleRemarkChange
-                }
+                onChange={handleRemarkChange}
                 placeholder="Enter your reason..."
                 rows={4}
-                maxLength={
-                  MAX_REMARK_LENGTH
-                }
+                maxLength={MAX_REMARK_LENGTH}
                 autoFocus
               />
 
               <div
                 style={{
-                  textAlign:
-                    "right",
+                  textAlign: "right",
                   fontSize: "12px",
-                  color:
-                    remark.length >=
-                    MAX_REMARK_LENGTH
-                      ? "#dc2626"
-                      : "#666",
+                  color: remark.length >= MAX_REMARK_LENGTH ? "#dc2626" : "#666",
                   marginTop: "4px",
                 }}
               >
-                {remark.length}/
-                {MAX_REMARK_LENGTH}
+                {remark.length}/{MAX_REMARK_LENGTH}
               </div>
             </div>
 
@@ -1282,23 +915,16 @@ function Page() {
             <div
               style={{
                 display: "flex",
-                justifyContent:
-                  "flex-end",
+                justifyContent: "flex-end",
                 gap: "10px",
-                marginTop:
-                  "20px",
+                marginTop: "20px",
               }}
             >
               <button
                 type="button"
                 className="btn"
-                onClick={
-                  closeRemarkModal
-                }
-                disabled={
-                  checkingIn ||
-                  checkingOut
-                }
+                onClick={closeRemarkModal}
+                disabled={checkingIn || checkingOut}
               >
                 Cancel
               </button>
@@ -1306,27 +932,15 @@ function Page() {
               <button
                 type="button"
                 className="btn btn-gold"
-                onClick={
-                  handleRemarkSubmit
-                }
-                disabled={
-                  checkingIn ||
-                  checkingOut
-                }
+                onClick={handleRemarkSubmit}
+                disabled={checkingIn || checkingOut}
               >
-                {checkingIn ||
-                checkingOut ? (
+                {checkingIn || checkingOut ? (
                   <>
-                    <Loader2
-                      className="animate-spin"
-                      size={18}
-                    />
-
-                    &nbsp;
-                    Submitting...
+                    <Loader2 className="animate-spin" size={18} />
+                    &nbsp; Submitting...
                   </>
-                ) : remarkType ===
-                  "late-checkin" ? (
+                ) : remarkType === "late-checkin" ? (
                   "Submit Check In"
                 ) : (
                   "Submit Check Out"
