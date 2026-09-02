@@ -27,11 +27,24 @@ export interface DeleteHolidayResponse {
   message: string;
 }
 
+/* =========================================================
+   TODAY HOLIDAY RESPONSE
+========================================================= */
+
+export interface TodayHolidayResponse {
+  success: boolean;
+  isHoliday: boolean;
+  holiday: Holiday | null;
+}
+
 /**
  * Get all holidays
  */
 export async function getHolidays() {
-  const { data } = await api.get<GetHolidaysResponse>("/admin/holidays");
+  const { data } =
+    await api.get<GetHolidaysResponse>(
+      "/admin/holidays",
+    );
 
   return data;
 }
@@ -43,13 +56,14 @@ export async function createHolidays(
   dates: string[],
   reason: string,
 ) {
-  const { data } = await api.post<CreateHolidayResponse>(
-    "/admin/holidays",
-    {
-      dates,
-      reason,
-    },
-  );
+  const { data } =
+    await api.post<CreateHolidayResponse>(
+      "/admin/holidays",
+      {
+        dates,
+        reason,
+      },
+    );
 
   return data;
 }
@@ -57,10 +71,25 @@ export async function createHolidays(
 /**
  * Delete a holiday
  */
-export async function deleteHoliday(id: string) {
-  const { data } = await api.delete<DeleteHolidayResponse>(
-    `/admin/holidays/${id}`,
-  );
+export async function deleteHoliday(
+  id: string,
+) {
+  const { data } =
+    await api.delete<DeleteHolidayResponse>(
+      `/admin/holidays/${id}`,
+    );
+
+  return data;
+}
+
+/**
+ * Check whether today is a holiday
+ */
+export async function getTodayHoliday() {
+  const { data } =
+    await api.get<TodayHolidayResponse>(
+      "/employee/holidays/today",
+    );
 
   return data;
 }
