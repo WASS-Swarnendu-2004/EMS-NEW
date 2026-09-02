@@ -9,10 +9,12 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useEffect, useState } from "react";
 import {
-  Loader2,
-  X,
   CalendarDays,
+  CheckCircle2,
   Info,
+  Loader2,
+  Sparkles,
+  X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import {
@@ -46,8 +48,7 @@ function Page() {
 
   const [plan, setPlan] = useState("");
   const [status, setStatus] = useState("");
-  const [projectId, setProjectId] =
-    useState("");
+  const [projectId, setProjectId] = useState("");
 
   const t = today();
 
@@ -80,9 +81,6 @@ function Page() {
     useState<Holiday | null>(null);
 
   const [holidayPopupOpen, setHolidayPopupOpen] =
-    useState(false);
-
-  const [holidayLoading, setHolidayLoading] =
     useState(false);
 
   // --------------------------------------------------
@@ -133,9 +131,9 @@ function Page() {
         dashboardData.todayPlan?.projectId ?? "",
       );
 
-      // --------------------------------------------------
-      // HOLIDAY DATA
-      // --------------------------------------------------
+      // ------------------------------------------------
+      // HOLIDAY
+      // ------------------------------------------------
 
       if (
         holidayData.success &&
@@ -143,12 +141,11 @@ function Page() {
         holidayData.holiday
       ) {
         setIsHoliday(true);
-
         setTodayHoliday(
           holidayData.holiday,
         );
 
-        // Automatically open popup
+        // Automatically show popup
         setHolidayPopupOpen(true);
       } else {
         setIsHoliday(false);
@@ -227,18 +224,69 @@ function Page() {
   }
 
   // --------------------------------------------------
+  // IST TIME
+  // --------------------------------------------------
+
+  function getCurrentISTMinutes() {
+    const now = new Date();
+
+    const istTime =
+      new Intl.DateTimeFormat(
+        "en-IN",
+        {
+          timeZone: "Asia/Kolkata",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        },
+      ).formatToParts(now);
+
+    const hour = Number(
+      istTime.find(
+        (part) =>
+          part.type === "hour",
+      )?.value ?? 0,
+    );
+
+    const minute = Number(
+      istTime.find(
+        (part) =>
+          part.type === "minute",
+      )?.value ?? 0,
+    );
+
+    return hour * 60 + minute;
+  }
+
+  const LATE_CHECKIN_TIME =
+    10 * 60 + 15;
+
+  const EARLY_CHECKOUT_TIME =
+    18 * 60 + 45;
+
+  // --------------------------------------------------
   // CHECK IN
   // --------------------------------------------------
 
   const handleCheckIn = async () => {
-    /*
-     * Frontend protection.
-     *
-     * Backend should also reject check-in
-     * on holidays.
-     */
+    // Do not allow check-in on holiday
     if (isHoliday) {
       setHolidayPopupOpen(true);
+      return;
+    }
+
+    const currentISTMinutes =
+      getCurrentISTMinutes();
+
+    if (
+      currentISTMinutes >=
+      LATE_CHECKIN_TIME
+    ) {
+      setRemark("");
+
+      setRemarkType(
+        "late-checkin",
+      );
 
       return;
     }
@@ -264,42 +312,10 @@ function Page() {
 
       await fetchDashboard();
     } catch (err: any) {
-      console.error(
-        "Check-in error:",
-        err,
-      );
-
-      const message =
-        err.response?.data?.message ||
-        "";
-
-      /*
-       * The backend decides whether the employee
-       * is late and requires a remark.
-       *
-       * We do NOT check the time in the frontend.
-       */
-
-      if (
-        err.response?.status === 400 &&
-        message
-          .toLowerCase()
-          .includes("late") &&
-        message
-          .toLowerCase()
-          .includes("remark")
-      ) {
-        setRemark("");
-
-        setRemarkType(
-          "late-checkin",
-        );
-
-        return;
-      }
+      console.error(err);
 
       toast.error(
-        message ||
+        err.response?.data?.message ||
           "Check in failed",
       );
     } finally {
@@ -312,12 +328,24 @@ function Page() {
   // --------------------------------------------------
 
   const handleCheckOut = async () => {
-    /*
-     * Do not allow checkout on holiday.
-     * Backend should also enforce this.
-     */
+    // Do not allow check-out on holiday
     if (isHoliday) {
       setHolidayPopupOpen(true);
+      return;
+    }
+
+    const currentISTMinutes =
+      getCurrentISTMinutes();
+
+    if (
+      currentISTMinutes <
+      EARLY_CHECKOUT_TIME
+    ) {
+      setRemark("");
+
+      setRemarkType(
+        "early-checkout",
+      );
 
       return;
     }
@@ -342,42 +370,10 @@ function Page() {
 
       await fetchDashboard();
     } catch (err: any) {
-      console.error(
-        "Check-out error:",
-        err,
-      );
-
-      const message =
-        err.response?.data?.message ||
-        "";
-
-      /*
-       * The backend decides whether the employee
-       * is checking out too early and requires a remark.
-       *
-       * We do NOT check the time in the frontend.
-       */
-
-      if (
-        err.response?.status === 400 &&
-        message
-          .toLowerCase()
-          .includes("early") &&
-        message
-          .toLowerCase()
-          .includes("remark")
-      ) {
-        setRemark("");
-
-        setRemarkType(
-          "early-checkout",
-        );
-
-        return;
-      }
+      console.error(err);
 
       toast.error(
-        message ||
+        err.response?.data?.message ||
           "Failed to check out",
       );
     } finally {
@@ -407,47 +403,44 @@ function Page() {
     );
   };
 
-  const handleRemarkSubmit = async () => {
-    const trimmedRemark =
-      remark.trim();
+  const handleRemarkSubmit =
+    async () => {
+      const trimmedRemark =
+        remark.trim();
 
-    if (!trimmedRemark) {
-      toast.error(
-        "Please provide a reason",
-      );
+      if (!trimmedRemark) {
+        toast.error(
+          "Please provide a reason",
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (
-      trimmedRemark.length >
-      MAX_REMARK_LENGTH
-    ) {
-      toast.error(
-        `Reason cannot exceed ${MAX_REMARK_LENGTH} characters`,
-      );
+      if (
+        trimmedRemark.length >
+        MAX_REMARK_LENGTH
+      ) {
+        toast.error(
+          `Reason cannot exceed ${MAX_REMARK_LENGTH} characters`,
+        );
 
-      return;
-    }
+        return;
+      }
 
-    if (
-      remarkType ===
-      "late-checkin"
-    ) {
-      await performCheckIn();
+      if (
+        remarkType ===
+        "late-checkin"
+      ) {
+        await performCheckIn();
+      }
 
-      return;
-    }
-
-    if (
-      remarkType ===
-      "early-checkout"
-    ) {
-      await performCheckOut();
-
-      return;
-    }
-  };
+      if (
+        remarkType ===
+        "early-checkout"
+      ) {
+        await performCheckOut();
+      }
+    };
 
   // --------------------------------------------------
   // FORMAT IST TIME
@@ -476,30 +469,17 @@ function Page() {
   // --------------------------------------------------
 
   function formatHolidayDate(
-    dateString: string,
+    date: string,
   ) {
-    const datePart =
-      dateString.split("T")[0];
-
-    const [
-      year,
-      month,
-      day,
-    ] = datePart
-      .split("-")
-      .map(Number);
-
-    const date = new Date(
-      year,
-      month - 1,
-      day,
-    );
-
-    return date.toLocaleDateString(
+    return new Date(
+      date,
+    ).toLocaleDateString(
       "en-IN",
       {
+        timeZone:
+          "Asia/Kolkata",
         weekday: "long",
-        day: "2-digit",
+        day: "numeric",
         month: "long",
         year: "numeric",
       },
@@ -531,8 +511,7 @@ function Page() {
       <div
         style={{
           display: "flex",
-          flexDirection:
-            "column",
+          flexDirection: "column",
           justifyContent:
             "center",
           alignItems: "center",
@@ -632,28 +611,26 @@ function Page() {
 
           {isHoliday ? (
             <div className="space-y-4">
-              {/* Holiday Banner */}
-
-              <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5">
+              <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5">
                 <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-yellow-100">
-                    <CalendarDays className="h-6 w-6 text-yellow-600" />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+                    <CalendarDays
+                      className="h-6 w-6 text-amber-600"
+                    />
                   </div>
 
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-semibold text-yellow-900">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">
                       Today is a Holiday
                     </h3>
 
-                    <p className="mt-1 text-sm text-yellow-800">
+                    <p className="mt-1 text-sm leading-5 text-gray-600">
                       {todayHoliday?.reason ||
                         "Today has been declared a company holiday."}
                     </p>
                   </div>
                 </div>
               </div>
-
-              {/* Disabled Check In */}
 
               <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
                 <button
@@ -666,20 +643,17 @@ function Page() {
 
                 <p className="mt-3 text-center text-xs text-gray-500">
                   Check-in and check-out are
-                  unavailable on company holidays.
+                  unavailable on company
+                  holidays.
                 </p>
               </div>
             </div>
           ) : dashboard?.onLeave ||
             dashboard?.attendance
-              ?.status ===
-              "Leave" ? (
-            /* ==================================================
-                ON LEAVE
-            ================================================== */
-
+              ?.status === "Leave" ? (
             <p className="badge">
-              You are on approved leave today.
+              You are on approved
+              leave today.
             </p>
           ) : !hasCheckedIn ? (
             /* ==================================================
@@ -697,7 +671,8 @@ function Page() {
                   value={mode}
                   onChange={(e) =>
                     setMode(
-                      e.target.value as
+                      e.target
+                        .value as
                         | "office"
                         | "wfh",
                     )
@@ -718,10 +693,7 @@ function Page() {
                 onClick={
                   handleCheckIn
                 }
-                disabled={
-                  checkingIn ||
-                  isHoliday
-                }
+                disabled={checkingIn}
               >
                 {checkingIn ? (
                   <>
@@ -814,10 +786,7 @@ function Page() {
                 onClick={
                   handleCheckOut
                 }
-                disabled={
-                  checkingOut ||
-                  isHoliday
-                }
+                disabled={checkingOut}
               >
                 {checkingOut ? (
                   <>
@@ -869,8 +838,12 @@ function Page() {
               {projects.map(
                 (project) => (
                   <option
-                    key={project._id}
-                    value={project._id}
+                    key={
+                      project._id
+                    }
+                    value={
+                      project._id
+                    }
                   >
                     {
                       project.projectName
@@ -918,9 +891,7 @@ function Page() {
             onClick={
               handleSaveWorkStatus
             }
-            disabled={
-              savingWork
-            }
+            disabled={savingWork}
           >
             {savingWork ? (
               <>
@@ -940,149 +911,231 @@ function Page() {
       </div>
 
       {/* ==================================================
-          HOLIDAY POPUP
+          ATTRACTIVE HORIZONTAL HOLIDAY POPUP
       ================================================== */}
 
       {holidayPopupOpen &&
         isHoliday &&
         todayHoliday && (
           <div
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-md"
             onClick={() =>
               setHolidayPopupOpen(false)
             }
           >
             <div
-              className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
+              className="relative w-full max-w-4xl overflow-hidden rounded-[28px] border border-white/20 bg-white shadow-[0_25px_80px_rgba(0,0,0,0.25)]"
               onClick={(e) =>
                 e.stopPropagation()
               }
             >
-              {/* ==========================================
-                  POPUP TOP
-              =========================================== */}
+              {/* ==================================================
+                  DECORATIVE TOP LINE
+              ================================================== */}
 
-              <div className="relative overflow-hidden bg-gradient-to-br from-yellow-400 via-yellow-500 to-orange-500 px-6 pb-8 pt-7">
-                {/* Decorative circles */}
+              <div className="h-1.5 w-full bg-gradient-to-r from-yellow-300 via-amber-500 to-orange-500" />
 
-                <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10" />
+              <div className="flex flex-col md:flex-row">
+                {/* ==================================================
+                    LEFT HERO SECTION
+                ================================================== */}
 
-                <div className="absolute -bottom-16 -left-8 h-32 w-32 rounded-full bg-white/10" />
+                <div className="relative flex min-h-[310px] w-full flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-amber-400 via-yellow-500 to-orange-500 px-8 py-10 text-center md:w-[38%]">
+                  {/* Background decorations */}
 
-                {/* Close */}
+                  <div className="absolute -right-16 -top-16 h-44 w-44 rounded-full border-[20px] border-white/10" />
 
-                <button
-                  type="button"
-                  onClick={() =>
-                    setHolidayPopupOpen(
-                      false,
-                    )
-                  }
-                  className="absolute right-4 top-4 rounded-full bg-white/20 p-2 text-white transition hover:bg-white/30"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+                  <div className="absolute -bottom-20 -left-16 h-48 w-48 rounded-full border-[24px] border-white/10" />
 
-                {/* Icon */}
+                  <div className="absolute left-10 top-10 h-3 w-3 rounded-full bg-white/30" />
 
-                <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-white shadow-lg">
-                  <CalendarDays className="h-10 w-10 text-yellow-500" />
-                </div>
+                  <div className="absolute right-16 top-24 h-2 w-2 rounded-full bg-white/40" />
 
-                {/* Title */}
+                  <div className="absolute bottom-20 right-10 h-4 w-4 rounded-full bg-white/20" />
 
-                <div className="relative mt-4 text-center">
-                  <h2 className="text-2xl font-bold text-white">
+                  {/* Small badge */}
+
+                  <div className="relative mb-5 inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-white/15 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-white backdrop-blur-sm">
+                    <Sparkles
+                      size={13}
+                    />
+                    Holiday
+                  </div>
+
+                  {/* Icon */}
+
+                  <div className="relative flex h-24 w-24 items-center justify-center rounded-[28px] border border-white/50 bg-white/95 shadow-[0_15px_35px_rgba(0,0,0,0.15)]">
+                    <div className="absolute inset-2 rounded-[21px] bg-gradient-to-br from-amber-50 to-yellow-100" />
+
+                    <CalendarDays
+                      className="relative h-12 w-12 text-amber-500"
+                      strokeWidth={1.8}
+                    />
+                  </div>
+
+                  <h2 className="relative mt-6 text-[26px] font-bold tracking-tight text-white">
                     Today is a Holiday
                   </h2>
 
-                  <p className="mt-1 text-sm text-yellow-50">
-                    Company Holiday
+                  <p className="relative mt-2 text-sm font-medium text-white/85">
+                    Take a break & enjoy your day
                   </p>
                 </div>
-              </div>
 
-              {/* ==========================================
-                  POPUP BODY
-              =========================================== */}
+                {/* ==================================================
+                    RIGHT CONTENT SECTION
+                ================================================== */}
 
-              <div className="space-y-5 px-6 py-6">
-                {/* Date */}
+                <div className="flex w-full flex-col justify-center px-6 py-7 sm:px-8 md:w-[62%] md:px-10 md:py-8">
+                  {/* Close */}
 
-                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-yellow-100">
-                      <CalendarDays className="h-5 w-5 text-yellow-600" />
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setHolidayPopupOpen(
+                        false,
+                      )
+                    }
+                    className="absolute right-4 top-5 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700"
+                    aria-label="Close holiday announcement"
+                  >
+                    <X size={18} />
+                  </button>
+
+                  {/* Header */}
+
+                  <div className="pr-10">
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-amber-500" />
+
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-600">
+                        Company Announcement
+                      </p>
                     </div>
 
-                    <div>
-                      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                        Holiday Date
-                      </p>
+                    <h3 className="mt-2 text-2xl font-bold tracking-tight text-gray-900">
+                      Enjoy your day off!
+                    </h3>
 
-                      <p className="mt-1 text-sm font-semibold text-gray-800">
-                        {formatHolidayDate(
-                          todayHoliday.date,
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Reason */}
-
-                <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">
-                    Holiday Reason
-                  </p>
-
-                  <div className="rounded-2xl border border-yellow-200 bg-yellow-50 p-4">
-                    <p className="text-sm font-medium leading-6 text-yellow-900">
-                      {todayHoliday.reason}
+                    <p className="mt-1 text-sm text-gray-500">
+                      There is no attendance requirement
+                      for today.
                     </p>
                   </div>
-                </div>
 
-                {/* Important Note */}
+                  {/* Information cards */}
 
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100">
-                      <Info className="h-5 w-5 text-blue-600" />
+                  <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {/* Date */}
+
+                    <div className="group rounded-2xl border border-gray-200 bg-gray-50 p-4 transition hover:border-amber-200 hover:bg-amber-50/40">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-gray-100">
+                          <CalendarDays
+                            className="h-5 w-5 text-amber-500"
+                            strokeWidth={2}
+                          />
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                            Date
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold leading-5 text-gray-800">
+                            {formatHolidayDate(
+                              todayHoliday.date,
+                            )}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div>
-                      <p className="text-sm font-semibold text-blue-900">
+                    {/* Status */}
+
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-emerald-100">
+                          <CheckCircle2
+                            className="h-5 w-5 text-emerald-500"
+                            strokeWidth={2}
+                          />
+                        </div>
+
+                        <div>
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+                            Attendance
+                          </p>
+
+                          <p className="mt-1 text-sm font-semibold text-emerald-700">
+                            Not Required
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reason */}
+
+                  <div className="mt-3 rounded-2xl border border-amber-100 bg-gradient-to-r from-amber-50 to-yellow-50 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-amber-600">
+                      Holiday Reason
+                    </p>
+
+                    <p className="mt-1.5 text-sm font-semibold leading-6 text-gray-800">
+                      {todayHoliday.reason ||
+                        "Company Holiday"}
+                    </p>
+                  </div>
+
+                  {/* Important Note */}
+
+                  <div className="mt-3 flex gap-3 rounded-2xl border border-blue-100 bg-blue-50/70 p-4">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
+                      <Info
+                        className="h-4.5 w-4.5 text-blue-500"
+                        size={18}
+                      />
+                    </div>
+
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-blue-700">
                         Important Note
                       </p>
 
-                      <p className="mt-1 text-sm leading-5 text-blue-800">
-                        Today is a company holiday.
+                      <p className="mt-1 text-xs leading-5 text-blue-700/80">
                         Check-in and check-out are
-                        not available today, and no
-                        attendance is required.
+                        unavailable today. No attendance
+                        is required, so you can enjoy
+                        your holiday without worrying
+                        about marking attendance.
                       </p>
                     </div>
                   </div>
+
+                  {/* Bottom */}
+
+                  <div className="mt-6 flex flex-col-reverse items-center justify-between gap-3 border-t border-gray-100 pt-5 sm:flex-row">
+                    <p className="text-xs text-gray-400">
+                      Have a wonderful holiday! ✨
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setHolidayPopupOpen(
+                          false,
+                        )
+                      }
+                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gray-900 px-7 py-3 text-sm font-semibold text-white shadow-lg shadow-gray-900/10 transition-all hover:-translate-y-0.5 hover:bg-gray-800 hover:shadow-xl sm:w-auto"
+                    >
+                      <CheckCircle2
+                        size={17}
+                      />
+                      Got it
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              {/* ==========================================
-                  POPUP FOOTER
-              =========================================== */}
-
-              <div className="border-t bg-gray-50 px-6 py-4">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setHolidayPopupOpen(
-                      false,
-                    )
-                  }
-                  className="w-full rounded-xl bg-gray-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-gray-800"
-                >
-                  Got it
-                </button>
               </div>
             </div>
           </div>
@@ -1174,8 +1227,8 @@ function Page() {
             >
               {remarkType ===
               "late-checkin"
-                ? "You are checking in late. Please provide a reason for your late check-in."
-                : "You are checking out early. Please provide a reason for your early check-out."}
+                ? "You are checking in at or after 10:15 AM. Please provide a reason for your late check-in."
+                : "You are checking out before 6:45 PM. Please provide a reason for your early check-out."}
             </p>
 
             {/* REMARK */}
@@ -1216,8 +1269,7 @@ function Page() {
                     MAX_REMARK_LENGTH
                       ? "#dc2626"
                       : "#666",
-                  marginTop:
-                    "4px",
+                  marginTop: "4px",
                 }}
               >
                 {remark.length}/
