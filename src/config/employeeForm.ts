@@ -87,13 +87,13 @@ export const defaultEmployeeFields: EmployeeField[] = [
     type: "text",
     removable: false,
   },
-  // {
-  //   id: crypto.randomUUID(),
-  //   label: "PAN",
-  //   name: "pan",
-  //   type: "text",
-  //   removable: false,
-  // },
+  {
+    id: crypto.randomUUID(),
+    label: "PAN",
+    name: "pan",
+    type: "text",
+    removable: false,
+  },
   {
     id: crypto.randomUUID(),
     label: "Bank Account",

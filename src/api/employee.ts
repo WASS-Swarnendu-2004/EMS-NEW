@@ -19,7 +19,10 @@ export interface Employee {
   salary: number;
   joiningDate: string;
   idProof: string;
+
+  // PAN Number
   pan: string;
+
   bankAccount: string;
   emergencyContact: string;
   address: string;
@@ -34,10 +37,7 @@ export interface Employee {
 }
 
 export interface CreateEmployeePayload
-  extends Omit<
-    Employee,
-    "_id" | "employeeId" | "userId"
-  > {}
+  extends Omit<Employee, "_id" | "employeeId" | "userId"> {}
 
 export interface UpdateEmployeePayload
   extends Omit<
@@ -56,29 +56,20 @@ export const getEmployees = async (
   page: number = 1,
 ): Promise<EmployeePagination> => {
   try {
-    const response = await api.get(
-      "/admin/employees",
-      {
-        params: {
-          page,
-        },
+    const response = await api.get("/admin/employees", {
+      params: {
+        page,
       },
-    );
+    });
 
     return {
       employees: response.data.employees,
-      totalEmployees:
-        response.data.totalEmployees,
-      currentPage:
-        response.data.currentPage,
-      totalPages:
-        response.data.totalPages,
+      totalEmployees: response.data.totalEmployees,
+      currentPage: response.data.currentPage,
+      totalPages: response.data.totalPages,
     };
   } catch (error) {
-    console.error(
-      "Get Employees Error:",
-      error,
-    );
+    console.error("Get Employees Error:", error);
     throw error;
   }
 };
@@ -87,17 +78,11 @@ export const createEmployee = async (
   data: CreateEmployeePayload,
 ): Promise<Employee> => {
   try {
-    const response = await api.post(
-      "/admin/employees",
-      data,
-    );
+    const response = await api.post("/admin/employees", data);
 
     return response.data.employee;
   } catch (error) {
-    console.error(
-      "Create Employee Error:",
-      error,
-    );
+    console.error("Create Employee Error:", error);
     throw error;
   }
 };
@@ -114,10 +99,7 @@ export const updateEmployee = async (
 
     return response.data.employee;
   } catch (error) {
-    console.error(
-      "Update Employee Error:",
-      error,
-    );
+    console.error("Update Employee Error:", error);
     throw error;
   }
 };
@@ -132,10 +114,7 @@ export const deleteEmployee = async (
 
     return response.data;
   } catch (error) {
-    console.error(
-      "Delete Employee Error:",
-      error,
-    );
+    console.error("Delete Employee Error:", error);
     throw error;
   }
 };
@@ -257,4 +236,3 @@ export const getTaskEmployees =
       throw error;
     }
   };
-

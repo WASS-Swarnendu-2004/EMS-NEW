@@ -136,8 +136,7 @@ export function EmployeeFormFields({
       {fields
         .filter(
           (field) =>
-            field.name !==
-            "pfApplicable",
+            field.name !== "pfApplicable",
         )
         .map((field) => {
           const value =
@@ -175,22 +174,19 @@ export function EmployeeFormFields({
               }
               className={`
                 ${
-                  field.type ===
-                  "textarea"
+                  field.type === "textarea"
                     ? "field lg:col-span-2"
                     : "field"
                 }
                 cursor-default rounded-lg
                 transition-all
                 ${
-                  draggedId ===
-                  field.id
+                  draggedId === field.id
                     ? "opacity-40"
                     : ""
                 }
                 ${
-                  dragOverId ===
-                  field.id
+                  dragOverId === field.id
                     ? "ring-2 ring-blue-400"
                     : ""
                 }
@@ -362,4 +358,3 @@ export function EmployeeFormFields({
     </div>
   );
 }
-
