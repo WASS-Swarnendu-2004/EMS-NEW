@@ -975,7 +975,7 @@ function Page() {
             >
               {remarkType === "late-checkin"
                 ? "Your check-in has been identified as late(after 10.20 am). Please provide a reason for your late check-in."
-                : "Your check-out has been identified as early(before 6.45 pm). Please provide a reason for your early check-out."}
+                : "Your check-out has been identified as early(before 6.40 pm). Please provide a reason for your early check-out."}
             </p>
 
             <div className="field">

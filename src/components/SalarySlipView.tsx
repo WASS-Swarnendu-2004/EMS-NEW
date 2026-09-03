@@ -12,7 +12,7 @@ export function SalarySlipView({
 }) {
   /*
    * ============================================================
-   * COMMON FALLBACK
+   * FALLBACK
    * ============================================================
    */
 
@@ -21,22 +21,21 @@ export function SalarySlipView({
   /*
    * ============================================================
    * COMPANY INFORMATION
-   *
-   * MOCK DATA FOR NOW
-   *
-   * Replace these values with the real company data later.
    * ============================================================
    */
 
-  const COMPANY_EMAIL = "✉  account@webappsoft.com";
-
-  const COMPANY_MOBILE = "📞 +91 03379647522";
-
-  const COMPANY_ADDRESS = "128, Jodhpur Gardens Lake Gardens, kolkata,700045, India";
+  const COMPANY_EMAIL = "account@webappsoft.com";
+  const COMPANY_MOBILE = "+91 03379647522";
+  const COMPANY_ADDRESS =
+    "128, Jodhpur Gardens, Lake Gardens, Kolkata, 700045, India";
 
   /*
    * ============================================================
    * PRINT STYLES
+   *
+   * Screen design remains unchanged.
+   * Print version is compacted so the complete salary slip
+   * fits inside ONE A4 portrait page.
    * ============================================================
    */
 
@@ -50,10 +49,20 @@ export function SalarySlipView({
       html,
       body {
         width: 210mm !important;
+        height: 297mm !important;
         min-width: 210mm !important;
+        min-height: 297mm !important;
+
         margin: 0 !important;
         padding: 0 !important;
+
         background: white !important;
+        overflow: hidden !important;
+      }
+
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
       }
 
       body * {
@@ -65,58 +74,203 @@ export function SalarySlipView({
         visibility: visible;
       }
 
+      /*
+       * ========================================================
+       * MAIN A4 PAGE
+       * ========================================================
+       */
+
       .salary-slip-print {
         position: absolute !important;
         left: 0 !important;
         top: 0 !important;
 
         width: 210mm !important;
-        min-width: 210mm !important;
-        max-width: 210mm !important;
-
         height: 297mm !important;
         min-height: 297mm !important;
         max-height: 297mm !important;
 
-        box-sizing: border-box !important;
-
         margin: 0 !important;
-        padding: 15mm !important;
-
-        background: white !important;
+        padding: 0 !important;
 
         overflow: hidden !important;
 
-        page-break-after: always;
+        background: white !important;
+
+        box-sizing: border-box !important;
+
+        page-break-after: always !important;
+        break-after: page !important;
       }
 
-      .salary-slip-print .overflow-x-auto {
-        overflow: visible !important;
+      /*
+       * ========================================================
+       * COMPACT PRINT SCALE
+       *
+       * The normal UI remains exactly as it is.
+       * During printing the entire design is scaled slightly
+       * so that nothing moves to page 2.
+       * ========================================================
+       */
+
+      .salary-slip-inner {
+        width: 111.112% !important;
+        height: 111.112% !important;
+
+        min-height: 111.112% !important;
+
+        transform: scale(0.9) !important;
+        transform-origin: top left !important;
+
+        box-sizing: border-box !important;
+
+        overflow: hidden !important;
+      }
+
+      /*
+       * ========================================================
+       * CONTENT WIDTH
+       * ========================================================
+       */
+
+      .salary-slip-content {
+        padding-left: 10mm !important;
+        padding-right: 10mm !important;
+      }
+
+      /*
+       * ========================================================
+       * HEADER
+       * ========================================================
+       */
+
+      .salary-slip-header {
+        height: 48mm !important;
+      }
+
+      .salary-slip-header-content {
+        padding-top: 7mm !important;
+      }
+
+      /*
+       * ========================================================
+       * NET PAY CARD
+       * ========================================================
+       */
+
+      .salary-slip-net-card {
+        margin-top: -14px !important;
+        padding-top: 11px !important;
+        padding-bottom: 11px !important;
+      }
+
+      /*
+       * ========================================================
+       * EMPLOYEE INFORMATION
+       * ========================================================
+       */
+
+      .salary-slip-employee-card {
+        margin-top: 17px !important;
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+      }
+
+      .salary-slip-employee-card .info-row {
+        padding-top: 3px !important;
+        padding-bottom: 3px !important;
+      }
+
+      /*
+       * ========================================================
+       * SUMMARY CARDS
+       * ========================================================
+       */
+
+      .salary-slip-summary {
+        margin-top: 13px !important;
+      }
+
+      .salary-slip-summary-box {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+      }
+
+      /*
+       * ========================================================
+       * TABLES
+       * ========================================================
+       */
+
+      .salary-slip-earnings,
+      .salary-slip-deductions {
+        margin-top: 14px !important;
       }
 
       .salary-slip-print table {
         width: 100% !important;
         min-width: 0 !important;
-        max-width: 100% !important;
+
         table-layout: fixed !important;
+        border-collapse: collapse !important;
       }
 
-      .salary-slip-print table .salary-label-column {
-        width: 58% !important;
+      .salary-slip-print th {
+        padding-top: 7px !important;
+        padding-bottom: 7px !important;
       }
 
-      .salary-slip-print table .salary-amount-column {
-        width: 42% !important;
+      .salary-slip-print td {
+        padding-top: 5px !important;
+        padding-bottom: 5px !important;
       }
 
       .salary-slip-print tr {
-        break-inside: avoid;
-        page-break-inside: avoid;
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
       }
 
-      .salary-slip-print {
-        break-inside: avoid;
-        page-break-inside: avoid;
+      /*
+       * ========================================================
+       * FINAL SUMMARY
+       * ========================================================
+       */
+
+      .salary-slip-final-summary {
+        margin-top: 13px !important;
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+      }
+
+      /*
+       * ========================================================
+       * PF BADGE
+       * ========================================================
+       */
+
+      .salary-slip-pf {
+        margin-top: 12px !important;
+      }
+
+      /*
+       * ========================================================
+       * FOOTER
+       * ========================================================
+       */
+
+      .salary-slip-footer {
+        margin-top: 12px !important;
+        padding-top: 9px !important;
+      }
+
+      /*
+       * ========================================================
+       * HIDE NON-PRINT ELEMENTS
+       * ========================================================
+       */
+
+      .salary-slip-print .no-print {
+        display: none !important;
       }
     }
   `;
@@ -127,19 +281,14 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const earnings = slip.items
+  const earnings = (slip.items || [])
     .filter((item) => item.type === "earning")
     .sort((a, b) => {
       const getPriority = (label: string) => {
         const normalized = label.trim().toLowerCase();
 
-        if (normalized === "basic") {
-          return 1;
-        }
-
-        if (normalized === "hra") {
-          return 2;
-        }
+        if (normalized === "basic") return 1;
+        if (normalized === "hra") return 2;
 
         return 3;
       };
@@ -153,7 +302,9 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const deductions = slip.items.filter((item) => item.type === "deduction");
+  const deductions = (slip.items || []).filter(
+    (item) => item.type === "deduction",
+  );
 
   /*
    * ============================================================
@@ -163,15 +314,20 @@ export function SalarySlipView({
 
   const employee = slip.employee;
 
-  const employeeName = employee?.fullName || empName || NOT_APPLICABLE;
+  const employeeName =
+    employee?.fullName || empName || NOT_APPLICABLE;
 
-  const employeeDepartment = employee?.department || department || NOT_APPLICABLE;
+  const employeeDepartment =
+    employee?.department || department || NOT_APPLICABLE;
 
-  const employeeId = employee?.employeeId || NOT_APPLICABLE;
+  const employeeId =
+    employee?.employeeId || NOT_APPLICABLE;
 
-  const designation = employee?.designation || NOT_APPLICABLE;
+  const designation =
+    employee?.designation || NOT_APPLICABLE;
 
-  const phone = employee?.phone || NOT_APPLICABLE;
+  const phone =
+    employee?.phone || NOT_APPLICABLE;
 
   /*
    * ============================================================
@@ -179,7 +335,10 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const bankAccount = employee?.bankAccount || slip.employeeInfo?.bankAccount || NOT_APPLICABLE;
+  const bankAccount =
+    employee?.bankAccount ||
+    slip.employeeInfo?.bankAccount ||
+    NOT_APPLICABLE;
 
   /*
    * ============================================================
@@ -187,24 +346,32 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const getCustomField = (label: string): string | undefined => {
+  const getCustomField = (
+    label: string,
+  ): string | undefined => {
     const fields = employee?.customFields;
 
     if (!Array.isArray(fields)) {
       return undefined;
     }
 
-    const normalizedLabel = label.trim().toLowerCase();
+    const normalizedLabel =
+      label.trim().toLowerCase();
 
     const field = fields.find((item) => {
-      const itemLabel = String(item?.label ?? "")
+      const itemLabel = String(
+        item?.label ?? "",
+      )
         .trim()
         .toLowerCase();
 
       return itemLabel === normalizedLabel;
     });
 
-    if (field?.value === undefined || field?.value === null) {
+    if (
+      field?.value === undefined ||
+      field?.value === null
+    ) {
       return undefined;
     }
 
@@ -215,28 +382,29 @@ export function SalarySlipView({
 
   /*
    * ============================================================
-   * PAN NUMBER
+   * PAN
    * ============================================================
    */
 
-  const panNumber = slip.employeeInfo?.panNumber || employee?.pan || NOT_APPLICABLE;
+  const panNumber =
+    slip.employeeInfo?.panNumber ||
+    employee?.pan ||
+    NOT_APPLICABLE;
 
   /*
    * ============================================================
-   * UAN NUMBER
+   * UAN
    * ============================================================
    */
 
-  const uanNumber = slip.employeeInfo?.uanNumber || getCustomField("UAN No") || NOT_APPLICABLE;
+  const uanNumber =
+    slip.employeeInfo?.uanNumber ||
+    getCustomField("UAN No") ||
+    NOT_APPLICABLE;
 
   /*
    * ============================================================
    * BANK NAME
-   *
-   * Supports:
-   *
-   * "Bank Name"
-   * "Name Bank"
    * ============================================================
    */
 
@@ -252,7 +420,10 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const esiNumber = slip.employeeInfo?.esiNumber || getCustomField("ESI No") || NOT_APPLICABLE;
+  const esiNumber =
+    slip.employeeInfo?.esiNumber ||
+    getCustomField("ESI No") ||
+    NOT_APPLICABLE;
 
   /*
    * ============================================================
@@ -260,7 +431,9 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const formatISTDate = (dateString?: string) => {
+  const formatISTDate = (
+    dateString?: string,
+  ) => {
     if (!dateString || dateString === "-") {
       return NOT_APPLICABLE;
     }
@@ -289,9 +462,12 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const joiningDate = slip.employeeInfo?.joiningDate || employee?.joiningDate;
+  const joiningDate =
+    slip.employeeInfo?.joiningDate ||
+    employee?.joiningDate;
 
-  const formattedJoiningDate = formatISTDate(joiningDate);
+  const formattedJoiningDate =
+    formatISTDate(joiningDate);
 
   /*
    * ============================================================
@@ -305,25 +481,46 @@ export function SalarySlipView({
     }
 
     try {
-      const [year, month] = slip.month.split("-").map(Number);
+      const [year, month] =
+        slip.month.split("-").map(Number);
 
-      if (!year || !month || month < 1 || month > 12) {
+      if (
+        !year ||
+        !month ||
+        month < 1 ||
+        month > 12
+      ) {
         return NOT_APPLICABLE;
       }
 
-      const firstDay = new Date(year, month - 1, 1);
+      const firstDay = new Date(
+        year,
+        month - 1,
+        1,
+      );
 
-      const lastDay = new Date(year, month, 0);
+      const lastDay = new Date(
+        year,
+        month,
+        0,
+      );
 
-      const formatPeriodDate = (date: Date) => {
-        return new Intl.DateTimeFormat("en-IN", {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }).format(date);
+      const formatPeriodDate = (
+        date: Date,
+      ) => {
+        return new Intl.DateTimeFormat(
+          "en-IN",
+          {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          },
+        ).format(date);
       };
 
-      return `${formatPeriodDate(firstDay)} - ${formatPeriodDate(lastDay)}`;
+      return `${formatPeriodDate(
+        firstDay,
+      )} - ${formatPeriodDate(lastDay)}`;
     } catch {
       return NOT_APPLICABLE;
     }
@@ -337,7 +534,8 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const issuedDate = formatISTDate(slip.generatedAt);
+  const issuedDate =
+    formatISTDate(slip.generatedAt);
 
   /*
    * ============================================================
@@ -348,15 +546,8 @@ export function SalarySlipView({
   const paidLeaveDays =
     slip.paidLeaveDays !== undefined
       ? slip.paidLeaveDays
-      : (slip.paidCasualLeaveDays || 0) + (slip.paidSickLeaveDays || 0);
-
-  /*
-   * ============================================================
-   * UNPAID LEAVES
-   * ============================================================
-   */
-
-  const unpaidLeaveDays = slip.unpaidLeaveDays ?? 0;
+      : (slip.paidCasualLeaveDays || 0) +
+        (slip.paidSickLeaveDays || 0);
 
   /*
    * ============================================================
@@ -364,535 +555,1049 @@ export function SalarySlipView({
    * ============================================================
    */
 
-  const payableDays = slip.payableDays;
+  const payableDays =
+    slip.payableDays;
 
   /*
    * ============================================================
-   * DEDUCTION LABEL FORMATTER
+   * PAID DAYS
+   *
+   * Backend response has:
+   * paidDays
+   *
+   * Make sure salary.ts maps it to the frontend.
    * ============================================================
    */
 
-  const formatDeductionLabel = (label: string) => {
+  const paidDays =
+    slip.paidDays ?? 0;
+
+  /*
+   * ============================================================
+   * DEDUCTION LABEL
+   * ============================================================
+   */
+
+  const formatDeductionLabel = (
+    label: string,
+  ) => {
     if (!label) {
       return NOT_APPLICABLE;
     }
 
-    return label.replace(/\s*\(\s*\d+(?:\.\d+)?%\s*\)/g, "").trim();
+    return label
+      .replace(
+        /\s*\(\s*\d+(?:\.\d+)?%\s*\)/g,
+        "",
+      )
+      .trim();
   };
+
+  /*
+   * ============================================================
+   * NUMBER FORMAT
+   * ============================================================
+   */
+
+  const formatAmount = (
+    value: number | undefined | null,
+  ) => {
+    return Number(value || 0).toLocaleString(
+      "en-IN",
+      {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      },
+    );
+  };
+
+  /*
+   * ============================================================
+   * RETURN
+   * ============================================================
+   */
 
   return (
     <>
-      {/* ======================================================
-          A4 PRINT CSS
-          ====================================================== */}
-
       <style>{printStyles}</style>
-
-      {/* ======================================================
-          A4 SALARY SLIP
-          ====================================================== */}
 
       <div
         className="
           salary-slip-print
-          slip
-          relative
           w-full
-          max-w-full
           overflow-hidden
           bg-white
         "
+        style={{
+          fontFamily:
+            "Arial, Helvetica, sans-serif",
+          color: "#29213d",
+        }}
       >
-        {/* ====================================================
-            COMPANY LOGO WATERMARK
-            ==================================================== */}
-
-        <img
-          src={logo1}
-          alt=""
-          aria-hidden="true"
-          className="
-            pointer-events-none
-            absolute
-            left-1/2
-            top-1/2
-            z-0
-            h-[380px]
-            w-[380px]
-            -translate-x-1/2
-            -translate-y-1/2
-            object-contain
-            opacity-10
-            print:opacity-10
-          "
-        />
-
-        {/* ====================================================
-            ALL SALARY SLIP CONTENT
-            ==================================================== */}
-
-        <div className="relative z-10">
+        <div className="salary-slip-inner relative">
           {/* ==================================================
-    HEADER
-    ================================================== */}
+              PURPLE HEADER
+              ================================================== */}
 
           <div
             className="
-    slip-head
-    flex
-    flex-col
-    gap-3
-    sm:flex-row
-    sm:items-center
-    sm:justify-between
-  "
+              salary-slip-header
+              relative
+              h-[193px]
+              overflow-hidden
+              bg-gradient-to-br
+              from-[#55218a]
+              via-[#7131a7]
+              to-[#9a55d2]
+              text-white
+            "
           >
-            {/* ================================================
-      COMPANY INFORMATION
-      ================================================ */}
+            {/* Decorative circles */}
 
             <div
               className="
-      flex
-      min-w-0
-      items-center
-      gap-2.5
-    "
-            >
-              <img
-                src={logo1}
-                alt="Webapps Software Solution"
-                className="
-        h-10
-        w-10
-        shrink-0
-        object-contain
-        sm:h-12
-        sm:w-12
-      "
-              />
-
-              <div className="min-w-0">
-                <h2
-                  className="
-          break-words
-          text-base
-          font-semibold
-          leading-tight
-          sm:text-lg
-        "
-                >
-                  Webapps Software Solution
-                </h2>
-
-                {/* Company Contact Details */}
-
-                <div
-                  className="
-          mt-0.5
-          flex
-          flex-wrap
-          items-center
-          gap-x-2
-          text-[10px]
-          leading-tight
-          text-gray-600
-          sm:text-xs
-        "
-                >
-                  <span>{COMPANY_EMAIL}</span>
-
-                  <span className="text-gray-400">|</span>
-
-                  <span>{COMPANY_MOBILE}</span>
-                </div>
-
-                {/* Company Address */}
-
-                <div
-                  className="
-          mt-0.5
-          max-w-[420px]
-          truncate
-          text-[10px]
-          leading-tight
-          text-gray-600
-          sm:text-xs
-        "
-                >
-                  {COMPANY_ADDRESS}
-                </div>
-              </div>
-            </div>
-
-            {/* ================================================
-      PAY PERIOD
-      ================================================ */}
+                absolute
+                -right-12
+                -top-16
+                h-48
+                w-48
+                rounded-full
+                bg-white/5
+              "
+            />
 
             <div
               className="
-      text-left
-      sm:text-right
-    "
-            >
-              <div className="muted text-xs">Pay Period</div>
+                absolute
+                right-12
+                top-20
+                h-28
+                w-28
+                rounded-full
+                bg-white/5
+              "
+            />
 
-              <div className="text-xs sm:text-sm">{payPeriod}</div>
-            </div>
-          </div>
-
-          {/* ==================================================
-              EMPLOYEE INFORMATION
-              ================================================== */}
-
-          <div
-            className="
-              mt-5
-              mb-5
-              grid
-              grid-cols-1
-              gap-3
-              sm:grid-cols-2
-            "
-          >
-            <div className="min-w-0">
-              <span className="muted">Employee Name:</span>{" "}
-              <strong className="break-words">{employeeName}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">Employee ID:</span>{" "}
-              <strong className="break-all">{employeeId}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">Department:</span>{" "}
-              <strong className="break-words">{employeeDepartment}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">Designation:</span>{" "}
-              <strong className="break-words">{designation}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">Phone:</span> <strong className="break-words">{phone}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">Bank Account:</span>{" "}
-              <strong className="break-all">{bankAccount}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">Bank Name:</span>{" "}
-              <strong className="break-words">{bankName}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">PAN No:</span>{" "}
-              <strong className="break-all">{panNumber}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">UAN No:</span>{" "}
-              <strong className="break-all">{uanNumber}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">ESI No:</span>{" "}
-              <strong className="break-all">{esiNumber}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">Joining Date:</span> <strong>{formattedJoiningDate}</strong>
-            </div>
-          </div>
-
-          {/* ==================================================
-              SALARY SUMMARY
-              ================================================== */}
-
-          <div
-            className="
-              mb-5
-              grid
-              grid-cols-1
-              gap-3
-              sm:grid-cols-2
-            "
-          >
-            {slip.workingDays !== undefined && (
-              <div className="min-w-0">
-                <span className="muted">Working Days:</span> <strong>{slip.workingDays}</strong>
-              </div>
-            )}
-
-            {slip.absentDays !== undefined && (
-              <div className="min-w-0">
-                <span className="muted">Absent Days:</span> <strong>{slip.absentDays}</strong>
-              </div>
-            )}
-
-            <div className="min-w-0">
-              <span className="muted">Paid Leaves:</span> <strong>{paidLeaveDays}</strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">Unpaid Leaves:</span> <strong>{unpaidLeaveDays}</strong>
-            </div>
-
-            {payableDays !== undefined && (
-              <div className="min-w-0">
-                <span className="muted">Payable Days:</span> <strong>{payableDays}</strong>
-              </div>
-            )}
-
-            {slip.leaveDeduction !== undefined && slip.leaveDeduction > 0 && (
-              <div className="min-w-0">
-                <span className="muted">Leave Deduction:</span>{" "}
-                <strong>₹{slip.leaveDeduction.toLocaleString()}</strong>
-              </div>
-            )}
-          </div>
-
-          {/* ==================================================
-              EARNINGS
-              ================================================== */}
-
-          <div className="w-full overflow-x-auto">
-            <table
+            <div
               className="
-                slip-table
-                w-full
-                min-w-[420px]
-                table-fixed
+                absolute
+                -bottom-16
+                right-20
+                h-44
+                w-44
+                rounded-full
+                bg-white/5
+              "
+            />
+
+            <div
+              className="
+                salary-slip-header-content
+                salary-slip-content
+                relative
+                z-10
+                px-10
+                pt-8
               "
             >
-              <colgroup>
-                <col className="w-[58%]" />
-                <col className="w-[42%]" />
-              </colgroup>
-
-              <thead>
-                <tr>
-                  <th
-                    className="
-                      salary-label-column
-                      text-left
-                    "
-                  >
-                    Earnings
-                  </th>
-
-                  <th
-                    className="
-                      salary-amount-column
-                      whitespace-nowrap
-                      text-right
-                    "
-                  >
-                    Amount (₹)
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {earnings.map((item, index) => (
-                  <tr key={index}>
-                    <td className="break-words">{item.label || NOT_APPLICABLE}</td>
-
-                    <td
-                      className="
-                          whitespace-nowrap
-                          text-right
-                        "
-                    >
-                      {item.amount.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-
-                <tr>
-                  <td>
-                    <strong>Gross Salary</strong>
-                  </td>
-
-                  <td
-                    className="
-                      whitespace-nowrap
-                      text-right
-                    "
-                  >
-                    <strong>{slip.totalEarnings.toLocaleString()}</strong>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* ==================================================
-              DEDUCTIONS
-              ================================================== */}
-
-          <div
-            className="
-              mt-3
-              w-full
-              overflow-x-auto
-            "
-          >
-            <table
-              className="
-                slip-table
-                w-full
-                min-w-[420px]
-                table-fixed
-              "
-            >
-              <colgroup>
-                <col className="w-[58%]" />
-                <col className="w-[42%]" />
-              </colgroup>
-
-              <thead>
-                <tr>
-                  <th
-                    className="
-                      salary-label-column
-                      text-left
-                    "
-                  >
-                    Deductions
-                  </th>
-
-                  <th
-                    className="
-                      salary-amount-column
-                      whitespace-nowrap
-                      text-right
-                    "
-                  >
-                    Amount (₹)
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {deductions.map((item, index) => (
-                  <tr key={index}>
-                    <td className="break-words">{formatDeductionLabel(item.label)}</td>
-
-                    <td
-                      className="
-                          whitespace-nowrap
-                          text-right
-                        "
-                    >
-                      - {item.amount.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-
-                {deductions.length === 0 && (
-                  <tr>
-                    <td className="muted">No deductions</td>
-
-                    <td className="text-right">0</td>
-                  </tr>
-                )}
-
-                <tr>
-                  <td>
-                    <strong>Total Deductions</strong>
-                  </td>
-
-                  <td
-                    className="
-                      whitespace-nowrap
-                      text-right
-                    "
-                  >
-                    <strong>- {slip.totalDeductions.toLocaleString()}</strong>
-                  </td>
-                </tr>
-              </tbody>
-
               {/* ==================================================
-                  NET PAY
+                  HEADER TOP
                   ================================================== */}
 
-              <tfoot>
-                <tr>
-                  <td>
-                    <strong>Net Pay</strong>
-                  </td>
+              <div className="flex items-start justify-between">
+                {/* Company */}
 
-                  <td
+                <div className="flex items-center gap-3">
+                  <div
                     className="
-                      whitespace-nowrap
-                      text-right
+                      flex
+                      h-12
+                      w-12
+                      shrink-0
+                      items-center
+                      justify-center
+                      overflow-hidden
+                      rounded-xl
+                      border
+                      border-white/30
+                      bg-white/10
+                      shadow-sm
                     "
                   >
-                    <strong>₹ {slip.net.toLocaleString()}</strong>
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+                    <img
+                      src={logo1}
+                      alt="Webapps Software Solution"
+                      className="
+                        h-full
+                        w-full
+                        object-contain
+                      "
+                    />
+                  </div>
+
+                  <div>
+                    <h1
+                      className="
+                        text-[25px]
+                        font-bold
+                        leading-none
+                        tracking-tight
+                        text-white
+                      "
+                    >
+                      Webapps Software Solution
+                    </h1>
+
+                    <div
+                      className="
+                        mt-1
+                        text-[10px]
+                        text-white/75
+                      "
+                    >
+                      {COMPANY_EMAIL}
+
+                      <span className="mx-2">
+                        |
+                      </span>
+
+                      {COMPANY_MOBILE}
+                    </div>
+
+                    <div
+                      className="
+                        mt-0.5
+                        text-[10px]
+                        text-white/75
+                      "
+                    >
+                      {COMPANY_ADDRESS}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pay Period */}
+
+                <div
+                  className="
+                    rounded-xl
+                    border
+                    border-white/20
+                    bg-white/10
+                    px-5
+                    py-2.5
+                    text-right
+                    shadow-sm
+                    backdrop-blur-sm
+                  "
+                >
+                  <div
+                    className="
+                      text-[9px]
+                      font-medium
+                      uppercase
+                      tracking-[2px]
+                      text-white/65
+                    "
+                  >
+                    Pay Period
+                  </div>
+
+                  <div
+                    className="
+                      mt-1
+                      whitespace-nowrap
+                      text-[14px]
+                      font-bold
+                    "
+                  >
+                    {payPeriod}
+                  </div>
+                </div>
+              </div>
+
+              {/* ==================================================
+                  TITLE
+                  ================================================== */}
+
+              <div className="mt-6">
+                <div
+                  className="
+                    text-[28px]
+                    font-bold
+                    leading-none
+                  "
+                >
+                  Salary Slip
+                </div>
+
+                <div
+                  className="
+                    mt-1
+                    text-[12px]
+                    text-white/65
+                  "
+                >
+                  Employee Payment Summary
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* ==================================================
-              PF INFORMATION
+              MAIN CONTENT
               ================================================== */}
 
-          {slip.pfApplicable && (
+          <div
+            className="
+              salary-slip-content
+              relative
+              px-10
+            "
+          >
+            {/* ==================================================
+                NET PAY CARD
+                ================================================== */}
+
             <div
               className="
-                mt-5
-                grid
-                grid-cols-1
-                gap-3
-                sm:grid-cols-2
+                salary-slip-net-card
+                relative
+                z-20
+                -mt-[18px]
+                flex
+                items-center
+                justify-between
+                rounded-xl
+                border
+                border-purple-100
+                bg-white
+                px-6
+                py-4
+                shadow-[0_8px_22px_rgba(76,34,110,0.13)]
               "
             >
               <div>
-                <span className="muted">PF Applicable:</span> <strong>Yes</strong>
+                <div
+                  className="
+                    text-[10px]
+                    font-medium
+                    uppercase
+                    tracking-[1.5px]
+                    text-gray-500
+                  "
+                >
+                  Net Pay
+                </div>
+
+                <div
+                  className="
+                    mt-0.5
+                    text-[30px]
+                    font-bold
+                    leading-none
+                    text-[#4d2277]
+                  "
+                >
+                  ₹ {formatAmount(slip.net)}
+                </div>
+              </div>
+
+              <div
+                className="
+                  text-right
+                  text-[11px]
+                  leading-5
+                  text-gray-500
+                "
+              >
+                {payableDays !== undefined && (
+                  <div>
+                    Payable Days:{" "}
+                    <strong className="text-gray-700">
+                      {payableDays}
+                    </strong>
+                  </div>
+                )}
+
+                {slip.workingDays !== undefined && (
+                  <div>
+                    Working Days:{" "}
+                    <strong className="text-gray-700">
+                      {slip.workingDays}
+                    </strong>
+                  </div>
+                )}
               </div>
             </div>
-          )}
 
-          {/* ==================================================
-              FOOTER
-              ================================================== */}
+            {/* ==================================================
+                EMPLOYEE INFORMATION CARD
+                ================================================== */}
 
-          <p
-            className="
-              muted
-              mt-4
-              text-xs
-              leading-relaxed
-            "
-          >
-            This is a system-generated salary slip and does not require a signature.
-          </p>
+            <div
+              className="
+                salary-slip-employee-card
+                mt-7
+                rounded-xl
+                border
+                border-purple-100
+                bg-[#fcf8ff]
+                px-6
+                py-5
+              "
+            >
+              <div className="grid grid-cols-2 gap-x-10">
+                <InfoRow
+                  label="Employee Name"
+                  value={employeeName}
+                />
 
-          {/* ==================================================
-              SLIP ID
-              ================================================== */}
+                <InfoRow
+                  label="Employee ID"
+                  value={employeeId}
+                />
 
-          <div className="min-w-0">
-            <strong className="break-all">{slip.id || NOT_APPLICABLE}</strong>
-          </div>
+                <InfoRow
+                  label="Department"
+                  value={employeeDepartment}
+                />
 
-          {/* ==================================================
-              ISSUED DATE
-              ================================================== */}
+                <InfoRow
+                  label="Designation"
+                  value={designation}
+                />
 
-          <div className="mt-2 min-w-0">
-            <span className="muted">Issued Date:</span> <strong>{issuedDate}</strong>
+                <InfoRow
+                  label="Phone"
+                  value={phone}
+                />
+
+                <InfoRow
+                  label="Bank Account"
+                  value={bankAccount}
+                />
+
+                <InfoRow
+                  label="Bank Name"
+                  value={bankName}
+                />
+
+                <InfoRow
+                  label="PAN No."
+                  value={panNumber}
+                />
+
+                <InfoRow
+                  label="UAN No."
+                  value={uanNumber}
+                />
+
+                <InfoRow
+                  label="ESI No."
+                  value={esiNumber}
+                />
+
+                <InfoRow
+                  label="Joining Date"
+                  value={formattedJoiningDate}
+                />
+
+                <InfoRow
+                  label="PF Applicable"
+                  value={
+                    slip.pfApplicable
+                      ? "Yes"
+                      : "No"
+                  }
+                  last
+                />
+              </div>
+            </div>
+
+            {/* ==================================================
+                SUMMARY CARDS
+                ORDER:
+                1. Payable Days
+                2. Working Days
+                3. Absent Days
+                4. Paid Leaves
+                5. Paid Days
+                ================================================== */}
+
+            <div
+              className="
+                salary-slip-summary
+                mt-5
+                grid
+                grid-cols-5
+                gap-1
+              "
+            >
+              <SummaryBox
+                value={
+                  payableDays ??
+                  slip.workingDays ??
+                  0
+                }
+                label="PAYABLE DAYS"
+              />
+
+              <SummaryBox
+                value={slip.workingDays ?? 0}
+                label="WORKING DAYS"
+              />
+
+              <SummaryBox
+                value={slip.absentDays ?? 0}
+                label="ABSENT DAYS"
+              />
+
+              <SummaryBox
+                value={paidLeaveDays}
+                label="PAID LEAVES"
+              />
+
+              <SummaryBox
+                value={paidDays}
+                label="PAID DAYS"
+              />
+            </div>
+
+            {/* ==================================================
+                EARNINGS TABLE
+                ================================================== */}
+
+            <div className="salary-slip-earnings mt-6">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-[#572285] text-white">
+                    <th
+                      className="
+                        rounded-tl-lg
+                        px-5
+                        py-2.5
+                        text-left
+                        text-[11px]
+                        font-bold
+                        uppercase
+                        tracking-[1px]
+                      "
+                    >
+                      Earnings
+                    </th>
+
+                    <th
+                      className="
+                        rounded-tr-lg
+                        px-5
+                        py-2.5
+                        text-right
+                        text-[11px]
+                        font-bold
+                        uppercase
+                        tracking-[1px]
+                      "
+                    >
+                      Amount (₹)
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {earnings.map(
+                    (item, index) => (
+                      <tr
+                        key={`${item.label}-${index}`}
+                        className="border-b border-gray-100"
+                      >
+                        <td
+                          className="
+                            px-5
+                            py-2
+                            text-[12px]
+                            text-gray-700
+                          "
+                        >
+                          {item.label ||
+                            NOT_APPLICABLE}
+                        </td>
+
+                        <td
+                          className="
+                            px-5
+                            py-2
+                            text-right
+                            text-[12px]
+                            text-gray-700
+                          "
+                        >
+                          {formatAmount(
+                            item.amount,
+                          )}
+                        </td>
+                      </tr>
+                    ),
+                  )}
+
+                  <tr className="bg-[#fcf5ff]">
+                    <td
+                      className="
+                        px-5
+                        py-2.5
+                        text-[12px]
+                        font-bold
+                        text-[#54257b]
+                      "
+                    >
+                      Gross Salary
+                    </td>
+
+                    <td
+                      className="
+                        px-5
+                        py-2.5
+                        text-right
+                        text-[12px]
+                        font-bold
+                        text-[#54257b]
+                      "
+                    >
+                      {formatAmount(
+                        slip.totalEarnings,
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* ==================================================
+                DEDUCTIONS TABLE
+                ================================================== */}
+
+            <div className="salary-slip-deductions mt-4">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-[#572285] text-white">
+                    <th
+                      className="
+                        rounded-tl-lg
+                        px-5
+                        py-2.5
+                        text-left
+                        text-[11px]
+                        font-bold
+                        uppercase
+                        tracking-[1px]
+                      "
+                    >
+                      Deductions
+                    </th>
+
+                    <th
+                      className="
+                        rounded-tr-lg
+                        px-5
+                        py-2.5
+                        text-right
+                        text-[11px]
+                        font-bold
+                        uppercase
+                        tracking-[1px]
+                      "
+                    >
+                      Amount (₹)
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  {deductions.map(
+                    (item, index) => (
+                      <tr
+                        key={`${item.label}-${index}`}
+                        className="border-b border-gray-100"
+                      >
+                        <td
+                          className="
+                            px-5
+                            py-2
+                            text-[12px]
+                            text-gray-700
+                          "
+                        >
+                          {formatDeductionLabel(
+                            item.label,
+                          )}
+                        </td>
+
+                        <td
+                          className="
+                            px-5
+                            py-2
+                            text-right
+                            text-[12px]
+                            text-[#92566d]
+                          "
+                        >
+                          -{" "}
+                          {formatAmount(
+                            item.amount,
+                          )}
+                        </td>
+                      </tr>
+                    ),
+                  )}
+
+                  {deductions.length === 0 && (
+                    <tr>
+                      <td
+                        className="
+                          px-5
+                          py-2
+                          text-[12px]
+                          text-gray-500
+                        "
+                      >
+                        No deductions
+                      </td>
+
+                      <td
+                        className="
+                          px-5
+                          py-2
+                          text-right
+                          text-[12px]
+                        "
+                      >
+                        0.00
+                      </td>
+                    </tr>
+                  )}
+
+                  <tr className="bg-[#fcf5ff]">
+                    <td
+                      className="
+                        px-5
+                        py-2.5
+                        text-[12px]
+                        font-bold
+                        text-[#54257b]
+                      "
+                    >
+                      Total Deductions
+                    </td>
+
+                    <td
+                      className="
+                        px-5
+                        py-2.5
+                        text-right
+                        text-[12px]
+                        font-bold
+                        text-[#92566d]
+                      "
+                    >
+                      -{" "}
+                      {formatAmount(
+                        slip.totalDeductions,
+                      )}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            {/* ==================================================
+                FINAL SALARY SUMMARY
+                ================================================== */}
+
+            <div
+              className="
+                salary-slip-final-summary
+                mt-5
+                grid
+                grid-cols-3
+                overflow-hidden
+                rounded-xl
+                bg-gradient-to-r
+                from-[#572285]
+                via-[#7130a2]
+                to-[#8f4bc0]
+                px-6
+                py-4
+                text-white
+              "
+            >
+              {/* Gross */}
+
+              <div>
+                <div
+                  className="
+                    text-[9px]
+                    uppercase
+                    tracking-[1.5px]
+                    text-white/65
+                  "
+                >
+                  Gross Salary
+                </div>
+
+                <div
+                  className="
+                    mt-1
+                    text-[18px]
+                    font-bold
+                  "
+                >
+                  ₹{" "}
+                  {formatAmount(
+                    slip.totalEarnings,
+                  )}
+                </div>
+              </div>
+
+              {/* Deductions */}
+
+              <div className="text-center">
+                <div
+                  className="
+                    text-[9px]
+                    uppercase
+                    tracking-[1.5px]
+                    text-white/65
+                  "
+                >
+                  Total Deductions
+                </div>
+
+                <div
+                  className="
+                    mt-1
+                    text-[18px]
+                    font-bold
+                  "
+                >
+                  ₹{" "}
+                  {formatAmount(
+                    slip.totalDeductions,
+                  )}
+                </div>
+              </div>
+
+              {/* Net Pay */}
+
+              <div className="text-right">
+                <div
+                  className="
+                    text-[9px]
+                    uppercase
+                    tracking-[1.5px]
+                    text-white/65
+                  "
+                >
+                  Net Pay
+                </div>
+
+                <div
+                  className="
+                    mt-1
+                    text-[18px]
+                    font-bold
+                  "
+                >
+                  ₹{" "}
+                  {formatAmount(slip.net)}
+                </div>
+              </div>
+            </div>
+
+            {/* ==================================================
+                PF BADGE
+                ================================================== */}
+
+            {slip.pfApplicable && (
+              <div className="salary-slip-pf mt-5">
+                <span
+                  className="
+                    inline-flex
+                    items-center
+                    rounded-full
+                    bg-[#eefaf0]
+                    px-2.5
+                    py-1
+                    text-[10px]
+                    font-semibold
+                    text-[#438b58]
+                  "
+                >
+                  ✓ PF Applicable
+                </span>
+              </div>
+            )}
+
+            {/* ==================================================
+                FOOTER
+                ================================================== */}
+
+            <div
+              className="
+                salary-slip-footer
+                mt-5
+                border-t
+                border-gray-200
+                pt-4
+              "
+            >
+              <div className="flex items-end justify-between">
+                <div>
+                  <p
+                    className="
+                      text-[10px]
+                      text-gray-400
+                    "
+                  >
+                    This is a system-generated
+                    salary slip and does not
+                    require a signature.
+                  </p>
+
+                  <p
+                    className="
+                      mt-0.5
+                      text-[8px]
+                      text-gray-400
+                    "
+                  >
+                    {slip.id ||
+                      NOT_APPLICABLE}
+                  </p>
+                </div>
+
+                <div
+                  className="
+                    text-right
+                    text-[10px]
+                    text-gray-400
+                  "
+                >
+                  Issued Date:{" "}
+                  <strong className="text-gray-500">
+                    {issuedDate}
+                  </strong>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </>
+  );
+}
+
+/*
+ * ============================================================
+ * INFO ROW
+ * ============================================================
+ */
+
+function InfoRow({
+  label,
+  value,
+  last = false,
+}: {
+  label: string;
+  value: string | number;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className={`
+        info-row
+        flex
+        min-w-0
+        items-center
+        justify-between
+        gap-4
+        border-b
+        border-dashed
+        border-gray-200
+        py-[5px]
+        text-[11px]
+        ${last ? "border-b-0" : ""}
+      `}
+    >
+      <span className="shrink-0 text-gray-500">
+        {label}
+      </span>
+
+      <strong
+        className="
+          min-w-0
+          truncate
+          text-right
+          font-semibold
+          text-gray-800
+        "
+        title={String(value)}
+      >
+        {value}
+      </strong>
+    </div>
+  );
+}
+
+/*
+ * ============================================================
+ * SUMMARY BOX
+ * ============================================================
+ */
+
+function SummaryBox({
+  value,
+  label,
+}: {
+  value: number | string;
+  label: string;
+}) {
+  return (
+    <div
+      className="
+        salary-slip-summary-box
+        rounded-lg
+        border
+        border-gray-200
+        bg-white
+        px-2
+        py-3
+        text-center
+      "
+    >
+      <div
+        className="
+          text-[20px]
+          font-bold
+          leading-none
+          text-[#54257b]
+        "
+      >
+        {value}
+      </div>
+
+      <div
+        className="
+          mt-1.5
+          whitespace-nowrap
+          text-[7px]
+          font-medium
+          uppercase
+          tracking-[1px]
+          text-gray-400
+        "
+      >
+        {label}
+      </div>
+    </div>
   );
 }

@@ -109,6 +109,14 @@ export interface SalarySlip {
   workingDays?: number;
   absentDays?: number;
 
+  /*
+   * Paid Days
+   *
+   * Comes directly from API:
+   * "paidDays": 9
+   */
+  paidDays?: number;
+
   /* Leave information */
   paidLeaveDays?: number;
   paidCasualLeaveDays?: number;
@@ -226,6 +234,22 @@ const mapSalarySlip = (
       ? Number(s.paidLeaveDays)
       : (Number(s.paidCasualLeaveDays) || 0) +
         (Number(s.paidSickLeaveDays) || 0);
+
+  /* -------------------------------------------------------
+   * Paid Days
+   *
+   * API response example:
+   *
+   * "paidDays": 9
+   *
+   * This is different from paidLeaveDays.
+   * ----------------------------------------------------- */
+
+  const paidDays =
+    s.paidDays !== undefined &&
+    s.paidDays !== null
+      ? Number(s.paidDays)
+      : undefined;
 
   /* -------------------------------------------------------
    * Payable Days
@@ -416,6 +440,18 @@ const mapSalarySlip = (
 
     absentDays:
       Number(s.absentDays) || 0,
+
+    /*
+     * IMPORTANT:
+     * API returns:
+     *
+     * "paidDays": 9
+     *
+     * Now this value is available as:
+     *
+     * slip.paidDays
+     */
+    paidDays,
 
     totalAvailableMinutes:
       Number(s.totalAvailableMinutes) || 0,
