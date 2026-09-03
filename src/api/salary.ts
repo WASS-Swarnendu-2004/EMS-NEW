@@ -1,5 +1,9 @@
 import api from "./axios";
 
+/* =========================================================
+ * Salary Configuration
+ * ======================================================= */
+
 export interface SalaryComponent {
   id?: string;
   label: string;
@@ -8,16 +12,28 @@ export interface SalaryComponent {
   value: number | "";
 }
 
+/* =========================================================
+ * Salary Items
+ * ======================================================= */
+
 export interface SalaryItem {
   label: string;
   type: "earning" | "deduction";
   amount: number;
 }
 
+/* =========================================================
+ * Employee Custom Fields
+ * ======================================================= */
+
 export interface SalaryCustomField {
   label: string;
   value: string;
 }
+
+/* =========================================================
+ * Employee Information
+ * ======================================================= */
 
 export interface SalaryEmployee {
   _id: string;
@@ -34,58 +50,99 @@ export interface SalaryEmployee {
   customFields?: SalaryCustomField[];
 }
 
+/* =========================================================
+ * Additional Employee Information
+ * ======================================================= */
+
 export interface SalaryEmployeeInfo {
   uanNumber?: string;
   esiNumber?: string;
-  dob?: string;
   bankName?: string;
+  dob?: string;
   joiningDate?: string;
   bankAccount?: string;
 }
 
+/* =========================================================
+ * Salary Slip
+ * ======================================================= */
+
 export interface SalarySlip {
   id: string;
+
   employeeId: string;
+
+  /*
+   * Stored in frontend as:
+   * YYYY-MM
+   *
+   * Example:
+   * 2026-08
+   */
   month: string;
 
-  // Employee information
+  /*
+   * Raw year/month information.
+   */
+  year?: number;
+  monthNumber?: number;
+
+  /* Employee information */
   employee?: SalaryEmployee;
 
-  // Additional employee information
+  /* Additional employee information */
   employeeInfo?: SalaryEmployeeInfo;
 
-  // Salary information
+  /* Salary information */
   gross: number;
   net: number;
 
   totalEarnings: number;
   totalDeductions: number;
 
-  // Attendance / salary calculation information
+  /* Attendance / salary calculation information */
   workingDays?: number;
   absentDays?: number;
-  totalAvailableMinutes?: number;
+
+  /* Leave information */
+  paidLeaveDays?: number;
   paidCasualLeaveDays?: number;
   paidSickLeaveDays?: number;
   unpaidLeaveDays?: number;
+
+  /* Payable days */
+  payableDays?: number;
+
+  totalAvailableMinutes?: number;
+
   actualWorkingMinutes?: number;
   finalPaidMinutes?: number;
+
   earlyCheckoutMinutes?: number;
+
   leaveDeduction?: number;
   earlyCheckoutDeduction?: number;
 
-  // PF information
+  /* PF information */
   pfApplicable?: boolean;
   pfPercentage?: number;
   pfWage?: number;
+
   employeePF?: number;
   employerPF?: number;
+
   professionalTax?: number;
 
+  /* Salary generation information */
   generatedAt: string;
 
+  /* Combined earnings + deductions */
   items: SalaryItem[];
 }
+
+/* =========================================================
+ * Salary List Item
+ * ======================================================= */
 
 export interface SalaryListItem {
   employeeId: string;
@@ -98,161 +155,392 @@ export interface SalaryListItem {
   netSalary?: number;
 }
 
-/*
+/* =========================================================
+ * Custom Field Helper
+ * ======================================================= */
+
+const getEmployeeCustomField = (
+  employee: any,
+  label: string,
+): string | undefined => {
+  const fields = employee?.customFields;
+
+  if (!Array.isArray(fields)) {
+    return undefined;
+  }
+
+  const normalizedLabel = label.trim().toLowerCase();
+
+  const field = fields.find(
+    (item: any) =>
+      String(item?.label ?? "")
+        .trim()
+        .toLowerCase() === normalizedLabel,
+  );
+
+  if (
+    field?.value === undefined ||
+    field?.value === null
+  ) {
+    return undefined;
+  }
+
+  const value = String(field.value).trim();
+
+  return value !== "" ? value : undefined;
+};
+
+/* =========================================================
+ * Map Salary Slip
+ * ======================================================= */
+
+const mapSalarySlip = (
+  s: any,
+  employeeInfo?: any,
+): SalarySlip => {
+  const year = Number(s.year);
+  const monthNumber = Number(s.month);
+
+  /* -------------------------------------------------------
+   * Employee
+   * ----------------------------------------------------- */
+
+  const employee =
+    typeof s.employee === "object" &&
+    s.employee !== null
+      ? s.employee
+      : undefined;
+
+  /* -------------------------------------------------------
+   * Paid Leaves
+   * ----------------------------------------------------- */
+
+  const paidLeaveDays =
+    s.paidLeaveDays !== undefined &&
+    s.paidLeaveDays !== null
+      ? Number(s.paidLeaveDays)
+      : (Number(s.paidCasualLeaveDays) || 0) +
+        (Number(s.paidSickLeaveDays) || 0);
+
+  /* -------------------------------------------------------
+   * Payable Days
+   * ----------------------------------------------------- */
+
+  const payableDays =
+    s.payableDays !== undefined &&
+    s.payableDays !== null
+      ? Number(s.payableDays)
+      : undefined;
+
+  /* -------------------------------------------------------
+   * Employee Custom Fields
+   *
+   * Supports:
+   *
+   * Bank Name
+   * Name Bank
+   * UAN No
+   * ESI No
+   * DOB
+   * ----------------------------------------------------- */
+
+  const uanNumber =
+    employeeInfo?.uanNumber ||
+    getEmployeeCustomField(
+      employee,
+      "UAN No",
+    );
+
+  const esiNumber =
+    employeeInfo?.esiNumber ||
+    getEmployeeCustomField(
+      employee,
+      "ESI No",
+    );
+
+  const bankName =
+    employeeInfo?.bankName ||
+    getEmployeeCustomField(
+      employee,
+      "Bank Name",
+    ) ||
+    getEmployeeCustomField(
+      employee,
+      "Name Bank",
+    );
+
+  const dob =
+    employeeInfo?.dob ||
+    getEmployeeCustomField(
+      employee,
+      "DOB",
+    );
+
+  /* -------------------------------------------------------
+   * Employee Information
+   *
+   * Important:
+   * Even if response.employeeInfo is not present,
+   * values are extracted from employee.customFields.
+   * ----------------------------------------------------- */
+
+  const mappedEmployeeInfo: SalaryEmployeeInfo = {
+    uanNumber,
+    esiNumber,
+    bankName,
+    dob,
+
+    joiningDate:
+      employeeInfo?.joiningDate ||
+      employee?.joiningDate,
+
+    bankAccount:
+      employeeInfo?.bankAccount ||
+      employee?.bankAccount,
+  };
+
+  /* -------------------------------------------------------
+   * Return mapped salary slip
+   * ----------------------------------------------------- */
+
+  return {
+    id: s._id,
+
+    employeeId:
+      typeof s.employee === "object"
+        ? s.employee?._id
+        : s.employee,
+
+    /* -----------------------------------------------------
+     * Month
+     * --------------------------------------------------- */
+
+    month:
+      year && monthNumber
+        ? `${year}-${String(monthNumber).padStart(2, "0")}`
+        : "",
+
+    year,
+
+    monthNumber,
+
+    /* -----------------------------------------------------
+     * Employee
+     * --------------------------------------------------- */
+
+    employee: employee
+      ? {
+          _id: employee._id,
+
+          employeeId:
+            employee.employeeId,
+
+          fullName:
+            employee.fullName,
+
+          email:
+            employee.email,
+
+          phone:
+            employee.phone,
+
+          department:
+            employee.department,
+
+          designation:
+            employee.designation,
+
+          bankAccount:
+            employee.bankAccount ||
+            "",
+
+          joiningDate:
+            employee.joiningDate,
+
+          customFields:
+            Array.isArray(
+              employee.customFields,
+            )
+              ? employee.customFields
+              : [],
+        }
+      : undefined,
+
+    /* -----------------------------------------------------
+     * Additional Employee Information
+     * --------------------------------------------------- */
+
+    employeeInfo:
+      mappedEmployeeInfo,
+
+    /* -----------------------------------------------------
+     * Salary
+     * --------------------------------------------------- */
+
+    gross:
+      Number(s.grossSalary) || 0,
+
+    net:
+      Number(s.netSalary) || 0,
+
+    totalEarnings:
+      Number(s.totalEarnings) || 0,
+
+    totalDeductions:
+      Number(s.totalDeductions) || 0,
+
+    /* -----------------------------------------------------
+     * Attendance
+     * --------------------------------------------------- */
+
+    workingDays:
+      Number(s.workingDays) || 0,
+
+    absentDays:
+      Number(s.absentDays) || 0,
+
+    totalAvailableMinutes:
+      Number(s.totalAvailableMinutes) || 0,
+
+    /* -----------------------------------------------------
+     * Leaves
+     * --------------------------------------------------- */
+
+    paidLeaveDays,
+
+    paidCasualLeaveDays:
+      Number(s.paidCasualLeaveDays) || 0,
+
+    paidSickLeaveDays:
+      Number(s.paidSickLeaveDays) || 0,
+
+    unpaidLeaveDays:
+      Number(s.unpaidLeaveDays) || 0,
+
+    /* -----------------------------------------------------
+     * Payable Days
+     * --------------------------------------------------- */
+
+    payableDays,
+
+    /* -----------------------------------------------------
+     * Working Time
+     * --------------------------------------------------- */
+
+    actualWorkingMinutes:
+      Number(s.actualWorkingMinutes) || 0,
+
+    finalPaidMinutes:
+      Number(s.finalPaidMinutes) || 0,
+
+    earlyCheckoutMinutes:
+      Number(s.earlyCheckoutMinutes) || 0,
+
+    /* -----------------------------------------------------
+     * Deductions
+     * --------------------------------------------------- */
+
+    leaveDeduction:
+      Number(s.leaveDeduction) || 0,
+
+    earlyCheckoutDeduction:
+      Number(s.earlyCheckoutDeduction) || 0,
+
+    /* -----------------------------------------------------
+     * PF
+     * --------------------------------------------------- */
+
+    pfApplicable:
+      Boolean(s.pfApplicable),
+
+    pfPercentage:
+      Number(s.pfPercentage) || 0,
+
+    pfWage:
+      Number(s.pfWage) || 0,
+
+    employeePF:
+      Number(s.employeePF) || 0,
+
+    employerPF:
+      Number(s.employerPF) || 0,
+
+    professionalTax:
+      Number(s.professionalTax) || 0,
+
+    /* -----------------------------------------------------
+     * Metadata
+     * --------------------------------------------------- */
+
+    generatedAt:
+      s.generatedAt,
+
+    /* -----------------------------------------------------
+     * Earnings + Deductions
+     * --------------------------------------------------- */
+
+    items: [
+      ...(Array.isArray(s.earnings)
+        ? s.earnings
+        : []
+      ).map(
+        (e: any): SalaryItem => ({
+          label:
+            e.label || "Not Applicable",
+
+          amount:
+            Number(e.amount) || 0,
+
+          type: "earning",
+        }),
+      ),
+
+      ...(Array.isArray(s.deductions)
+        ? s.deductions
+        : []
+      ).map(
+        (d: any): SalaryItem => ({
+          label:
+            d.label || "Not Applicable",
+
+          amount:
+            Number(d.amount) || 0,
+
+          type: "deduction",
+        }),
+      ),
+    ],
+  };
+};
+
+/* =========================================================
  * Get logged-in employee salary slips
- */
+ * ======================================================= */
+
 export const getMySalarySlips = async (): Promise<
   SalarySlip[]
 > => {
   const response = await api.get("/salary");
 
-  return response.data.salaries.map((s: any) => ({
-    id: s._id,
-
-    employeeId:
-      typeof s.employee === "object"
-        ? s.employee._id
-        : s.employee,
-
-    month: `${s.year}-${String(s.month).padStart(
-      2,
-      "0",
-    )}`,
-
-    employee:
-      typeof s.employee === "object"
-        ? {
-            _id: s.employee._id,
-            employeeId: s.employee.employeeId,
-            fullName: s.employee.fullName,
-            email: s.employee.email,
-            phone: s.employee.phone,
-            department: s.employee.department,
-            designation: s.employee.designation,
-            bankAccount:
-              s.employee.bankAccount || "",
-            joiningDate:
-              s.employee.joiningDate,
-            customFields:
-              s.employee.customFields || [],
-          }
-        : undefined,
-
-    employeeInfo: s.employeeInfo
-      ? {
-          uanNumber:
-            s.employeeInfo.uanNumber,
-
-          esiNumber:
-            s.employeeInfo.esiNumber,
-
-          dob:
-            s.employeeInfo.dob,
-
-          bankName:
-            s.employeeInfo.bankName,
-
-          joiningDate:
-            s.employeeInfo.joiningDate,
-
-          bankAccount:
-            s.employeeInfo.bankAccount,
-        }
-      : undefined,
-
-    gross:
-      s.grossSalary,
-
-    net:
-      s.netSalary,
-
-    totalEarnings:
-      s.totalEarnings,
-
-    totalDeductions:
-      s.totalDeductions,
-
-    workingDays:
-      s.workingDays,
-
-    absentDays:
-      s.absentDays,
-
-    totalAvailableMinutes:
-      s.totalAvailableMinutes,
-
-    paidCasualLeaveDays:
-      s.paidCasualLeaveDays,
-
-    paidSickLeaveDays:
-      s.paidSickLeaveDays,
-
-    unpaidLeaveDays:
-      s.unpaidLeaveDays,
-
-    actualWorkingMinutes:
-      s.actualWorkingMinutes,
-
-    finalPaidMinutes:
-      s.finalPaidMinutes,
-
-    earlyCheckoutMinutes:
-      s.earlyCheckoutMinutes,
-
-    leaveDeduction:
-      s.leaveDeduction,
-
-    earlyCheckoutDeduction:
-      s.earlyCheckoutDeduction,
-
-    pfApplicable:
-      s.pfApplicable,
-
-    pfPercentage:
-      s.pfPercentage,
-
-    pfWage:
-      s.pfWage,
-
-    employeePF:
-      s.employeePF,
-
-    employerPF:
-      s.employerPF,
-
-    professionalTax:
-      s.professionalTax,
-
-    generatedAt:
-      s.generatedAt,
-
-    items: [
-      ...(s.earnings || []).map(
-        (e: any) => ({
-          label: e.label,
-          amount: e.amount,
-          type: "earning" as const,
-        }),
-      ),
-
-      ...(s.deductions || []).map(
-        (d: any) => ({
-          label: d.label,
-          amount: d.amount,
-          type: "deduction" as const,
-        }),
-      ),
-    ],
-  }));
+  return (
+    response.data.salaries || []
+  ).map((s: any) =>
+    mapSalarySlip(
+      s,
+      s.employeeInfo,
+    ),
+  );
 };
 
-/*
+/* =========================================================
  * Get salary list for a particular month
- */
+ * ======================================================= */
+
 export const getSalaryList = async (
   month: string,
 ): Promise<SalaryListItem[]> => {
-  const [year, mon] = month.split("-");
+  const [year, mon] =
+    month.split("-");
 
   const response = await api.get(
     "/admin/salary",
@@ -267,13 +555,15 @@ export const getSalaryList = async (
   return response.data.employees;
 };
 
-/*
+/* =========================================================
  * Generate salary for all employees
- */
+ * ======================================================= */
+
 export const generateSalary = async (
   month: string,
 ) => {
-  const [year, mon] = month.split("-");
+  const [year, mon] =
+    month.split("-");
 
   try {
     const response = await api.post(
@@ -295,9 +585,10 @@ export const generateSalary = async (
   }
 };
 
-/*
+/* =========================================================
  * Get salary configuration
- */
+ * ======================================================= */
+
 export const getSalaryConfig = async (): Promise<
   SalaryComponent[]
 > => {
@@ -306,8 +597,10 @@ export const getSalaryConfig = async (): Promise<
       "/admin/salary/config",
     );
 
-    return response.data.configs.map(
-      (c: any) => ({
+    return (
+      response.data.configs || []
+    ).map(
+      (c: any): SalaryComponent => ({
         id: c._id,
         label: c.label,
         type: c.type,
@@ -325,9 +618,10 @@ export const getSalaryConfig = async (): Promise<
   }
 };
 
-/*
+/* =========================================================
  * Update salary configuration
- */
+ * ======================================================= */
+
 export const updateSalaryConfig = async (
   data: SalaryComponent[],
 ) => {
@@ -339,14 +633,16 @@ export const updateSalaryConfig = async (
   return response.data;
 };
 
-/*
+/* =========================================================
  * Generate salary for one employee
- */
+ * ======================================================= */
+
 export const generateSalaryForEmployee = async (
   employeeId: string,
   month: string,
 ) => {
-  const [year, mon] = month.split("-");
+  const [year, mon] =
+    month.split("-");
 
   const response = await api.post(
     `/admin/salary/generate/${employeeId}`,
@@ -359,12 +655,10 @@ export const generateSalaryForEmployee = async (
   return response.data;
 };
 
-/*
+/* =========================================================
  * Get one salary slip
- *
- * GET:
- * /admin/salary/:salarySlipId
- */
+ * ======================================================= */
+
 export const getSalarySlip = async (
   salarySlipId: string,
 ): Promise<SalarySlip> => {
@@ -372,165 +666,14 @@ export const getSalarySlip = async (
     `/admin/salary/${salarySlipId}`,
   );
 
-  const s = response.data.salary;
+  const s =
+    response.data.salary;
+
   const employeeInfo =
     response.data.employeeInfo;
 
-  return {
-    id: s._id,
-
-    employeeId:
-      typeof s.employee === "object"
-        ? s.employee._id
-        : s.employee,
-
-    month: `${s.year}-${String(s.month).padStart(
-      2,
-      "0",
-    )}`,
-
-    employee:
-      typeof s.employee === "object"
-        ? {
-            _id: s.employee._id,
-
-            employeeId:
-              s.employee.employeeId,
-
-            fullName:
-              s.employee.fullName,
-
-            email:
-              s.employee.email,
-
-            phone:
-              s.employee.phone,
-
-            department:
-              s.employee.department,
-
-            designation:
-              s.employee.designation,
-
-            bankAccount:
-              s.employee.bankAccount || "",
-
-            joiningDate:
-              s.employee.joiningDate,
-
-            customFields:
-              s.employee.customFields || [],
-          }
-        : undefined,
-
-    /*
-     * Complete employee information
-     * returned by the salary slip API.
-     */
-    employeeInfo: employeeInfo
-      ? {
-          uanNumber:
-            employeeInfo.uanNumber,
-
-          esiNumber:
-            employeeInfo.esiNumber,
-
-          dob:
-            employeeInfo.dob,
-
-          bankName:
-            employeeInfo.bankName,
-
-          joiningDate:
-            employeeInfo.joiningDate,
-
-          bankAccount:
-            employeeInfo.bankAccount,
-        }
-      : undefined,
-
-    gross:
-      s.grossSalary,
-
-    net:
-      s.netSalary,
-
-    totalEarnings:
-      s.totalEarnings,
-
-    totalDeductions:
-      s.totalDeductions,
-
-    workingDays:
-      s.workingDays,
-
-    absentDays:
-      s.absentDays,
-
-    totalAvailableMinutes:
-      s.totalAvailableMinutes,
-
-    paidCasualLeaveDays:
-      s.paidCasualLeaveDays,
-
-    paidSickLeaveDays:
-      s.paidSickLeaveDays,
-
-    unpaidLeaveDays:
-      s.unpaidLeaveDays,
-
-    actualWorkingMinutes:
-      s.actualWorkingMinutes,
-
-    finalPaidMinutes:
-      s.finalPaidMinutes,
-
-    earlyCheckoutMinutes:
-      s.earlyCheckoutMinutes,
-
-    leaveDeduction:
-      s.leaveDeduction,
-
-    earlyCheckoutDeduction:
-      s.earlyCheckoutDeduction,
-
-    pfApplicable:
-      s.pfApplicable,
-
-    pfPercentage:
-      s.pfPercentage,
-
-    pfWage:
-      s.pfWage,
-
-    employeePF:
-      s.employeePF,
-
-    employerPF:
-      s.employerPF,
-
-    professionalTax:
-      s.professionalTax,
-
-    generatedAt:
-      s.generatedAt,
-
-    items: [
-      ...(s.earnings || []).map(
-        (e: any) => ({
-          label: e.label,
-          amount: e.amount,
-          type: "earning" as const,
-        }),
-      ),
-
-      ...(s.deductions || []).map(
-        (d: any) => ({
-          label: d.label,
-          amount: d.amount,
-          type: "deduction" as const,
-        }),
-      ),
-    ],
-  };
+  return mapSalarySlip(
+    s,
+    employeeInfo,
+  );
 };

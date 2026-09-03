@@ -1,64 +1,59 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Printer, X } from "lucide-react";
-// import { useDB, type SalarySlip } from "@/lib/store";
-import { getMySalarySlips, type SalarySlip } from "@/api/salary";
+import { Printer, X, Loader2 } from "lucide-react";
+import {
+  getMySalarySlips,
+  type SalarySlip,
+} from "@/api/salary";
 import { useAuth } from "@/lib/auth";
 import { SalarySlipView } from "@/components/SalarySlipView";
-import { Loader2 } from "lucide-react";
 import { toast } from "react-toastify";
 
-export const Route = createFileRoute("/user/salary")({ component: Page });
+export const Route = createFileRoute(
+  "/user/salary",
+)({
+  component: Page,
+});
 
 function Page() {
   const { session } = useAuth();
+
   const empId = session!.id;
 
   const me = {
     name: session?.name ?? "",
-    role: "",
   };
 
-  const [slips, setSlips] = useState<SalarySlip[]>([]);
-  const [view, setView] = useState<SalarySlip | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [slips, setSlips] = useState<
+    SalarySlip[]
+  >([]);
 
-  //   useEffect(() => {
-  //     const loadSalary = async () => {
-  //       try {
-  //         const data = await getMySalarySlips();
-  //         console.log("Salary API Response:", data);
+  const [view, setView] =
+    useState<SalarySlip | null>(null);
 
-  //        setSlips(
-  //   data.sort((a, b) => b.month.localeCompare(a.month))
-  // );
-
-  // //         console.log("Session Employee ID:", empId);
-  // // console.log("All Slips:", data);
-  // // console.log(
-  // //   "Filtered:",
-  // //   data.filter((s) => s.employeeId === empId)
-  // // );
-  //       } catch (err) {
-  //         console.error(err);
-  //       }
-  //     };
-
-  //     loadSalary();
-  //   }, [empId]);
+  const [loading, setLoading] =
+    useState(true);
 
   useEffect(() => {
     const loadSalary = async () => {
       try {
         setLoading(true);
 
-        const data = await getMySalarySlips();
+        const data =
+          await getMySalarySlips();
 
-        setSlips(data.sort((a, b) => b.month.localeCompare(a.month)));
+        setSlips(
+          data.sort((a, b) =>
+            b.month.localeCompare(a.month),
+          ),
+        );
       } catch (err: any) {
         console.error(err);
 
-        toast.error(err.response?.data?.message || "Failed to load salary slips");
+        toast.error(
+          err.response?.data?.message ||
+            "Failed to load salary slips",
+        );
       } finally {
         setLoading(false);
       }
@@ -69,9 +64,34 @@ function Page() {
 
   if (loading) {
     return (
-      <div className="flex h-[70vh] flex-col items-center justify-center gap-3">
-        <Loader2 className="h-10 w-10 animate-spin text-yellow-500" />
-        <p className="text-gray-500 text-lg font-medium">Loading salary slips...</p>
+      <div
+        className="
+          flex
+          h-[70vh]
+          flex-col
+          items-center
+          justify-center
+          gap-3
+        "
+      >
+        <Loader2
+          className="
+            h-10
+            w-10
+            animate-spin
+            text-yellow-500
+          "
+        />
+
+        <p
+          className="
+            text-lg
+            font-medium
+            text-gray-500
+          "
+        >
+          Loading salary slips...
+        </p>
       </div>
     );
   }
@@ -80,7 +100,9 @@ function Page() {
     <>
       <div className="card">
         <div className="card-header">
-          <h2>Auto-generated salary slips</h2>
+          <h2>
+            Auto-generated salary slips
+          </h2>
         </div>
 
         <div className="table-wrap">
@@ -99,15 +121,43 @@ function Page() {
             <tbody>
               {slips.map((s) => (
                 <tr key={s.id}>
-                  <td>{s.month}</td>
-                  <td>₹{s.gross.toLocaleString()}</td>
-                  <td>₹{s.totalEarnings.toLocaleString()}</td>
-                  <td>- ₹{s.totalDeductions.toLocaleString()}</td>
                   <td>
-                    <strong>₹{s.net.toLocaleString()}</strong>
+                    {s.month}
                   </td>
+
                   <td>
-                    <button className="btn btn-sm btn-ghost" onClick={() => setView(s)}>
+                    ₹
+                    {s.gross.toLocaleString()}
+                  </td>
+
+                  <td>
+                    ₹
+                    {s.totalEarnings.toLocaleString()}
+                  </td>
+
+                  <td>
+                    - ₹
+                    {s.totalDeductions.toLocaleString()}
+                  </td>
+
+                  <td>
+                    <strong>
+                      ₹
+                      {s.net.toLocaleString()}
+                    </strong>
+                  </td>
+
+                  <td>
+                    <button
+                      className="
+                        btn
+                        btn-sm
+                        btn-ghost
+                      "
+                      onClick={() =>
+                        setView(s)
+                      }
+                    >
                       View
                     </button>
                   </td>
@@ -116,8 +166,12 @@ function Page() {
 
               {slips.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="empty">
-                    No salary slips yet. Ask admin to generate.
+                  <td
+                    colSpan={6}
+                    className="empty"
+                  >
+                    No salary slips yet.
+                    Ask admin to generate.
                   </td>
                 </tr>
               )}
@@ -126,30 +180,76 @@ function Page() {
         </div>
       </div>
 
+      {/* ======================================================
+          SALARY SLIP MODAL
+          ====================================================== */}
+
       {view && (
-        <div className="modal-backdrop" onClick={() => setView(null)}>
-          <div className="modal lg" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-head no-print">
-              <h2>Salary Slip</h2>
+        <div
+          className="modal-backdrop"
+          onClick={() =>
+            setView(null)
+          }
+        >
+          <div
+            className="modal lg"
+            onClick={(e) =>
+              e.stopPropagation()
+            }
+          >
+            <div
+              className="
+                modal-head
+                no-print
+              "
+            >
+              <h2>
+                Salary Slip
+              </h2>
 
               <div className="flex">
+                {/* Print */}
+
                 <button
-                  className="btn btn-ghost"
+                  className="
+                    btn
+                    btn-ghost
+                  "
                   onClick={() => {
-                    toast.info("Preparing salary slip for printing...");
+                    toast.info(
+                      "Preparing salary slip for printing...",
+                    );
+
                     window.print();
                   }}
                 >
-                  <Printer size={16} /> Print
+                  <Printer size={16} />
+
+                  Print
                 </button>
 
-                <button className="btn btn-ghost" onClick={() => setView(null)}>
+                {/* Close */}
+
+                <button
+                  className="
+                    btn
+                    btn-ghost
+                  "
+                  onClick={() =>
+                    setView(null)
+                  }
+                >
                   <X size={16} />
                 </button>
               </div>
             </div>
 
-            <SalarySlipView slip={view} empName={me.name} role={me.role} />
+            {/* Salary Slip */}
+
+            <SalarySlipView
+              slip={view}
+              empName={me.name}
+            />
           </div>
         </div>
       )}

@@ -12,16 +12,18 @@ export function SalarySlipView({
 }) {
   /*
    * ============================================================
+   * COMMON FALLBACK
+   * ============================================================
+   */
+
+  const NOT_APPLICABLE = "Not Applicable";
+
+  /*
+   * ============================================================
    * PRINT STYLES
    * ============================================================
-   *
-   * Salary slip will be printed as:
-   * A4 Portrait
-   * 210mm × 297mm
-   *
-   * Only .salary-slip-print and its contents
-   * will be visible while printing.
    */
+
   const printStyles = `
     @page {
       size: A4 portrait;
@@ -38,27 +40,17 @@ export function SalarySlipView({
         background: white !important;
       }
 
-      /*
-       * Hide everything on the page.
-       */
       body * {
         visibility: hidden;
       }
 
-      /*
-       * Show only the salary slip.
-       */
       .salary-slip-print,
       .salary-slip-print * {
         visibility: visible;
       }
 
-      /*
-       * Make salary slip exactly A4 size.
-       */
       .salary-slip-print {
         position: absolute !important;
-
         left: 0 !important;
         top: 0 !important;
 
@@ -82,34 +74,30 @@ export function SalarySlipView({
         page-break-after: always;
       }
 
-      /*
-       * Remove horizontal scrolling while printing.
-       */
       .salary-slip-print .overflow-x-auto {
         overflow: visible !important;
       }
 
-      /*
-       * Make tables fit inside A4.
-       */
       .salary-slip-print table {
         width: 100% !important;
         min-width: 0 !important;
         max-width: 100% !important;
+        table-layout: fixed !important;
       }
 
-      /*
-       * Prevent table rows from being split
-       * between pages.
-       */
+      .salary-slip-print table .salary-label-column {
+        width: 58% !important;
+      }
+
+      .salary-slip-print table .salary-amount-column {
+        width: 42% !important;
+      }
+
       .salary-slip-print tr {
         break-inside: avoid;
         page-break-inside: avoid;
       }
 
-      /*
-       * Keep the salary slip itself together.
-       */
       .salary-slip-print {
         break-inside: avoid;
         page-break-inside: avoid;
@@ -121,19 +109,16 @@ export function SalarySlipView({
    * ============================================================
    * EARNINGS
    * ============================================================
-   *
-   * Order:
-   *
-   * 1. Basic
-   * 2. HRA
-   * 3. All other earnings / allowances
-   *
-   * Other earnings keep their original API order.
    */
+
   const earnings = slip.items
-    .filter((i) => i.type === "earning")
+    .filter(
+      (item) => item.type === "earning",
+    )
     .sort((a, b) => {
-      const getPriority = (label: string) => {
+      const getPriority = (
+        label: string,
+      ) => {
         const normalized =
           label.trim().toLowerCase();
 
@@ -159,8 +144,9 @@ export function SalarySlipView({
    * DEDUCTIONS
    * ============================================================
    */
+
   const deductions = slip.items.filter(
-    (i) => i.type === "deduction",
+    (item) => item.type === "deduction",
   );
 
   /*
@@ -168,114 +154,167 @@ export function SalarySlipView({
    * EMPLOYEE
    * ============================================================
    */
+
   const employee = slip.employee;
 
   const employeeName =
-    employee?.fullName || empName || "-";
+    employee?.fullName ||
+    empName ||
+    NOT_APPLICABLE;
 
   const employeeDepartment =
     employee?.department ||
     department ||
-    "-";
+    NOT_APPLICABLE;
 
   const employeeId =
-    employee?.employeeId || "-";
+    employee?.employeeId ||
+    NOT_APPLICABLE;
 
   const designation =
-    employee?.designation || "-";
+    employee?.designation ||
+    NOT_APPLICABLE;
 
   const phone =
-    employee?.phone || "-";
-
-  const bankAccount =
-    employee?.bankAccount || "-";
+    employee?.phone ||
+    NOT_APPLICABLE;
 
   /*
    * ============================================================
-   * CUSTOM FIELDS
+   * BANK ACCOUNT
    * ============================================================
-   *
-   * API example:
-   *
-   * {
-   *   label: "Name Bank",
-   *   value: "HDFC Bank"
-   * }
-   *
-   * {
-   *   label: "UAN No",
-   *   value: "101525794635"
-   * }
-   *
-   * {
-   *   label: "DOB",
-   *   value: "1999-01-01"
-   * }
-   *
-   * {
-   *   label: "ESI No",
-   *   value: "5555557878"
-   * }
    */
+
+  const bankAccount =
+    employee?.bankAccount ||
+    slip.employeeInfo?.bankAccount ||
+    NOT_APPLICABLE;
+
+  /*
+   * ============================================================
+   * CUSTOM FIELD HELPER
+   * ============================================================
+   */
+
   const getCustomField = (
     label: string,
-  ): string => {
-    const field =
-      employee?.customFields?.find(
-        (item) =>
-          item.label?.trim().toLowerCase() ===
-          label.trim().toLowerCase(),
-      );
+  ): string | undefined => {
+    const fields =
+      employee?.customFields;
 
-    return field?.value || "-";
+    if (!Array.isArray(fields)) {
+      return undefined;
+    }
+
+    const normalizedLabel =
+      label.trim().toLowerCase();
+
+    const field = fields.find(
+      (item) => {
+        const itemLabel =
+          String(item?.label ?? "")
+            .trim()
+            .toLowerCase();
+
+        return (
+          itemLabel === normalizedLabel
+        );
+      },
+    );
+
+    if (
+      field?.value === undefined ||
+      field?.value === null
+    ) {
+      return undefined;
+    }
+
+    const value =
+      String(field.value).trim();
+
+    return value !== ""
+      ? value
+      : undefined;
   };
 
   /*
-   * UAN
+   * ============================================================
+   * UAN NUMBER
+   * ============================================================
    */
+
   const uanNumber =
-  slip.employeeInfo?.uanNumber ||
-  getCustomField("UAN No") ||
-  "-";
+    slip.employeeInfo?.uanNumber ||
+    getCustomField("UAN No") ||
+    NOT_APPLICABLE;
 
   /*
-   * Bank Name
+   * ============================================================
+   * BANK NAME
+   *
+   * Supports:
+   *
+   * "Bank Name"
+   * "Name Bank"
+   * ============================================================
    */
+
   const bankName =
-  slip.employeeInfo?.bankName ||
-  getCustomField("Bank Name") ||
-  getCustomField("Name Bank") ||
-  "-";
+    slip.employeeInfo?.bankName ||
+    getCustomField("Bank Name") ||
+    getCustomField("Name Bank") ||
+    NOT_APPLICABLE;
 
   /*
-   * DOB
+   * ============================================================
+   * ESI NUMBER
+   * ============================================================
    */
-  const dateOfBirth =
-  slip.employeeInfo?.dob ||
-  getCustomField("DOB") ||
-  "-";
 
-  /*
-   * ESI Number
-   */
   const esiNumber =
-  slip.employeeInfo?.esiNumber ||
-  getCustomField("ESI No") ||
-  "-";
+    slip.employeeInfo?.esiNumber ||
+    getCustomField("ESI No") ||
+    NOT_APPLICABLE;
+
+  /*
+   * ============================================================
+   * DOB
+   * ============================================================
+   */
+
+  const dob =
+    slip.employeeInfo?.dob ||
+    getCustomField("DOB") ||
+    undefined;
 
   /*
    * ============================================================
    * DATE FORMAT
    * ============================================================
    */
+
   const formatISTDate = (
     dateString?: string,
   ) => {
-    if (!dateString || dateString === "-") {
-      return "-";
+    if (
+      !dateString ||
+      dateString === "-"
+    ) {
+      return NOT_APPLICABLE;
     }
 
     try {
+      const date =
+        new Date(dateString);
+
+      if (
+        Number.isNaN(
+          date.getTime(),
+        )
+      ) {
+        return NOT_APPLICABLE;
+      }
+
       return new Intl.DateTimeFormat(
         "en-IN",
         {
@@ -284,21 +323,18 @@ export function SalarySlipView({
           month: "2-digit",
           year: "numeric",
         },
-      ).format(new Date(dateString));
+      ).format(date);
     } catch {
-      return "-";
+      return NOT_APPLICABLE;
     }
   };
 
   /*
-   * DOB
+   * ============================================================
+   * JOINING DATE
+   * ============================================================
    */
-  const formattedDateOfBirth =
-    formatISTDate(dateOfBirth);
 
-  /*
-   * Joining Date
-   */
   const joiningDate =
     slip.employeeInfo?.joiningDate ||
     employee?.joiningDate;
@@ -306,16 +342,173 @@ export function SalarySlipView({
   const formattedJoiningDate =
     formatISTDate(joiningDate);
 
+  /*
+   * ============================================================
+   * DOB DISPLAY
+   * ============================================================
+   */
+
+  const formattedDob =
+    formatISTDate(dob);
+
+  /*
+   * ============================================================
+   * PAY PERIOD
+   * ============================================================
+   */
+
+  const getPayPeriod = () => {
+    if (!slip.month) {
+      return NOT_APPLICABLE;
+    }
+
+    try {
+      const [
+        year,
+        month,
+      ] =
+        slip.month
+          .split("-")
+          .map(Number);
+
+      if (
+        !year ||
+        !month ||
+        month < 1 ||
+        month > 12
+      ) {
+        return NOT_APPLICABLE;
+      }
+
+      const firstDay =
+        new Date(
+          year,
+          month - 1,
+          1,
+        );
+
+      const lastDay =
+        new Date(
+          year,
+          month,
+          0,
+        );
+
+      const formatPeriodDate =
+        (date: Date) => {
+          return new Intl.DateTimeFormat(
+            "en-IN",
+            {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            },
+          ).format(date);
+        };
+
+      return `${formatPeriodDate(
+        firstDay,
+      )} - ${formatPeriodDate(
+        lastDay,
+      )}`;
+    } catch {
+      return NOT_APPLICABLE;
+    }
+  };
+
+  const payPeriod =
+    getPayPeriod();
+
+  /*
+   * ============================================================
+   * ISSUED DATE
+   * ============================================================
+   */
+
+  const issuedDate =
+    formatISTDate(
+      slip.generatedAt,
+    );
+
+  /*
+   * ============================================================
+   * PAID LEAVES
+   * ============================================================
+   */
+
+  const paidLeaveDays =
+    slip.paidLeaveDays !==
+    undefined
+      ? slip.paidLeaveDays
+      : (slip.paidCasualLeaveDays ||
+          0) +
+        (slip.paidSickLeaveDays ||
+          0);
+
+  /*
+   * ============================================================
+   * UNPAID LEAVES
+   * ============================================================
+   */
+
+  const unpaidLeaveDays =
+    slip.unpaidLeaveDays ?? 0;
+
+  /*
+   * ============================================================
+   * PAYABLE DAYS
+   * ============================================================
+   */
+
+  const payableDays =
+    slip.payableDays;
+
+  /*
+   * ============================================================
+   * DEDUCTION LABEL FORMATTER
+   *
+   * Backend may send:
+   *
+   * Employee PF (24%)
+   *
+   * We display:
+   *
+   * Employee PF
+   *
+   * Only the label is changed.
+   * The actual deduction amount remains unchanged.
+   * ============================================================
+   */
+
+  const formatDeductionLabel = (
+    label: string,
+  ) => {
+    if (!label) {
+      return NOT_APPLICABLE;
+    }
+
+    return label
+      .replace(
+        /\s*\(\s*\d+(?:\.\d+)?%\s*\)/g,
+        "",
+      )
+      .trim();
+  };
+
   return (
     <>
       {/* ======================================================
           A4 PRINT CSS
           ====================================================== */}
-      <style>{printStyles}</style>
+
+      <style>
+        {printStyles}
+      </style>
 
       {/* ======================================================
           A4 SALARY SLIP
           ====================================================== */}
+
       <div
         className="
           salary-slip-print
@@ -330,6 +523,7 @@ export function SalarySlipView({
         {/* ====================================================
             COMPANY LOGO WATERMARK
             ==================================================== */}
+
         <img
           src={logo1}
           alt=""
@@ -353,11 +547,13 @@ export function SalarySlipView({
         {/* ====================================================
             ALL SALARY SLIP CONTENT
             ==================================================== */}
+
         <div className="relative z-10">
 
           {/* ==================================================
               HEADER
               ================================================== */}
+
           <div
             className="
               slip-head
@@ -369,7 +565,6 @@ export function SalarySlipView({
               sm:justify-between
             "
           >
-            {/* Company information */}
             <div
               className="
                 flex
@@ -405,7 +600,6 @@ export function SalarySlipView({
               </div>
             </div>
 
-            {/* Issue date */}
             <div
               className="
                 text-left
@@ -413,13 +607,11 @@ export function SalarySlipView({
               "
             >
               <div className="muted text-sm">
-                Issued
+                Pay Period
               </div>
 
               <div className="text-sm sm:text-base">
-                {slip.generatedAt
-                  ? slip.generatedAt.slice(0, 10)
-                  : "-"}
+                {payPeriod}
               </div>
             </div>
           </div>
@@ -427,6 +619,7 @@ export function SalarySlipView({
           {/* ==================================================
               EMPLOYEE INFORMATION
               ================================================== */}
+
           <div
             className="
               mt-5
@@ -437,7 +630,6 @@ export function SalarySlipView({
               sm:grid-cols-2
             "
           >
-            {/* Employee Name */}
             <div className="min-w-0">
               <span className="muted">
                 Employee Name:
@@ -447,7 +639,6 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* Employee ID */}
             <div className="min-w-0">
               <span className="muted">
                 Employee ID:
@@ -457,7 +648,6 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* Department */}
             <div className="min-w-0">
               <span className="muted">
                 Department:
@@ -467,7 +657,6 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* Designation */}
             <div className="min-w-0">
               <span className="muted">
                 Designation:
@@ -477,7 +666,6 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* Phone */}
             <div className="min-w-0">
               <span className="muted">
                 Phone:
@@ -487,7 +675,6 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* Bank Account */}
             <div className="min-w-0">
               <span className="muted">
                 Bank Account:
@@ -497,7 +684,6 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* Bank Name */}
             <div className="min-w-0">
               <span className="muted">
                 Bank Name:
@@ -507,7 +693,6 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* UAN */}
             <div className="min-w-0">
               <span className="muted">
                 UAN No:
@@ -517,17 +702,6 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* DOB */}
-            <div className="min-w-0">
-              <span className="muted">
-                DOB:
-              </span>{" "}
-              <strong>
-                {formattedDateOfBirth}
-              </strong>
-            </div>
-
-            {/* ESI */}
             <div className="min-w-0">
               <span className="muted">
                 ESI No:
@@ -537,7 +711,15 @@ export function SalarySlipView({
               </strong>
             </div>
 
-            {/* Joining Date */}
+            <div className="min-w-0">
+              <span className="muted">
+                DOB:
+              </span>{" "}
+              <strong>
+                {formattedDob}
+              </strong>
+            </div>
+
             <div className="min-w-0">
               <span className="muted">
                 Joining Date:
@@ -551,6 +733,7 @@ export function SalarySlipView({
           {/* ==================================================
               SALARY SUMMARY
               ================================================== */}
+
           <div
             className="
               mb-5
@@ -560,8 +743,8 @@ export function SalarySlipView({
               sm:grid-cols-2
             "
           >
-            {/* Working Days */}
-            {slip.workingDays !== undefined && (
+            {slip.workingDays !==
+              undefined && (
               <div className="min-w-0">
                 <span className="muted">
                   Working Days:
@@ -572,8 +755,8 @@ export function SalarySlipView({
               </div>
             )}
 
-            {/* Absent Days */}
-            {slip.absentDays !== undefined && (
+            {slip.absentDays !==
+              undefined && (
               <div className="min-w-0">
                 <span className="muted">
                   Absent Days:
@@ -584,9 +767,40 @@ export function SalarySlipView({
               </div>
             )}
 
-            {/* Leave Deduction */}
-            {slip.leaveDeduction !== undefined &&
-              slip.leaveDeduction > 0 && (
+            <div className="min-w-0">
+              <span className="muted">
+                Paid Leaves:
+              </span>{" "}
+              <strong>
+                {paidLeaveDays}
+              </strong>
+            </div>
+
+            <div className="min-w-0">
+              <span className="muted">
+                Unpaid Leaves:
+              </span>{" "}
+              <strong>
+                {unpaidLeaveDays}
+              </strong>
+            </div>
+
+            {payableDays !==
+              undefined && (
+              <div className="min-w-0">
+                <span className="muted">
+                  Payable Days:
+                </span>{" "}
+                <strong>
+                  {payableDays}
+                </strong>
+              </div>
+            )}
+
+            {slip.leaveDeduction !==
+              undefined &&
+              slip.leaveDeduction >
+                0 && (
                 <div className="min-w-0">
                   <span className="muted">
                     Leave Deduction:
@@ -602,22 +816,35 @@ export function SalarySlipView({
           {/* ==================================================
               EARNINGS
               ================================================== */}
+
           <div className="w-full overflow-x-auto">
             <table
               className="
                 slip-table
                 w-full
                 min-w-[420px]
+                table-fixed
               "
             >
+              <colgroup>
+                <col className="w-[58%]" />
+                <col className="w-[42%]" />
+              </colgroup>
+
               <thead>
                 <tr>
-                  <th className="text-left">
+                  <th
+                    className="
+                      salary-label-column
+                      text-left
+                    "
+                  >
                     Earnings
                   </th>
 
                   <th
                     className="
+                      salary-amount-column
                       whitespace-nowrap
                       text-right
                     "
@@ -628,24 +855,26 @@ export function SalarySlipView({
               </thead>
 
               <tbody>
-                {earnings.map((it, i) => (
-                  <tr key={i}>
-                    <td className="break-words">
-                      {it.label}
-                    </td>
+                {earnings.map(
+                  (item, index) => (
+                    <tr key={index}>
+                      <td className="break-words">
+                        {item.label ||
+                          NOT_APPLICABLE}
+                      </td>
 
-                    <td
-                      className="
-                        whitespace-nowrap
-                        text-right
-                      "
-                    >
-                      {it.amount.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
+                      <td
+                        className="
+                          whitespace-nowrap
+                          text-right
+                        "
+                      >
+                        {item.amount.toLocaleString()}
+                      </td>
+                    </tr>
+                  ),
+                )}
 
-                {/* GROSS SALARY */}
                 <tr>
                   <td>
                     <strong>
@@ -671,6 +900,7 @@ export function SalarySlipView({
           {/* ==================================================
               DEDUCTIONS
               ================================================== */}
+
           <div
             className="
               mt-3
@@ -683,16 +913,28 @@ export function SalarySlipView({
                 slip-table
                 w-full
                 min-w-[420px]
+                table-fixed
               "
             >
+              <colgroup>
+                <col className="w-[58%]" />
+                <col className="w-[42%]" />
+              </colgroup>
+
               <thead>
                 <tr>
-                  <th className="text-left">
+                  <th
+                    className="
+                      salary-label-column
+                      text-left
+                    "
+                  >
                     Deductions
                   </th>
 
                   <th
                     className="
+                      salary-amount-column
                       whitespace-nowrap
                       text-right
                     "
@@ -703,26 +945,30 @@ export function SalarySlipView({
               </thead>
 
               <tbody>
-                {deductions.map((it, i) => (
-                  <tr key={i}>
-                    <td className="break-words">
-                      {it.label}
-                    </td>
+                {deductions.map(
+                  (item, index) => (
+                    <tr key={index}>
+                      <td className="break-words">
+                        {formatDeductionLabel(
+                          item.label,
+                        )}
+                      </td>
 
-                    <td
-                      className="
-                        whitespace-nowrap
-                        text-right
-                      "
-                    >
-                      -{" "}
-                      {it.amount.toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
+                      <td
+                        className="
+                          whitespace-nowrap
+                          text-right
+                        "
+                      >
+                        -{" "}
+                        {item.amount.toLocaleString()}
+                      </td>
+                    </tr>
+                  ),
+                )}
 
-                {/* No deductions */}
-                {deductions.length === 0 && (
+                {deductions.length ===
+                  0 && (
                   <tr>
                     <td className="muted">
                       No deductions
@@ -734,7 +980,6 @@ export function SalarySlipView({
                   </tr>
                 )}
 
-                {/* Total deductions */}
                 <tr>
                   <td>
                     <strong>
@@ -759,6 +1004,7 @@ export function SalarySlipView({
               {/* ==================================================
                   NET PAY
                   ================================================== */}
+
               <tfoot>
                 <tr>
                   <td>
@@ -774,7 +1020,8 @@ export function SalarySlipView({
                     "
                   >
                     <strong>
-                      ₹ {slip.net.toLocaleString()}
+                      ₹{" "}
+                      {slip.net.toLocaleString()}
                     </strong>
                   </td>
                 </tr>
@@ -785,6 +1032,7 @@ export function SalarySlipView({
           {/* ==================================================
               PF INFORMATION
               ================================================== */}
+
           {slip.pfApplicable && (
             <div
               className="
@@ -809,6 +1057,7 @@ export function SalarySlipView({
           {/* ==================================================
               FOOTER
               ================================================== */}
+
           <p
             className="
               muted
@@ -817,16 +1066,32 @@ export function SalarySlipView({
               leading-relaxed
             "
           >
-            This is a system-generated salary slip
-            and does not require a signature.
+            This is a system-generated
+            salary slip and does not
+            require a signature.
           </p>
 
           {/* ==================================================
               SLIP ID
               ================================================== */}
+
           <div className="min-w-0">
             <strong className="break-all">
-              {slip.id}
+              {slip.id ||
+                NOT_APPLICABLE}
+            </strong>
+          </div>
+
+          {/* ==================================================
+              ISSUED DATE
+              ================================================== */}
+
+          <div className="mt-2 min-w-0">
+            <span className="muted">
+              Issued Date:
+            </span>{" "}
+            <strong>
+              {issuedDate}
             </strong>
           </div>
         </div>
@@ -834,4 +1099,3 @@ export function SalarySlipView({
     </>
   );
 }
-
