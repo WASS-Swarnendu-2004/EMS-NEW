@@ -47,6 +47,11 @@ export interface SalaryEmployee {
 
   joiningDate?: string;
 
+  /*
+   * PAN Number
+   */
+  pan?: string;
+
   customFields?: SalaryCustomField[];
 }
 
@@ -55,10 +60,10 @@ export interface SalaryEmployee {
  * ======================================================= */
 
 export interface SalaryEmployeeInfo {
+  panNumber?: string;
   uanNumber?: string;
   esiNumber?: string;
   bankName?: string;
-  dob?: string;
   joiningDate?: string;
   bankAccount?: string;
 }
@@ -241,7 +246,6 @@ const mapSalarySlip = (
    * Name Bank
    * UAN No
    * ESI No
-   * DOB
    * ----------------------------------------------------- */
 
   const uanNumber =
@@ -269,26 +273,36 @@ const mapSalarySlip = (
       "Name Bank",
     );
 
-  const dob =
-    employeeInfo?.dob ||
-    getEmployeeCustomField(
-      employee,
-      "DOB",
-    );
+  /* -------------------------------------------------------
+   * PAN NUMBER
+   *
+   * Supports:
+   *
+   * employeeInfo.panNumber
+   * employee.pan
+   * ----------------------------------------------------- */
+
+  const panNumber =
+    employeeInfo?.panNumber ||
+    employee?.pan ||
+    undefined;
 
   /* -------------------------------------------------------
    * Employee Information
    *
    * Important:
    * Even if response.employeeInfo is not present,
-   * values are extracted from employee.customFields.
+   * values are extracted from employee.
    * ----------------------------------------------------- */
 
   const mappedEmployeeInfo: SalaryEmployeeInfo = {
+    panNumber,
+
     uanNumber,
+
     esiNumber,
+
     bankName,
-    dob,
 
     joiningDate:
       employeeInfo?.joiningDate ||
@@ -356,6 +370,10 @@ const mapSalarySlip = (
 
           joiningDate:
             employee.joiningDate,
+
+          pan:
+            employee.pan ||
+            "",
 
           customFields:
             Array.isArray(

@@ -239,6 +239,17 @@ export function SalarySlipView({
 
   /*
    * ============================================================
+   * PAN NUMBER
+   * ============================================================
+   */
+
+  const panNumber =
+    slip.employeeInfo?.panNumber ||
+    employee?.pan ||
+    NOT_APPLICABLE;
+
+  /*
+   * ============================================================
    * UAN NUMBER
    * ============================================================
    */
@@ -275,17 +286,6 @@ export function SalarySlipView({
     slip.employeeInfo?.esiNumber ||
     getCustomField("ESI No") ||
     NOT_APPLICABLE;
-
-  /*
-   * ============================================================
-   * DOB
-   * ============================================================
-   */
-
-  const dob =
-    slip.employeeInfo?.dob ||
-    getCustomField("DOB") ||
-    undefined;
 
   /*
    * ============================================================
@@ -341,15 +341,6 @@ export function SalarySlipView({
 
   const formattedJoiningDate =
     formatISTDate(joiningDate);
-
-  /*
-   * ============================================================
-   * DOB DISPLAY
-   * ============================================================
-   */
-
-  const formattedDob =
-    formatISTDate(dob);
 
   /*
    * ============================================================
@@ -466,17 +457,6 @@ export function SalarySlipView({
   /*
    * ============================================================
    * DEDUCTION LABEL FORMATTER
-   *
-   * Backend may send:
-   *
-   * Employee PF (24%)
-   *
-   * We display:
-   *
-   * Employee PF
-   *
-   * Only the label is changed.
-   * The actual deduction amount remains unchanged.
    * ============================================================
    */
 
@@ -695,6 +675,15 @@ export function SalarySlipView({
 
             <div className="min-w-0">
               <span className="muted">
+                PAN No:
+              </span>{" "}
+              <strong className="break-all">
+                {panNumber}
+              </strong>
+            </div>
+
+            <div className="min-w-0">
+              <span className="muted">
                 UAN No:
               </span>{" "}
               <strong className="break-all">
@@ -708,15 +697,6 @@ export function SalarySlipView({
               </span>{" "}
               <strong className="break-all">
                 {esiNumber}
-              </strong>
-            </div>
-
-            <div className="min-w-0">
-              <span className="muted">
-                DOB:
-              </span>{" "}
-              <strong>
-                {formattedDob}
               </strong>
             </div>
 
