@@ -53,7 +53,7 @@ function Login() {
 
     if (k === "admin") {
       setEmail("admin@webapps.com");
-      setPassword("admin123");
+      setPassword("Admin@12345");
     } else {
       setEmail("");
       setPassword("");
