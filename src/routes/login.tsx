@@ -16,7 +16,7 @@ function Login() {
   const navigate = useNavigate();
   const [kind, setKind] = useState<"admin" | "employee">("admin");
   const [email, setEmail] = useState("admin@webapps.com");
-  const [password, setPassword] = useState("admin123");
+  const [password, setPassword] = useState("Admin@12345");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

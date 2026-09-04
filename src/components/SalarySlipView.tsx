@@ -34,8 +34,13 @@ export function SalarySlipView({
    * PRINT STYLES
    *
    * Screen design remains unchanged.
-   * Print version is compacted so the complete salary slip
-   * fits inside ONE A4 portrait page.
+   *
+   * PRINT:
+   * - A4 portrait
+   * - 8mm safe margin on all four sides
+   * - Complete salary slip stays inside printable area
+   * - Prevents clipping at top / bottom / left / right
+   * - Keeps everything on ONE A4 page
    * ============================================================
    */
 
@@ -50,6 +55,7 @@ export function SalarySlipView({
       body {
         width: 210mm !important;
         height: 297mm !important;
+
         min-width: 210mm !important;
         min-height: 297mm !important;
 
@@ -65,6 +71,10 @@ export function SalarySlipView({
         print-color-adjust: exact !important;
       }
 
+      /*
+       * Hide everything except salary slip
+       */
+
       body * {
         visibility: hidden;
       }
@@ -76,28 +86,43 @@ export function SalarySlipView({
 
       /*
        * ========================================================
-       * MAIN A4 PAGE
+       * A4 OUTER PAGE
+       *
+       * 210mm x 297mm
+       *
+       * 8mm safe area on all sides
+       *
+       * Actual content area:
+       *
+       * Width  = 194mm
+       * Height = 281mm
        * ========================================================
        */
 
       .salary-slip-print {
         position: absolute !important;
+
         left: 0 !important;
         top: 0 !important;
 
         width: 210mm !important;
         height: 297mm !important;
+
+        min-width: 210mm !important;
         min-height: 297mm !important;
+
+        max-width: 210mm !important;
         max-height: 297mm !important;
 
         margin: 0 !important;
-        padding: 0 !important;
+
+        padding: 8mm !important;
+
+        box-sizing: border-box !important;
 
         overflow: hidden !important;
 
         background: white !important;
-
-        box-sizing: border-box !important;
 
         page-break-after: always !important;
         break-after: page !important;
@@ -105,15 +130,21 @@ export function SalarySlipView({
 
       /*
        * ========================================================
-       * COMPACT PRINT SCALE
+       * INNER CONTENT
        *
-       * The normal UI remains exactly as it is.
-       * During printing the entire design is scaled slightly
-       * so that nothing moves to page 2.
+       * The inner design is scaled down very slightly.
+       *
+       * 111.112% x 0.9 = approximately 100%
+       *
+       * This allows the original design to retain almost all
+       * of its proportions while fitting inside the 194mm
+       * printable width.
        * ========================================================
        */
 
       .salary-slip-inner {
+        position: relative !important;
+
         width: 111.112% !important;
         height: 111.112% !important;
 
@@ -136,6 +167,8 @@ export function SalarySlipView({
       .salary-slip-content {
         padding-left: 10mm !important;
         padding-right: 10mm !important;
+
+        box-sizing: border-box !important;
       }
 
       /*
@@ -146,6 +179,11 @@ export function SalarySlipView({
 
       .salary-slip-header {
         height: 48mm !important;
+
+        min-height: 48mm !important;
+        max-height: 48mm !important;
+
+        overflow: hidden !important;
       }
 
       .salary-slip-header-content {
@@ -160,8 +198,11 @@ export function SalarySlipView({
 
       .salary-slip-net-card {
         margin-top: -14px !important;
+
         padding-top: 11px !important;
         padding-bottom: 11px !important;
+
+        box-sizing: border-box !important;
       }
 
       /*
@@ -172,13 +213,18 @@ export function SalarySlipView({
 
       .salary-slip-employee-card {
         margin-top: 17px !important;
+
         padding-top: 12px !important;
         padding-bottom: 12px !important;
+
+        box-sizing: border-box !important;
       }
 
       .salary-slip-employee-card .info-row {
         padding-top: 3px !important;
         padding-bottom: 3px !important;
+
+        line-height: 1.25 !important;
       }
 
       /*
@@ -194,6 +240,8 @@ export function SalarySlipView({
       .salary-slip-summary-box {
         padding-top: 8px !important;
         padding-bottom: 8px !important;
+
+        box-sizing: border-box !important;
       }
 
       /*
@@ -209,20 +257,27 @@ export function SalarySlipView({
 
       .salary-slip-print table {
         width: 100% !important;
+
         min-width: 0 !important;
+        max-width: 100% !important;
 
         table-layout: fixed !important;
+
         border-collapse: collapse !important;
       }
 
       .salary-slip-print th {
         padding-top: 7px !important;
         padding-bottom: 7px !important;
+
+        line-height: 1.15 !important;
       }
 
       .salary-slip-print td {
         padding-top: 5px !important;
         padding-bottom: 5px !important;
+
+        line-height: 1.2 !important;
       }
 
       .salary-slip-print tr {
@@ -238,8 +293,11 @@ export function SalarySlipView({
 
       .salary-slip-final-summary {
         margin-top: 13px !important;
+
         padding-top: 10px !important;
         padding-bottom: 10px !important;
+
+        box-sizing: border-box !important;
       }
 
       /*
@@ -260,7 +318,9 @@ export function SalarySlipView({
 
       .salary-slip-footer {
         margin-top: 12px !important;
+
         padding-top: 9px !important;
+        padding-bottom: 0 !important;
       }
 
       /*
@@ -561,11 +621,6 @@ export function SalarySlipView({
   /*
    * ============================================================
    * PAID DAYS
-   *
-   * Backend response has:
-   * paidDays
-   *
-   * Make sure salary.ts maps it to the frontend.
    * ============================================================
    */
 
@@ -700,9 +755,7 @@ export function SalarySlipView({
                 pt-8
               "
             >
-              {/* ==================================================
-                  HEADER TOP
-                  ================================================== */}
+              {/* HEADER TOP */}
 
               <div className="flex items-start justify-between">
                 {/* Company */}
@@ -816,9 +869,7 @@ export function SalarySlipView({
                 </div>
               </div>
 
-              {/* ==================================================
-                  TITLE
-                  ================================================== */}
+              {/* TITLE */}
 
               <div className="mt-6">
                 <div
@@ -855,9 +906,7 @@ export function SalarySlipView({
               px-10
             "
           >
-            {/* ==================================================
-                NET PAY CARD
-                ================================================== */}
+            {/* NET PAY CARD */}
 
             <div
               className="
@@ -931,9 +980,7 @@ export function SalarySlipView({
               </div>
             </div>
 
-            {/* ==================================================
-                EMPLOYEE INFORMATION CARD
-                ================================================== */}
+            {/* EMPLOYEE INFORMATION CARD */}
 
             <div
               className="
@@ -1015,15 +1062,7 @@ export function SalarySlipView({
               </div>
             </div>
 
-            {/* ==================================================
-                SUMMARY CARDS
-                ORDER:
-                1. Payable Days
-                2. Working Days
-                3. Absent Days
-                4. Paid Leaves
-                5. Paid Days
-                ================================================== */}
+            {/* SUMMARY CARDS */}
 
             <div
               className="
@@ -1064,9 +1103,7 @@ export function SalarySlipView({
               />
             </div>
 
-            {/* ==================================================
-                EARNINGS TABLE
-                ================================================== */}
+            {/* EARNINGS TABLE */}
 
             <div className="salary-slip-earnings mt-6">
               <table className="w-full border-collapse">
@@ -1084,7 +1121,7 @@ export function SalarySlipView({
                         tracking-[1px]
                       "
                     >
-                      Earnings
+                      Earning
                     </th>
 
                     <th
@@ -1172,9 +1209,7 @@ export function SalarySlipView({
               </table>
             </div>
 
-            {/* ==================================================
-                DEDUCTIONS TABLE
-                ================================================== */}
+            {/* DEDUCTIONS TABLE */}
 
             <div className="salary-slip-deductions mt-4">
               <table className="w-full border-collapse">
@@ -1192,7 +1227,7 @@ export function SalarySlipView({
                         tracking-[1px]
                       "
                     >
-                      Deductions
+                      Deduction
                     </th>
 
                     <th
@@ -1309,9 +1344,7 @@ export function SalarySlipView({
               </table>
             </div>
 
-            {/* ==================================================
-                FINAL SALARY SUMMARY
-                ================================================== */}
+            {/* FINAL SALARY SUMMARY */}
 
             <div
               className="
@@ -1413,9 +1446,7 @@ export function SalarySlipView({
               </div>
             </div>
 
-            {/* ==================================================
-                PF BADGE
-                ================================================== */}
+            {/* PF BADGE */}
 
             {slip.pfApplicable && (
               <div className="salary-slip-pf mt-5">
@@ -1437,9 +1468,7 @@ export function SalarySlipView({
               </div>
             )}
 
-            {/* ==================================================
-                FOOTER
-                ================================================== */}
+            {/* FOOTER */}
 
             <div
               className="
