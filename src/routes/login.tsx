@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import logo from "@/assets/logo.jpeg.asset.json";
@@ -14,6 +14,7 @@ export const Route = createFileRoute("/login")({
 function Login() {
   const { login, session } = useAuth();
   const navigate = useNavigate();
+
   const [kind, setKind] = useState<"admin" | "employee">("admin");
   const [email, setEmail] = useState("admin@webapps.com");
   const [password, setPassword] = useState("Admin@12345");
@@ -22,30 +23,35 @@ function Login() {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (session) navigate({ to: session.kind === "admin" ? "/admin" : "/user", replace: true });
+    if (session) {
+      navigate({
+        to: session.kind === "admin" ? "/admin" : "/user",
+        replace: true,
+      });
+    }
   }, [session, navigate]);
 
   useEffect(() => {
-  const preventCopyPaste = (e: ClipboardEvent) => {
-    e.preventDefault();
-  };
+    const preventCopyPaste = (e: ClipboardEvent) => {
+      e.preventDefault();
+    };
 
-  const preventContextMenu = (e: MouseEvent) => {
-    e.preventDefault();
-  };
+    const preventContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
 
-  document.addEventListener("copy", preventCopyPaste);
-  document.addEventListener("cut", preventCopyPaste);
-  document.addEventListener("paste", preventCopyPaste);
-  document.addEventListener("contextmenu", preventContextMenu);
+    document.addEventListener("copy", preventCopyPaste);
+    document.addEventListener("cut", preventCopyPaste);
+    document.addEventListener("paste", preventCopyPaste);
+    document.addEventListener("contextmenu", preventContextMenu);
 
-  return () => {
-    document.removeEventListener("copy", preventCopyPaste);
-    document.removeEventListener("cut", preventCopyPaste);
-    document.removeEventListener("paste", preventCopyPaste);
-    document.removeEventListener("contextmenu", preventContextMenu);
-  };
-}, []);
+    return () => {
+      document.removeEventListener("copy", preventCopyPaste);
+      document.removeEventListener("cut", preventCopyPaste);
+      document.removeEventListener("paste", preventCopyPaste);
+      document.removeEventListener("contextmenu", preventContextMenu);
+    };
+  }, []);
 
   function setRole(k: "admin" | "employee") {
     setKind(k);
@@ -94,6 +100,7 @@ function Login() {
           <h1>Webapps EMS</h1>
           <p>Employee Management System</p>
         </div>
+
         <div className="role-tabs">
           <button
             type="button"
@@ -103,6 +110,7 @@ function Login() {
           >
             Admin / Employer
           </button>
+
           <button
             type="button"
             className={kind === "employee" ? "active" : ""}
@@ -112,9 +120,11 @@ function Login() {
             Employee
           </button>
         </div>
+
         <form onSubmit={submit}>
           <div className="field">
             <label>Email</label>
+
             <input
               className="input"
               value={email}
@@ -123,6 +133,7 @@ function Login() {
               disabled={loading}
             />
           </div>
+
           <div className="field">
             <label>Password</label>
 
@@ -154,18 +165,54 @@ function Login() {
                   padding: 0,
                 }}
               >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
               </button>
             </div>
           </div>
+
+          {/* =====================================================
+              FORGOT PASSWORD - ADMIN ONLY
+              ===================================================== */}
+
+          {kind === "admin" && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                marginBottom: "0.75rem",
+              }}
+            >
+              <Link
+                to="/forgot-password"
+                style={{
+                  color: "#2563eb",
+                  textDecoration: "none",
+                  fontSize: "0.875rem",
+                  fontWeight: 500,
+                }}
+              >
+                Forgot Password?
+              </Link>
+            </div>
+          )}
+
           {err && (
             <div
               className="badge danger"
-              style={{ display: "block", padding: ".5rem .75rem", marginBottom: ".75rem" }}
+              style={{
+                display: "block",
+                padding: ".5rem .75rem",
+                marginBottom: ".75rem",
+              }}
             >
               {err}
             </div>
           )}
+
           <button
             className="btn w-full flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             type="submit"

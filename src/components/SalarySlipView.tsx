@@ -29,21 +29,7 @@ export function SalarySlipView({
   const COMPANY_ADDRESS =
     "128, Jodhpur Gardens, Lake Gardens, Kolkata, 700045, India";
 
-  /*
-   * ============================================================
-   * PRINT STYLES
-   *
-   * Screen design remains unchanged.
-   *
-   * PRINT:
-   * - A4 portrait
-   * - 8mm safe margin on all four sides
-   * - Complete salary slip stays inside printable area
-   * - Prevents clipping at top / bottom / left / right
-   * - Keeps everything on ONE A4 page
-   * ============================================================
-   */
-
+  
   const printStyles = `
     @page {
       size: A4 portrait;
