@@ -85,6 +85,8 @@ type SalaryDetailsResponse = {
 
     leaveDeduction: number;
     earlyCheckoutDeduction: number;
+
+    finalPaidMinutes: number;
   };
 };
 
@@ -102,8 +104,14 @@ type SalaryRow = {
   unpaidLeaves: number | null;
 
   absentDeduction: number | null;
+  earlyCheckoutDeduction: number | null;
+
+  finalPaidMinutes: number | null;
+
   pf: number | null;
   professionalTax: number | null;
+  esi: number | null;
+
   netSalary: number | null;
 
   generated: boolean;
@@ -281,8 +289,14 @@ function AdminSalaryDetails() {
               unpaidLeaves: null,
 
               absentDeduction: null,
+              earlyCheckoutDeduction: null,
+
+              finalPaidMinutes: null,
+
               pf: null,
               professionalTax: null,
+              esi: null,
+
               netSalary: null,
 
               generated: employee.generated,
@@ -303,6 +317,16 @@ function AdminSalaryDetails() {
            */
           const unpaidLeaves =
             details.unpaidLeaveDays || 0;
+
+          /*
+           * ESI is stored inside the
+           * deductions array.
+           */
+          const esi =
+            getDeductionAmount(
+              details.deductions,
+              "ESI",
+            );
 
           return {
             employeeId: employee.employeeId,
@@ -336,15 +360,28 @@ function AdminSalaryDetails() {
 
             unpaidLeaves,
 
-            absentDeduction: getDeductionAmount(
-              details.deductions,
-              "Absent Deduction",
-            ),
+            absentDeduction:
+              getDeductionAmount(
+                details.deductions,
+                "Absent Deduction",
+              ),
+
+            earlyCheckoutDeduction:
+              details.earlyCheckoutDeduction ??
+              getDeductionAmount(
+                details.deductions,
+                "Early Checkout Deduction",
+              ),
+
+            finalPaidMinutes:
+              details.finalPaidMinutes ?? null,
 
             pf: details.employeePF,
 
             professionalTax:
               details.professionalTax,
+
+            esi,
 
             netSalary: details.netSalary,
 
@@ -447,14 +484,23 @@ function AdminSalaryDetails() {
           "Unpaid Leaves":
             employee.unpaidLeaves ?? "",
 
+          "Final Paid Minutes":
+            employee.finalPaidMinutes ?? "",
+
           "Absent Deductions":
             employee.absentDeduction ?? "",
+
+          "Early Checkout Deduction":
+            employee.earlyCheckoutDeduction ?? "",
 
           PF:
             employee.pf ?? "",
 
           PTAX:
             employee.professionalTax ?? "",
+
+          ESI:
+            employee.esi ?? "",
 
           "Net Pay":
             employee.netSalary ?? "",
@@ -476,7 +522,10 @@ function AdminSalaryDetails() {
         { wch: 23 },
         { wch: 16 },
         { wch: 17 },
+        { wch: 20 },
         { wch: 22 },
+        { wch: 27 },
+        { wch: 16 },
         { wch: 16 },
         { wch: 16 },
         { wch: 18 },
@@ -646,7 +695,7 @@ function AdminSalaryDetails() {
 
         <div className="w-full overflow-x-auto">
 
-          <table className="w-full min-w-[1750px] border-collapse">
+          <table className="w-full min-w-[2250px] border-collapse">
 
             {/* HEADER */}
             <thead>
@@ -685,7 +734,15 @@ function AdminSalaryDetails() {
                 </th>
 
                 <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
+                  FINAL PAID MINUTES
+                </th>
+
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   ABSENT DEDUCTIONS
+                </th>
+
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
+                  EARLY CHECKOUT DEDUCTION
                 </th>
 
                 <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
@@ -694,6 +751,10 @@ function AdminSalaryDetails() {
 
                 <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
                   PTAX
+                </th>
+
+                <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
+                  ESI
                 </th>
 
                 <th className="whitespace-nowrap px-4 py-4 text-center text-xs font-bold tracking-wide text-[#240051]">
@@ -708,7 +769,7 @@ function AdminSalaryDetails() {
 
               {loading ? (
                 <tr>
-                  <td colSpan={12}>
+                  <td colSpan={15}>
 
                     <div className="flex min-h-[300px] flex-col items-center justify-center gap-3">
 
@@ -819,10 +880,23 @@ function AdminSalaryDetails() {
                           "—"}
                       </td>
 
+                      {/* FINAL PAID MINUTES */}
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
+                        {employee.finalPaidMinutes ??
+                          "—"}
+                      </td>
+
                       {/* ABSENT DEDUCTION */}
                       <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
                         {formatCurrency(
                           employee.absentDeduction,
+                        )}
+                      </td>
+
+                      {/* EARLY CHECKOUT DEDUCTION */}
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
+                        {formatCurrency(
+                          employee.earlyCheckoutDeduction,
                         )}
                       </td>
 
@@ -840,6 +914,13 @@ function AdminSalaryDetails() {
                         )}
                       </td>
 
+                      {/* ESI */}
+                      <td className="px-4 py-3.5 text-center text-sm font-medium text-[#1a2140]">
+                        {formatCurrency(
+                          employee.esi,
+                        )}
+                      </td>
+
                       {/* NET PAY */}
                       <td className="px-4 py-3.5 text-center text-sm font-bold text-[#182033]">
                         {formatCurrency(
@@ -854,7 +935,7 @@ function AdminSalaryDetails() {
               ) : (
 
                 <tr>
-                  <td colSpan={12}>
+                  <td colSpan={15}>
 
                     <div className="flex min-h-[240px] flex-col items-center justify-center px-4 text-center">
 

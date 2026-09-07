@@ -1,3 +1,4 @@
+
 import api from "./axios";
 
 /* =========================================================
@@ -129,12 +130,34 @@ export interface SalarySlip {
   totalAvailableMinutes?: number;
 
   actualWorkingMinutes?: number;
+
+  /*
+   * Final paid minutes after all
+   * attendance adjustments.
+   */
   finalPaidMinutes?: number;
 
   earlyCheckoutMinutes?: number;
 
   leaveDeduction?: number;
+
+  /*
+   * Deduction caused by early checkout.
+   */
   earlyCheckoutDeduction?: number;
+
+  /*
+   * ESI deduction amount.
+   *
+   * Example:
+   * deductions: [
+   *   {
+   *     label: "ESI",
+   *     amount: 75
+   *   }
+   * ]
+   */
+  esi?: number;
 
   /* PF information */
   pfApplicable?: boolean;
@@ -312,6 +335,39 @@ const mapSalarySlip = (
     undefined;
 
   /* -------------------------------------------------------
+   * ESI DEDUCTION
+   *
+   * Backend response:
+   *
+   * deductions: [
+   *   {
+   *     label: "ESI",
+   *     amount: 75
+   *   }
+   * ]
+   *
+   * This is the employee's ESI deduction amount,
+   * NOT the ESI registration number.
+   * ----------------------------------------------------- */
+
+  const esiDeduction = Array.isArray(
+    s.deductions,
+  )
+    ? s.deductions.find(
+        (item: any) =>
+          String(item?.label ?? "")
+            .trim()
+            .toLowerCase() === "esi",
+      )
+    : undefined;
+
+  const esi =
+    esiDeduction?.amount !== undefined &&
+    esiDeduction?.amount !== null
+      ? Number(esiDeduction.amount)
+      : undefined;
+
+  /* -------------------------------------------------------
    * Employee Information
    *
    * Important:
@@ -485,7 +541,10 @@ const mapSalarySlip = (
       Number(s.actualWorkingMinutes) || 0,
 
     finalPaidMinutes:
-      Number(s.finalPaidMinutes) || 0,
+      s.finalPaidMinutes !== undefined &&
+      s.finalPaidMinutes !== null
+        ? Number(s.finalPaidMinutes)
+        : undefined,
 
     earlyCheckoutMinutes:
       Number(s.earlyCheckoutMinutes) || 0,
@@ -498,7 +557,15 @@ const mapSalarySlip = (
       Number(s.leaveDeduction) || 0,
 
     earlyCheckoutDeduction:
-      Number(s.earlyCheckoutDeduction) || 0,
+      s.earlyCheckoutDeduction !== undefined &&
+      s.earlyCheckoutDeduction !== null
+        ? Number(s.earlyCheckoutDeduction)
+        : undefined,
+
+    /*
+     * ESI deduction amount
+     */
+    esi,
 
     /* -----------------------------------------------------
      * PF
@@ -731,3 +798,4 @@ export const getSalarySlip = async (
     employeeInfo,
   );
 };
+
